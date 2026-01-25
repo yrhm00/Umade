@@ -39,3 +39,55 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# IDE / Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-*
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Testing
+coverage/
+*.coverage
+.nyc_output/
+.jest/
+
+# Cache
+.cache/
+*.cache
+.parcel-cache/
+.eslintcache
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# OS files
+Thumbs.db
+Desktop.ini
+
+# Supabase local
+supabase/.temp/
+.supabase/
