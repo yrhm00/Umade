@@ -21,7 +21,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const { signUp, isLoading, clearError } = useAuthStore();
+  // Use individual selectors to prevent unnecessary re-renders
+  const signUp = useAuthStore((state) => state.signUp);
+  const isLoading = useAuthStore((state) => state.isLoading);
+  const clearError = useAuthStore((state) => state.clearError);
 
   const [role, setRole] = useState<UserRole>('client');
   const [fullName, setFullName] = useState('');
@@ -78,10 +81,12 @@ export default function RegisterScreen() {
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
+        keyboardVerticalOffset={0}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
+          keyboardShouldPersistTaps="always"
+          keyboardDismissMode="none"
           showsVerticalScrollIndicator={false}
         >
           {/* Header */}
@@ -226,7 +231,7 @@ export default function RegisterScreen() {
           {/* Footer */}
           <View style={styles.footer}>
             <Text style={styles.footerText}>Déjà un compte ?</Text>
-            <TouchableOpacity onPress={() => router.replace('/auth/login')}>
+            <TouchableOpacity onPress={() => router.replace('/(auth)/login')}>
               <Text style={styles.footerLink}>Se connecter</Text>
             </TouchableOpacity>
           </View>

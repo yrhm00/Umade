@@ -53,7 +53,7 @@ export default function ProviderDashboardScreen() {
 
   const handleLogout = async () => {
     await signOut();
-    router.replace('/auth/welcome');
+    router.replace('/(auth)/welcome');
   };
 
   return (

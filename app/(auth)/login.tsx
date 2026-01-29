@@ -20,7 +20,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { signIn, isLoading, error, clearError } = useAuthStore();
+  // Use individual selectors to prevent unnecessary re-renders
+  const signIn = useAuthStore((state) => state.signIn);
+  const isLoading = useAuthStore((state) => state.isLoading);
+  const clearError = useAuthStore((state) => state.clearError);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -66,10 +69,12 @@ export default function LoginScreen() {
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
+        keyboardVerticalOffset={0}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
+          keyboardShouldPersistTaps="always"
+          keyboardDismissMode="none"
           showsVerticalScrollIndicator={false}
         >
           {/* Header */}
@@ -117,7 +122,7 @@ export default function LoginScreen() {
 
             <TouchableOpacity
               style={styles.forgotPassword}
-              onPress={() => router.push('/auth/forgot-password')}
+              onPress={() => router.push('/(auth)/forgot-password')}
             >
               <Text style={styles.forgotPasswordText}>
                 Mot de passe oublié ?
@@ -137,7 +142,7 @@ export default function LoginScreen() {
           {/* Footer */}
           <View style={styles.footer}>
             <Text style={styles.footerText}>Pas encore de compte ?</Text>
-            <TouchableOpacity onPress={() => router.replace('/auth/register')}>
+            <TouchableOpacity onPress={() => router.replace('/(auth)/register')}>
               <Text style={styles.footerLink}>Créer un compte</Text>
             </TouchableOpacity>
           </View>

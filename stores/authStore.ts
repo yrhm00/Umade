@@ -28,6 +28,17 @@ interface AuthState {
   clearError: () => void;
 }
 
+// Helper : calcule les valeurs dérivées à partir de session et profile.
+// Appelé dans chaque set() qui modifie session ou profile.
+function deriveState(session: Session | null, profile: Profile | null) {
+  return {
+    isAuthenticated: !!session,
+    isProvider: profile?.role === 'provider',
+    isClient: profile?.role === 'client',
+    isOnboarded: profile?.is_onboarded ?? false,
+  };
+}
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   // Initial state
   session: null,
@@ -37,19 +48,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isInitialized: false,
   error: null,
 
-  // Computed getters (via get())
-  get isAuthenticated() {
-    return !!get().session;
-  },
-  get isProvider() {
-    return get().profile?.role === 'provider';
-  },
-  get isClient() {
-    return get().profile?.role === 'client';
-  },
-  get isOnboarded() {
-    return get().profile?.is_onboarded ?? false;
-  },
+  // Valeurs dérivées (recalculées via deriveState à chaque set pertinent)
+  isAuthenticated: false,
+  isProvider: false,
+  isClient: false,
+  isOnboarded: false,
 
   // Initialize - appelé au démarrage de l'app
   initialize: async () => {
@@ -58,7 +61,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       // Récupérer la session existante
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
+
       if (sessionError) throw sessionError;
 
       if (session?.user) {
@@ -79,6 +82,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           profile,
           isLoading: false,
           isInitialized: true,
+          ...deriveState(session, profile),
         });
       } else {
         set({
@@ -87,34 +91,46 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           profile: null,
           isLoading: false,
           isInitialized: true,
+          ...deriveState(null, null),
         });
       }
 
       // Écouter les changements d'auth
       supabase.auth.onAuthStateChange(async (event, newSession) => {
-        console.log('Auth state changed:', event);
-
+        // Only handle specific events to prevent unnecessary re-renders
         if (event === 'SIGNED_IN' && newSession?.user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', newSession.user.id)
-            .single();
+          // Only update if user is different
+          const currentUserId = get().user?.id;
+          if (currentUserId !== newSession.user.id) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', newSession.user.id)
+              .single();
 
-          set({
-            session: newSession,
-            user: newSession.user,
-            profile,
-          });
+            set({
+              session: newSession,
+              user: newSession.user,
+              profile,
+              ...deriveState(newSession, profile),
+            });
+          }
         } else if (event === 'SIGNED_OUT') {
-          set({
-            session: null,
-            user: null,
-            profile: null,
-          });
+          // Only update if currently has session
+          if (get().session) {
+            set({
+              session: null,
+              user: null,
+              profile: null,
+              ...deriveState(null, null),
+            });
+          }
         } else if (event === 'TOKEN_REFRESHED' && newSession) {
+          // Ne met à jour QUE le token, pas la session entière comme objet.
+          // Cela évite de déclencher les sélecteurs qui dépendent de !!session.
           set({ session: newSession });
         }
+        // Ignore INITIAL_SESSION and other events to prevent re-renders
       });
     } catch (error) {
       console.error('Auth initialization error:', error);
@@ -198,6 +214,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           user: data.user,
           profile,
           isLoading: false,
+          ...deriveState(data.session, profile),
         });
       }
     } catch (error) {
@@ -223,6 +240,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         user: null,
         profile: null,
         isLoading: false,
+        ...deriveState(null, null),
       });
     } catch (error) {
       console.error('Sign out error:', error);
@@ -276,6 +294,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({
         profile: data,
         isLoading: false,
+        ...deriveState(get().session, data),
       });
     } catch (error) {
       console.error('Update profile error:', error);
@@ -301,7 +320,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       if (error) throw error;
 
-      set({ profile: data });
+      set({
+        profile: data,
+        ...deriveState(get().session, data),
+      });
     } catch (error) {
       console.error('Refresh profile error:', error);
     }

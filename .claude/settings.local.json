@@ -6,7 +6,15 @@
       "Bash(npx tsc:*)",
       "Bash(git add:*)",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nImplement complete authentication system and core app features\n\n- Add authentication flow with Supabase \\(login, register, forgot password, welcome\\)\n- Implement onboarding screens with role-based navigation\n- Create provider dashboard with statistics and overview\n- Add provider profile page with details and booking functionality\n- Implement real-time chat with Supabase Realtime\n- Add reusable UI components \\(Button, Input\\)\n- Set up state management with Zustand \\(auth store, app store\\)\n- Configure React Query for data fetching\n- Add utility functions \\(date/price formatting, validation\\)\n- Set up TypeScript types aligned with Supabase database\n- Install missing dependencies \\(lucide-react-native, expo-linear-gradient\\)\n- Fix navigation routes and AuthGuard logic\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(npm ls:*)",
+      "Bash(npm install:*)",
+      "Bash(npx expo install @gorhom/bottom-sheet @react-native-community/slider)",
+      "Bash(npx expo install:*)",
+      "Bash(node -e:*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:docs.expo.dev)"
     ]
   }
 }

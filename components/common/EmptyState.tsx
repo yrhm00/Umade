@@ -1,0 +1,72 @@
+import React from 'react';
+import { View, Text, StyleSheet, ViewStyle } from 'react-native';
+import { Button } from '@/components/ui/Button';
+import { Colors } from '@/constants/Colors';
+import { Layout } from '@/constants/Layout';
+
+interface EmptyStateProps {
+  icon?: string;
+  title: string;
+  description?: string;
+  actionLabel?: string;
+  onAction?: () => void;
+  style?: ViewStyle;
+}
+
+export function EmptyState({
+  icon,
+  title,
+  description,
+  actionLabel,
+  onAction,
+  style,
+}: EmptyStateProps) {
+  return (
+    <View style={[styles.container, style]}>
+      {icon && <Text style={styles.icon}>{icon}</Text>}
+      <Text style={styles.title}>{title}</Text>
+      {description && (
+        <Text style={styles.description}>{description}</Text>
+      )}
+      {actionLabel && onAction && (
+        <Button
+          title={actionLabel}
+          onPress={onAction}
+          variant="outline"
+          size="md"
+          style={styles.button}
+        />
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: Layout.spacing.xl,
+  },
+  icon: {
+    fontSize: 64,
+    marginBottom: Layout.spacing.lg,
+  },
+  title: {
+    fontSize: Layout.fontSize.lg,
+    fontWeight: '600',
+    color: Colors.text.primary,
+    textAlign: 'center',
+    marginBottom: Layout.spacing.sm,
+  },
+  description: {
+    fontSize: Layout.fontSize.md,
+    color: Colors.text.secondary,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: Layout.spacing.lg,
+  },
+  button: {
+    minWidth: 150,
+  },
+});

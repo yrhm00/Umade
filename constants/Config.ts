@@ -33,6 +33,8 @@ export const Config = {
     categories: 'categories',
     providers: 'providers',
     bookings: 'bookings',
+    events: 'events',
+    availability: 'availability',
     conversations: 'conversations',
     notifications: 'notifications',
     favorites: 'favorites',

@@ -1,202 +1,384 @@
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+  Dimensions,
+  FlatList,
+  Share,
+} from 'react-native';
+import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  ArrowLeft,
+  Heart,
+  Share2,
+  MapPin,
+  Star,
+  Clock,
+  MessageCircle,
+  ChevronRight,
+  Phone,
+  Globe,
+} from 'lucide-react-native';
+import { useProviderDetail } from '@/hooks/useProviders';
+import { useFavoriteIds, useToggleFavorite } from '@/hooks/useFavorites';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Button } from '@/components/ui/Button';
+import { RatingStars } from '@/components/common/RatingStars';
+import { Avatar } from '@/components/ui/Avatar';
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
-import { supabase } from '@/lib/supabase';
 import { formatPrice } from '@/lib/utils';
-import { Provider } from '@/types';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowLeft, Briefcase, Clock, MapPin, MessageCircle, Star } from 'lucide-react-native';
-import { useEffect, useState } from 'react';
-import {
-    ActivityIndicator,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function ProviderProfileScreen() {
+const { width } = Dimensions.get('window');
+const GALLERY_IMAGE_HEIGHT = 300;
+
+export default function ProviderDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
 
-  const [provider, setProvider] = useState<Provider | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: provider, isLoading, error } = useProviderDetail(id);
+  const { data: favoriteIds = [] } = useFavoriteIds();
+  const { mutate: toggleFavorite, isPending: isFavoriteLoading } = useToggleFavorite();
 
-  useEffect(() => {
-    fetchProviderProfile();
-  }, [id]);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
-  const fetchProviderProfile = async () => {
+  const isFavorite = favoriteIds.includes(id || '');
+
+  const handleBack = () => router.back();
+
+  const handleFavoritePress = () => {
+    if (!isFavoriteLoading && id) {
+      toggleFavorite(id);
+    }
+  };
+
+  const handleShare = async () => {
     try {
-      setIsLoading(true);
-      setError(null);
-
-      const { data, error } = await supabase
-        .from('providers')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error) throw error;
-
-      setProvider(data);
-    } catch (err: any) {
-      console.error('Error fetching provider:', err);
-      setError(err.message || 'Impossible de charger le profil');
-    } finally {
-      setIsLoading(false);
+      await Share.share({
+        message: `Découvrez ${provider?.business_name} sur Umade !`,
+        url: `https://umade.be/provider/${id}`,
+      });
+    } catch (error) {
+      console.error('Error sharing:', error);
     }
   };
 
   const handleContact = () => {
-    // TODO: Créer une conversation et naviguer vers le chat
-    router.push(`/chat/placeholder-conversation-id`);
+    // TODO: Créer conversation et naviguer vers chat
+    router.push(`/chat/new?providerId=${id}`);
   };
 
-  const handleBooking = () => {
-    // TODO: Implémenter le système de réservation
-    console.log('Réservation pour le prestataire:', id);
+  const handleBook = () => {
+    router.push(`/booking/${id}` as any);
   };
 
   if (isLoading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={Colors.primary.DEFAULT} />
-        </View>
-      </SafeAreaView>
-    );
+    return <LoadingSpinner fullScreen message="Chargement..." />;
   }
 
   if (error || !provider) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error || 'Prestataire non trouvé'}</Text>
-          <Button
-            title="Retour"
-            onPress={() => router.back()}
-            variant="outline"
-            size="md"
-          />
+          <Text style={styles.errorText}>Prestataire non trouvé</Text>
+          <Button title="Retour" onPress={handleBack} variant="outline" />
         </View>
       </SafeAreaView>
     );
   }
 
+  const images = provider.portfolio_images || [];
+  const services = provider.services || [];
+  const reviews = provider.reviews || [];
+  const minPrice =
+    services.length > 0 ? Math.min(...services.map((s) => s.price)) : null;
+
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
-      {/* Header with back button */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <ArrowLeft size={24} color={Colors.text.primary} />
-        </TouchableOpacity>
-      </View>
+    <>
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          headerTransparent: true,
+          headerTitle: '',
+          headerLeft: () => (
+            <TouchableOpacity style={styles.headerButton} onPress={handleBack}>
+              <ArrowLeft size={24} color={Colors.white} />
+            </TouchableOpacity>
+          ),
+          headerRight: () => (
+            <View style={styles.headerRightButtons}>
+              <TouchableOpacity
+                style={styles.headerButton}
+                onPress={handleShare}
+              >
+                <Share2 size={22} color={Colors.white} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.headerButton}
+                onPress={handleFavoritePress}
+              >
+                <Heart
+                  size={22}
+                  color={isFavorite ? Colors.error.DEFAULT : Colors.white}
+                  fill={isFavorite ? Colors.error.DEFAULT : 'transparent'}
+                />
+              </TouchableOpacity>
+            </View>
+          ),
+        }}
+      />
 
       <ScrollView
+        style={styles.container}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        bounces={false}
       >
-        {/* Profile Header */}
-        <View style={styles.profileHeader}>
-          <View style={styles.avatarContainer}>
-            <Briefcase size={48} color={Colors.primary.DEFAULT} />
-          </View>
-          <Text style={styles.businessName}>{provider.business_name}</Text>
-          <Text style={styles.category}>Prestataire événementiel</Text>
-
-          {/* Rating */}
-          {provider.average_rating && (
-            <View style={styles.ratingContainer}>
-              <Star size={20} color={Colors.warning.DEFAULT} fill={Colors.warning.DEFAULT} />
-              <Text style={styles.rating}>
-                {provider.average_rating.toFixed(1)}
-              </Text>
-              <Text style={styles.reviewCount}>
-                ({provider.review_count || 0} avis)
-              </Text>
+        {/* Gallery */}
+        <View style={styles.galleryContainer}>
+          {images.length > 0 ? (
+            <>
+              <FlatList
+                data={images}
+                keyExtractor={(item) => item.id}
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                onMomentumScrollEnd={(e) => {
+                  const index = Math.round(
+                    e.nativeEvent.contentOffset.x / width
+                  );
+                  setActiveImageIndex(index);
+                }}
+                renderItem={({ item }) => (
+                  <Image
+                    source={{ uri: item.image_url }}
+                    style={styles.galleryImage}
+                    resizeMode="cover"
+                  />
+                )}
+              />
+              {/* Pagination dots */}
+              {images.length > 1 && (
+                <View style={styles.paginationDots}>
+                  {images.map((_, index) => (
+                    <View
+                      key={index}
+                      style={[
+                        styles.dot,
+                        activeImageIndex === index && styles.dotActive,
+                      ]}
+                    />
+                  ))}
+                </View>
+              )}
+            </>
+          ) : (
+            <View style={styles.placeholderImage}>
+              <Text style={styles.placeholderEmoji}>📸</Text>
+              <Text style={styles.placeholderText}>Pas de photos</Text>
             </View>
           )}
         </View>
 
-        {/* Info Cards */}
-        <View style={styles.infoCards}>
-          <View style={styles.infoCard}>
-            <MapPin size={20} color={Colors.primary.DEFAULT} />
-            <View style={styles.infoCardContent}>
-              <Text style={styles.infoCardLabel}>Localisation</Text>
-              <Text style={styles.infoCardValue}>
-                {provider.city || 'Paris'}, France
+        {/* Main Info */}
+        <View style={styles.content}>
+          <View style={styles.mainInfo}>
+            <Text style={styles.businessName}>{provider.business_name}</Text>
+
+            <View style={styles.categoryBadge}>
+              <Text style={styles.categoryText}>
+                {provider.category?.name || 'Prestataire'}
               </Text>
             </View>
-          </View>
-        </View>
 
-        {/* Description */}
-        {provider.description && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>À propos</Text>
-            <Text style={styles.description}>{provider.description}</Text>
-          </View>
-        )}
-
-        {/* Services */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Services proposés</Text>
-          <View style={styles.servicesContainer}>
-            <View style={styles.serviceTag}>
-              <Text style={styles.serviceTagText}>Organisation complète</Text>
+            {/* Rating & Location */}
+            <View style={styles.metaRow}>
+              {provider.average_rating ? (
+                <RatingStars
+                  rating={provider.average_rating}
+                  reviewCount={provider.review_count || 0}
+                />
+              ) : (
+                <Text style={styles.newBadge}>Nouveau</Text>
+              )}
             </View>
-            <View style={styles.serviceTag}>
-              <Text style={styles.serviceTagText}>Conseil personnalisé</Text>
-            </View>
-            <View style={styles.serviceTag}>
-              <Text style={styles.serviceTagText}>Coordination le jour J</Text>
+
+            {provider.city && (
+              <View style={styles.locationRow}>
+                <MapPin size={16} color={Colors.text.secondary} />
+                <Text style={styles.locationText}>
+                  {provider.address || provider.city}
+                </Text>
+              </View>
+            )}
+
+            {/* Contact info */}
+            <View style={styles.contactInfo}>
+              {provider.business_phone && (
+                <View style={styles.contactItem}>
+                  <Phone size={16} color={Colors.text.secondary} />
+                  <Text style={styles.contactText}>
+                    {provider.business_phone}
+                  </Text>
+                </View>
+              )}
+              {provider.website && (
+                <View style={styles.contactItem}>
+                  <Globe size={16} color={Colors.text.secondary} />
+                  <Text style={styles.contactText} numberOfLines={1}>
+                    {provider.website}
+                  </Text>
+                </View>
+              )}
             </View>
           </View>
-        </View>
 
-        {/* Photos Gallery Placeholder */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Galerie</Text>
-          <Text style={styles.comingSoon}>Photos à venir</Text>
-        </View>
+          {/* Description */}
+          {provider.description && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>À propos</Text>
+              <Text style={styles.description}>{provider.description}</Text>
+            </View>
+          )}
 
-        {/* Reviews Section Placeholder */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Avis clients</Text>
-          <View style={styles.emptyState}>
-            <Star size={40} color={Colors.gray[300]} />
-            <Text style={styles.emptyStateText}>Aucun avis pour le moment</Text>
-          </View>
+          {/* Services */}
+          {services.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Services</Text>
+              {services.map((service) => (
+                <View key={service.id} style={styles.serviceCard}>
+                  <View style={styles.serviceInfo}>
+                    <Text style={styles.serviceName}>{service.name}</Text>
+                    {service.description && (
+                      <Text style={styles.serviceDescription} numberOfLines={2}>
+                        {service.description}
+                      </Text>
+                    )}
+                    {service.duration_minutes && (
+                      <View style={styles.durationRow}>
+                        <Clock size={14} color={Colors.text.tertiary} />
+                        <Text style={styles.durationText}>
+                          {service.duration_minutes} min
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                  <Text style={styles.servicePrice}>
+                    {formatPrice(service.price)}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Reviews */}
+          {reviews.length > 0 && (
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Avis</Text>
+                {reviews.length > 3 && (
+                  <TouchableOpacity
+                    style={styles.seeAllButton}
+                    onPress={() => router.push(`/reviews/provider/${id}`)}
+                  >
+                    <Text style={styles.seeAllText}>Voir tous</Text>
+                    <ChevronRight size={16} color={Colors.primary.DEFAULT} />
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              {reviews.slice(0, 3).map((review) => (
+                <View key={review.id} style={styles.reviewCard}>
+                  <View style={styles.reviewHeader}>
+                    <Avatar
+                      source={review.client?.avatar_url ?? undefined}
+                      name={review.client?.full_name ?? undefined}
+                      size="sm"
+                    />
+                    <View style={styles.reviewerInfo}>
+                      <Text style={styles.reviewerName}>
+                        {review.client?.full_name || 'Anonyme'}
+                      </Text>
+                      <RatingStars
+                        rating={review.rating}
+                        size={12}
+                        showValue={false}
+                      />
+                    </View>
+                    <Text style={styles.reviewDate}>
+                      {new Date(review.created_at!).toLocaleDateString('fr-BE', {
+                        month: 'short',
+                        year: 'numeric',
+                      })}
+                    </Text>
+                  </View>
+                  {review.comment && (
+                    <Text style={styles.reviewComment}>{review.comment}</Text>
+                  )}
+                  {review.provider_response && (
+                    <View style={styles.providerResponse}>
+                      <Text style={styles.providerResponseLabel}>
+                        Réponse du prestataire
+                      </Text>
+                      <Text style={styles.providerResponseText}>
+                        {review.provider_response}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Empty reviews state */}
+          {reviews.length === 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Avis</Text>
+              <View style={styles.emptyReviews}>
+                <Star size={40} color={Colors.gray[300]} />
+                <Text style={styles.emptyReviewsText}>
+                  Aucun avis pour le moment
+                </Text>
+              </View>
+            </View>
+          )}
+
+          {/* Spacer for bottom buttons */}
+          <View style={{ height: 100 }} />
         </View>
       </ScrollView>
 
-      {/* Action Buttons */}
-      <View style={styles.actionButtons}>
-        <Button
-          title="Contacter"
-          onPress={handleContact}
-          variant="outline"
-          size="lg"
-          icon={<MessageCircle size={20} color={Colors.primary.DEFAULT} />}
-          style={styles.contactButton}
-        />
-        <Button
-          title="Réserver"
-          onPress={handleBooking}
-          variant="primary"
-          size="lg"
-          style={styles.bookButton}
-        />
-      </View>
-    </SafeAreaView>
+      {/* Bottom CTA */}
+      <SafeAreaView edges={['bottom']} style={styles.bottomBar}>
+        <View style={styles.bottomContent}>
+          {minPrice && (
+            <View style={styles.priceContainer}>
+              <Text style={styles.priceLabel}>À partir de</Text>
+              <Text style={styles.priceValue}>{formatPrice(minPrice)}</Text>
+            </View>
+          )}
+          <View style={styles.bottomButtons}>
+            <TouchableOpacity
+              style={styles.contactButton}
+              onPress={handleContact}
+            >
+              <MessageCircle size={20} color={Colors.primary.DEFAULT} />
+            </TouchableOpacity>
+            <Button
+              title="Réserver"
+              onPress={handleBook}
+              size="lg"
+              style={styles.bookButton}
+            />
+          </View>
+        </View>
+      </SafeAreaView>
+    </>
   );
 }
 
@@ -205,111 +387,144 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background.primary,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: Layout.spacing.lg,
+    padding: Layout.spacing.xl,
+    gap: Layout.spacing.lg,
   },
   errorText: {
-    fontSize: Layout.fontSize.md,
-    color: Colors.error.DEFAULT,
-    marginBottom: Layout.spacing.lg,
-    textAlign: 'center',
+    fontSize: Layout.fontSize.lg,
+    color: Colors.text.secondary,
   },
-  header: {
-    paddingHorizontal: Layout.spacing.lg,
-    paddingVertical: Layout.spacing.md,
-  },
-  backButton: {
+
+  // Header buttons
+  headerButton: {
     width: 40,
     height: 40,
-    borderRadius: Layout.radius.md,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerRightButtons: {
+    flexDirection: 'row',
+    gap: Layout.spacing.sm,
+  },
+
+  // Gallery
+  galleryContainer: {
+    height: GALLERY_IMAGE_HEIGHT,
+    backgroundColor: Colors.gray[200],
+  },
+  galleryImage: {
+    width,
+    height: GALLERY_IMAGE_HEIGHT,
+  },
+  paginationDots: {
+    position: 'absolute',
+    bottom: Layout.spacing.md,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: Layout.spacing.xs,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.5)',
+  },
+  dotActive: {
     backgroundColor: Colors.white,
+    width: 20,
+  },
+  placeholderImage: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.gray[200],
   },
-  scrollContent: {
-    paddingBottom: Layout.spacing.xl,
+  placeholderEmoji: {
+    fontSize: 48,
   },
-  profileHeader: {
-    alignItems: 'center',
-    paddingHorizontal: Layout.spacing.lg,
-    paddingVertical: Layout.spacing.xl,
+  placeholderText: {
+    marginTop: Layout.spacing.sm,
+    fontSize: Layout.fontSize.md,
+    color: Colors.text.secondary,
   },
-  avatarContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: `${Colors.primary.DEFAULT}15`,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: Layout.spacing.md,
+
+  // Content
+  content: {
+    padding: Layout.spacing.lg,
+  },
+  mainInfo: {
+    marginBottom: Layout.spacing.lg,
   },
   businessName: {
     fontSize: Layout.fontSize['2xl'],
     fontWeight: '700',
     color: Colors.text.primary,
-    textAlign: 'center',
-    marginBottom: Layout.spacing.xs,
+    marginBottom: Layout.spacing.sm,
   },
-  category: {
-    fontSize: Layout.fontSize.md,
-    color: Colors.text.secondary,
+  categoryBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: Colors.primary[50],
+    paddingVertical: Layout.spacing.xs,
+    paddingHorizontal: Layout.spacing.md,
+    borderRadius: Layout.radius.full,
     marginBottom: Layout.spacing.md,
   },
-  ratingContainer: {
+  categoryText: {
+    fontSize: Layout.fontSize.sm,
+    fontWeight: '500',
+    color: Colors.primary.DEFAULT,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Layout.spacing.sm,
+  },
+  newBadge: {
+    fontSize: Layout.fontSize.sm,
+    color: Colors.primary.DEFAULT,
+    fontWeight: '500',
+  },
+  locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Layout.spacing.xs,
+    marginBottom: Layout.spacing.sm,
   },
-  rating: {
-    fontSize: Layout.fontSize.lg,
-    fontWeight: '600',
-    color: Colors.text.primary,
-  },
-  reviewCount: {
+  locationText: {
     fontSize: Layout.fontSize.sm,
     color: Colors.text.secondary,
   },
-  infoCards: {
-    paddingHorizontal: Layout.spacing.lg,
-    gap: Layout.spacing.md,
-    marginBottom: Layout.spacing.lg,
+  contactInfo: {
+    marginTop: Layout.spacing.sm,
+    gap: Layout.spacing.xs,
   },
-  infoCard: {
+  contactItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.white,
-    padding: Layout.spacing.md,
-    borderRadius: Layout.radius.lg,
-    borderWidth: 1,
-    borderColor: Colors.gray[200],
-    gap: Layout.spacing.md,
+    gap: Layout.spacing.sm,
   },
-  infoCardContent: {
-    flex: 1,
-  },
-  infoCardLabel: {
+  contactText: {
     fontSize: Layout.fontSize.sm,
     color: Colors.text.secondary,
-    marginBottom: Layout.spacing.xs / 2,
+    flex: 1,
   },
-  infoCardValue: {
-    fontSize: Layout.fontSize.md,
-    fontWeight: '600',
-    color: Colors.text.primary,
-  },
+
+  // Sections
   section: {
-    paddingHorizontal: Layout.spacing.lg,
     marginBottom: Layout.spacing.xl,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Layout.spacing.md,
   },
   sectionTitle: {
     fontSize: Layout.fontSize.lg,
@@ -317,54 +532,159 @@ const styles = StyleSheet.create({
     color: Colors.text.primary,
     marginBottom: Layout.spacing.md,
   },
+  seeAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  seeAllText: {
+    fontSize: Layout.fontSize.sm,
+    color: Colors.primary.DEFAULT,
+    fontWeight: '500',
+  },
   description: {
     fontSize: Layout.fontSize.md,
     color: Colors.text.secondary,
     lineHeight: 24,
   },
-  servicesContainer: {
+
+  // Services
+  serviceCard: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Layout.spacing.sm,
-  },
-  serviceTag: {
-    backgroundColor: Colors.primary[50],
-    paddingHorizontal: Layout.spacing.md,
-    paddingVertical: Layout.spacing.sm,
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    backgroundColor: Colors.gray[50],
+    padding: Layout.spacing.md,
     borderRadius: Layout.radius.md,
+    marginBottom: Layout.spacing.sm,
   },
-  serviceTagText: {
-    fontSize: Layout.fontSize.sm,
-    color: Colors.primary.DEFAULT,
-    fontWeight: '500',
+  serviceInfo: {
+    flex: 1,
+    marginRight: Layout.spacing.md,
   },
-  comingSoon: {
+  serviceName: {
     fontSize: Layout.fontSize.md,
+    fontWeight: '600',
+    color: Colors.text.primary,
+    marginBottom: Layout.spacing.xs,
+  },
+  serviceDescription: {
+    fontSize: Layout.fontSize.sm,
+    color: Colors.text.secondary,
+    marginBottom: Layout.spacing.xs,
+  },
+  durationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Layout.spacing.xs,
+  },
+  durationText: {
+    fontSize: Layout.fontSize.xs,
+    color: Colors.text.tertiary,
+  },
+  servicePrice: {
+    fontSize: Layout.fontSize.lg,
+    fontWeight: '700',
+    color: Colors.primary.DEFAULT,
+  },
+
+  // Reviews
+  reviewCard: {
+    backgroundColor: Colors.gray[50],
+    padding: Layout.spacing.md,
+    borderRadius: Layout.radius.md,
+    marginBottom: Layout.spacing.sm,
+  },
+  reviewHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Layout.spacing.sm,
+  },
+  reviewerInfo: {
+    flex: 1,
+    marginLeft: Layout.spacing.sm,
+  },
+  reviewerName: {
+    fontSize: Layout.fontSize.sm,
+    fontWeight: '600',
+    color: Colors.text.primary,
+  },
+  reviewDate: {
+    fontSize: Layout.fontSize.xs,
+    color: Colors.text.tertiary,
+  },
+  reviewComment: {
+    fontSize: Layout.fontSize.sm,
+    color: Colors.text.secondary,
+    lineHeight: 20,
+  },
+  providerResponse: {
+    marginTop: Layout.spacing.sm,
+    paddingTop: Layout.spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: Colors.gray[200],
+  },
+  providerResponseLabel: {
+    fontSize: Layout.fontSize.xs,
+    fontWeight: '600',
+    color: Colors.primary.DEFAULT,
+    marginBottom: Layout.spacing.xs,
+  },
+  providerResponseText: {
+    fontSize: Layout.fontSize.sm,
     color: Colors.text.secondary,
     fontStyle: 'italic',
   },
-  emptyState: {
+  emptyReviews: {
     alignItems: 'center',
     paddingVertical: Layout.spacing.xl,
   },
-  emptyStateText: {
+  emptyReviewsText: {
+    marginTop: Layout.spacing.sm,
     fontSize: Layout.fontSize.sm,
     color: Colors.text.secondary,
-    marginTop: Layout.spacing.sm,
   },
-  actionButtons: {
-    flexDirection: 'row',
-    paddingHorizontal: Layout.spacing.lg,
-    paddingVertical: Layout.spacing.md,
-    gap: Layout.spacing.md,
+
+  // Bottom bar
+  bottomBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     backgroundColor: Colors.white,
     borderTopWidth: 1,
     borderTopColor: Colors.gray[200],
   },
+  bottomContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: Layout.spacing.lg,
+  },
+  priceContainer: {},
+  priceLabel: {
+    fontSize: Layout.fontSize.xs,
+    color: Colors.text.secondary,
+  },
+  priceValue: {
+    fontSize: Layout.fontSize.xl,
+    fontWeight: '700',
+    color: Colors.text.primary,
+  },
+  bottomButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Layout.spacing.sm,
+  },
   contactButton: {
-    flex: 1,
+    width: 48,
+    height: 48,
+    borderRadius: Layout.radius.md,
+    borderWidth: 1.5,
+    borderColor: Colors.primary.DEFAULT,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   bookButton: {
-    flex: 1,
+    minWidth: 140,
   },
 });

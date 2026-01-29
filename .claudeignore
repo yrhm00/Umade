@@ -1,0 +1,24 @@
+# Dependencies et lock files
+node_modules/
+package-lock.json
+yarn.lock
+
+# Build outputs
+.expo/
+dist/
+web-build/
+build/
+
+# Assets lourds (si pas nécessaires)
+assets/fonts/
+assets/images/
+
+# Supabase temp
+supabase/.temp/
+
+# IDE
+.vscode/
+.idea/
+
+# Tests
+coverage/
