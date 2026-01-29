@@ -1,10 +1,10 @@
-import React from 'react';
-import { Tabs, Redirect } from 'expo-router';
-import { Home, Search, Calendar, MessageCircle, User } from 'lucide-react-native';
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
-import { useAuthStore } from '@/stores/authStore';
 import { useTotalUnreadCount } from '@/hooks/useConversations';
+import { useAuthStore } from '@/stores/authStore';
+import { Redirect, Tabs } from 'expo-router';
+import { Calendar, Home, MessageCircle, Search, User } from 'lucide-react-native';
+import React from 'react';
 
 const tabBarStyle = {
   height: Layout.tabBarHeight,
@@ -31,6 +31,7 @@ const screenOptions = {
 export default function TabLayout() {
   const hasSession = useAuthStore((state) => !!state.session);
   const isOnboarded = useAuthStore((state) => Boolean(state.profile?.is_onboarded));
+  const isProvider = useAuthStore((state) => state.profile?.role === 'provider');
   const unreadCount = useTotalUnreadCount();
 
   // Pas connecté → rediriger vers l'auth
@@ -41,6 +42,11 @@ export default function TabLayout() {
   // Connecté mais pas onboardé → rediriger vers l'onboarding
   if (!isOnboarded) {
     return <Redirect href="/onboarding" />;
+  }
+
+  // Prestataire → rediriger vers le dashboard provider
+  if (isProvider) {
+    return <Redirect href="/(provider)/dashboard" />;
   }
 
   return (
