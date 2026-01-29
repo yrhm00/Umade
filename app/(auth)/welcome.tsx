@@ -54,14 +54,14 @@ export default function WelcomeScreen() {
         <View style={styles.buttonContainer}>
           <Button
             title="Créer un compte"
-            onPress={() => router.push('/auth/register')}
+            onPress={() => router.push('/(auth)/register')}
             size="lg"
             fullWidth
           />
-          
+
           <Button
             title="J'ai déjà un compte"
-            onPress={() => router.push('/auth/login')}
+            onPress={() => router.push('/(auth)/login')}
             variant="outline"
             size="lg"
             fullWidth

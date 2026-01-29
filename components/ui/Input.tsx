@@ -1,8 +1,9 @@
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
 import { Eye, EyeOff } from 'lucide-react-native';
-import React, { useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
+    InteractionManager,
     StyleSheet,
     Text,
     TextInput,
@@ -21,7 +22,7 @@ interface InputProps extends TextInputProps {
   containerStyle?: ViewStyle;
 }
 
-export function Input({
+export const Input = React.memo(function Input({
   label,
   error,
   hint,
@@ -29,13 +30,39 @@ export function Input({
   rightIcon,
   secureTextEntry,
   containerStyle,
+  style,
+  onFocus,
+  onBlur,
   ...props
 }: InputProps) {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const focusTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isPassword = secureTextEntry !== undefined;
   const showPassword = isPassword && isPasswordVisible;
+
+  // Le style focus est appliqué APRÈS que le clavier soit ouvert.
+  // Appliquer un changement de shadow iOS pendant l'ouverture du clavier
+  // force la création d'un nouveau CALayer natif, ce qui fait perdre le
+  // firstResponder (focus) au TextInput et ferme le clavier.
+  const handleFocus = useCallback((event: any) => {
+    onFocus?.(event);
+    // Defer : attendre que le clavier soit complètement ouvert
+    if (focusTimer.current) clearTimeout(focusTimer.current);
+    focusTimer.current = setTimeout(() => {
+      setIsFocused(true);
+    }, 150);
+  }, [onFocus]);
+
+  const handleBlur = useCallback((event: any) => {
+    if (focusTimer.current) {
+      clearTimeout(focusTimer.current);
+      focusTimer.current = null;
+    }
+    setIsFocused(false);
+    onBlur?.(event);
+  }, [onBlur]);
 
   const inputContainerStyles = [
     styles.inputContainer,
@@ -46,23 +73,24 @@ export function Input({
   return (
     <View style={[styles.container, containerStyle]}>
       {label && <Text style={styles.label}>{label}</Text>}
-      
+
       <View style={inputContainerStyles}>
         {leftIcon && <View style={styles.iconLeft}>{leftIcon}</View>}
-        
+
         <TextInput
           style={[
             styles.input,
             leftIcon ? styles.inputWithLeftIcon : undefined,
             (rightIcon || isPassword) ? styles.inputWithRightIcon : undefined,
+            style,
           ]}
           placeholderTextColor={Colors.gray[400]}
           secureTextEntry={isPassword && !showPassword}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
           {...props}
         />
-        
+
         {isPassword && (
           <TouchableOpacity
             style={styles.iconRight}
@@ -75,17 +103,17 @@ export function Input({
             )}
           </TouchableOpacity>
         )}
-        
+
         {rightIcon && !isPassword && (
           <View style={styles.iconRight}>{rightIcon}</View>
         )}
       </View>
-      
+
       {error && <Text style={styles.error}>{error}</Text>}
       {hint && !error && <Text style={styles.hint}>{hint}</Text>}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -105,13 +133,19 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: Colors.gray[200],
     height: Layout.inputHeight,
+    // Shadow toujours présente sur iOS (avec opacité 0) pour que le CALayer
+    // existe dès le départ. Changer UNIQUEMENT shadowOpacity au focus
+    // évite la restructuration native qui tue le firstResponder.
+    shadowColor: Colors.primary.DEFAULT,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 4,
+    elevation: 0,
   },
   inputContainerFocused: {
     borderColor: Colors.primary.DEFAULT,
-    shadowColor: Colors.primary.DEFAULT,
-    shadowOffset: { width: 0, height: 0 },
+    // Seul shadowOpacity change → pas de nouveau CALayer → pas de perte de focus
     shadowOpacity: 0.1,
-    shadowRadius: 4,
     elevation: 2,
   },
   inputContainerError: {

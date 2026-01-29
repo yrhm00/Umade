@@ -1,87 +1,137 @@
-// Palette Umade - Design Premium
+// Palette Umade - Premium UI Phase 7
 export const Colors = {
-  // Couleurs principales
+  // Couleur principale - Violet profond
   primary: {
-    DEFAULT: '#5E4074',      // Violet principal
-    light: '#7B5A94',
-    dark: '#4A325C',
-    50: '#F5F0F8',
-    100: '#EBE1F1',
-    200: '#D7C3E3',
-    300: '#C3A5D5',
-    400: '#9E79B4',
-    500: '#5E4074',
-    600: '#4A325C',
-    700: '#362544',
-    800: '#22172C',
-    900: '#0E0A14',
+    50: '#F5F3F9',
+    100: '#E8E3F2',
+    200: '#D1C7E5',
+    300: '#B3A4D4',
+    400: '#8F77B8',
+    500: '#5F4A8B',
+    600: '#4E3D73',
+    700: '#3D2F5A',
+    800: '#2C2242',
+    900: '#1B1529',
+    DEFAULT: '#5F4A8B',
+    light: '#8F77B8',
+    dark: '#4E3D73',
   },
-  
-  // Couleur secondaire (crème)
+
+  // Couleur secondaire - Creme chaud
+  cream: {
+    50: '#FFFEF7',
+    100: '#FEFCEB',
+    200: '#FEFACD',
+    300: '#FDF6A8',
+    400: '#FCF283',
+    DEFAULT: '#FEFACD',
+  },
+
+  // Secondary (alias for cream for backward compatibility)
   secondary: {
-    DEFAULT: '#F7F9EC',
-    dark: '#E8EBD9',
-    darker: '#D9DDC6',
+    DEFAULT: '#FEFACD',
+    dark: '#FEFCEB',
+    darker: '#FDF6A8',
   },
-  
-  // Couleurs sémantiques
+
+  // Couleurs semantiques
   success: {
+    50: '#ECFDF5',
+    100: '#D1FAE5',
+    500: '#10B981',
+    600: '#059669',
     DEFAULT: '#10B981',
     light: '#D1FAE5',
     dark: '#059669',
   },
+
   warning: {
+    50: '#FFFBEB',
+    100: '#FEF3C7',
+    500: '#F59E0B',
+    600: '#D97706',
     DEFAULT: '#F59E0B',
     light: '#FEF3C7',
     dark: '#D97706',
   },
+
   error: {
+    50: '#FEF2F2',
+    100: '#FEE2E2',
+    500: '#EF4444',
+    600: '#DC2626',
     DEFAULT: '#EF4444',
     light: '#FEE2E2',
     dark: '#DC2626',
   },
-  
-  // Neutres
+
+  // Neutres (harmonise avec primary)
   gray: {
-    50: '#F9FAFB',
-    100: '#F3F4F6',
-    200: '#E5E7EB',
-    300: '#D1D5DB',
-    400: '#9CA3AF',
-    500: '#6B7280',
-    600: '#4B5563',
-    700: '#374151',
-    800: '#1F2937',
-    900: '#111827',
+    50: '#FAFAF9',
+    100: '#F5F3F9',
+    200: '#E8E3F2',
+    300: '#D1C7E5',
+    400: '#B3A4D4',
+    500: '#8F77B8',
+    600: '#6B5A94',
+    700: '#4E3D73',
+    800: '#3D2F5A',
+    900: '#2C2242',
   },
-  
+
   // Base
   white: '#FFFFFF',
   black: '#000000',
   transparent: 'transparent',
-  
+
   // Backgrounds
   background: {
-    primary: '#FFFFFF',
-    secondary: '#F7F9EC',
-    tertiary: '#F3F4F6',
+    primary: '#FFFEF7',
+    secondary: '#FEFCEB',
+    tertiary: '#F5F3F9',
   },
-  
+
   // Text
   text: {
-    primary: '#111827',
-    secondary: '#6B7280',
-    tertiary: '#9CA3AF',
-    inverse: '#FFFFFF',
+    primary: '#1B1529',
+    secondary: '#4E3D73',
+    tertiary: '#8F77B8',
+    inverse: '#FFFEF7',
+    muted: '#B3A4D4',
   },
-  
+
   // Glassmorphism
   glass: {
-    background: 'rgba(255, 255, 255, 0.7)',
-    border: 'rgba(255, 255, 255, 0.3)',
-    shadow: 'rgba(94, 64, 116, 0.1)',
+    light: 'rgba(254, 250, 205, 0.7)',
+    medium: 'rgba(254, 250, 205, 0.85)',
+    dark: 'rgba(95, 74, 139, 0.8)',
+    background: 'rgba(255, 254, 247, 0.85)',
+    border: 'rgba(95, 74, 139, 0.15)',
+    borderLight: 'rgba(254, 250, 205, 0.3)',
+    shadow: 'rgba(95, 74, 139, 0.1)',
+  },
+
+  // Gradients (arrays pour LinearGradient)
+  gradients: {
+    primary: ['#5F4A8B', '#8F77B8'] as const,
+    primaryReverse: ['#8F77B8', '#5F4A8B'] as const,
+    cream: ['#FEFACD', '#FFFEF7'] as const,
+    sunset: ['#5F4A8B', '#B3A4D4', '#FEFACD'] as const,
+    card: ['rgba(254, 252, 235, 0.95)', 'rgba(255, 254, 247, 0.98)'] as const,
+    shimmer: ['#E8E3F2', '#F5F3F9', '#E8E3F2'] as const,
+  },
+
+  // Ombres
+  shadow: {
+    color: '#5F4A8B',
+    light: 'rgba(95, 74, 139, 0.08)',
+    medium: 'rgba(95, 74, 139, 0.15)',
+    dark: 'rgba(95, 74, 139, 0.25)',
   },
 } as const;
+
+// Type helper
+export type ColorKey = keyof typeof Colors;
 
 // Export pour usage avec useColorScheme
 export default {

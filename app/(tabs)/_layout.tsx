@@ -1,57 +1,95 @@
 import React from 'react';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Link, Tabs } from 'expo-router';
-import { Pressable } from 'react-native';
+import { Tabs, Redirect } from 'expo-router';
+import { Home, Search, Calendar, MessageCircle, User } from 'lucide-react-native';
+import { Colors } from '@/constants/Colors';
+import { Layout } from '@/constants/Layout';
+import { useAuthStore } from '@/stores/authStore';
+import { useTotalUnreadCount } from '@/hooks/useConversations';
 
-import Colors from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
-import { useClientOnlyValue } from '@/components/useClientOnlyValue';
+const tabBarStyle = {
+  height: Layout.tabBarHeight,
+  paddingTop: 8,
+  paddingBottom: 20,
+  backgroundColor: Colors.white,
+  borderTopWidth: 1,
+  borderTopColor: Colors.gray[200],
+} as const;
 
-// You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
-function TabBarIcon(props: {
-  name: React.ComponentProps<typeof FontAwesome>['name'];
-  color: string;
-}) {
-  return <FontAwesome size={28} style={{ marginBottom: -3 }} {...props} />;
-}
+const tabBarLabelStyle = {
+  fontSize: 11,
+  fontWeight: '500',
+} as const;
+
+const screenOptions = {
+  tabBarActiveTintColor: Colors.primary.DEFAULT,
+  tabBarInactiveTintColor: Colors.gray[400],
+  tabBarStyle,
+  tabBarLabelStyle,
+  headerShown: false,
+} as const;
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const hasSession = useAuthStore((state) => !!state.session);
+  const isOnboarded = useAuthStore((state) => Boolean(state.profile?.is_onboarded));
+  const unreadCount = useTotalUnreadCount();
+
+  // Pas connecté → rediriger vers l'auth
+  if (!hasSession) {
+    return <Redirect href="/(auth)/welcome" />;
+  }
+
+  // Connecté mais pas onboardé → rediriger vers l'onboarding
+  if (!isOnboarded) {
+    return <Redirect href="/onboarding" />;
+  }
 
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
-        headerShown: useClientOnlyValue(false, true),
-      }}>
+    <Tabs screenOptions={screenOptions}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Tab One',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
-          headerRight: () => (
-            <Link href="/modal" asChild>
-              <Pressable>
-                {({ pressed }) => (
-                  <FontAwesome
-                    name="info-circle"
-                    size={25}
-                    color={Colors[colorScheme ?? 'light'].text}
-                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
-              </Pressable>
-            </Link>
+          title: 'Accueil',
+          tabBarIcon: ({ color, size }) => (
+            <Home size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="two"
+        name="search"
         options={{
-          title: 'Tab Two',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+          title: 'Recherche',
+          tabBarIcon: ({ color, size }) => (
+            <Search size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="events"
+        options={{
+          title: 'Événements',
+          tabBarIcon: ({ color, size }) => (
+            <Calendar size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="messages"
+        options={{
+          title: 'Messages',
+          tabBarIcon: ({ color, size }) => (
+            <MessageCircle size={size} color={color} />
+          ),
+          tabBarBadge: unreadCount > 0 ? (unreadCount > 9 ? '9+' : unreadCount) : undefined,
+          tabBarBadgeStyle: { backgroundColor: Colors.primary.DEFAULT, fontSize: 10 },
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profil',
+          tabBarIcon: ({ color, size }) => (
+            <User size={size} color={color} />
+          ),
         }}
       />
     </Tabs>
