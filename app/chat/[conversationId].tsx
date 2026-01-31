@@ -1,3 +1,16 @@
+import { ChatHeader } from '@/components/chat/ChatHeader';
+import { ChatInput } from '@/components/chat/ChatInput';
+import { DateSeparator } from '@/components/chat/DateSeparator';
+import { EmptyChat } from '@/components/chat/EmptyChat';
+import { MessageBubble } from '@/components/chat/MessageBubble';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { Colors } from '@/constants/Colors';
+import { Layout } from '@/constants/Layout';
+import { useAuth } from '@/hooks/useAuth';
+import { useMarkAsRead, useMessages, useSendMessage } from '@/hooks/useMessages';
+import { useRealtimeMessages } from '@/hooks/useRealtimeMessages';
+import { MessageWithSender } from '@/types';
+import { useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   ActivityIndicator,
@@ -7,20 +20,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from '@/hooks/useAuth';
-import { useMessages, useSendMessage, useMarkAsRead } from '@/hooks/useMessages';
-import { useRealtimeMessages } from '@/hooks/useRealtimeMessages';
-import { ChatHeader } from '@/components/chat/ChatHeader';
-import { MessageBubble } from '@/components/chat/MessageBubble';
-import { ChatInput } from '@/components/chat/ChatInput';
-import { DateSeparator } from '@/components/chat/DateSeparator';
-import { EmptyChat } from '@/components/chat/EmptyChat';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { MessageWithSender } from '@/types';
-import { Colors } from '@/constants/Colors';
-import { Layout } from '@/constants/Layout';
 
 function isSameDay(d1: Date, d2: Date): boolean {
   return (
@@ -50,6 +50,11 @@ export default function ChatScreen() {
 
   // Real-time subscription
   useRealtimeMessages(conversationId);
+
+  // New hooks moved to top level
+  const { data: conversation } = useConversation(conversationId);
+  const isProvider = conversation?.provider_id === userId;
+  const { booking, updateStatus, isUpdating } = useChatBooking(conversationId);
 
   // Mark messages as read on mount and when conversationId changes
   useEffect(() => {
@@ -129,11 +134,26 @@ export default function ChatScreen() {
     );
   }
 
+  // ... (existing helper functions)
+
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <ChatHeader conversationId={conversationId ?? ''} />
 
+      {/* Booking Action Card (Pending Request) */}
+      {booking && (
+        <View style={styles.actionCardContainer}>
+          <BookingActionCard
+            booking={booking}
+            isProvider={isProvider}
+            onUpdateStatus={async (bookingId, status) => { await updateStatus({ bookingId, status }); }}
+            isUpdating={isUpdating}
+          />
+        </View>
+      )}
+
       <KeyboardAvoidingView
+        // ...
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
@@ -164,9 +184,19 @@ export default function ChatScreen() {
   );
 }
 
+import { BookingActionCard } from '@/components/chat/BookingActionCard';
+import { useChatBooking } from '@/hooks/useChatBooking';
+import { useConversation } from '@/hooks/useConversations';
+
+// ... existing code ...
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Colors.background.primary,
+  },
+  actionCardContainer: {
+    zIndex: 10,
     backgroundColor: Colors.background.primary,
   },
   keyboardView: {

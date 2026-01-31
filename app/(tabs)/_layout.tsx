@@ -1,32 +1,11 @@
+import { LiquidTabBar } from '@/components/navigation/LiquidTabBar';
 import { Colors } from '@/constants/Colors';
-import { Layout } from '@/constants/Layout';
 import { useTotalUnreadCount } from '@/hooks/useConversations';
 import { useAuthStore } from '@/stores/authStore';
 import { Redirect, Tabs } from 'expo-router';
 import { Calendar, Home, MessageCircle, Search, User } from 'lucide-react-native';
 import React from 'react';
 
-const tabBarStyle = {
-  height: Layout.tabBarHeight,
-  paddingTop: 8,
-  paddingBottom: 20,
-  backgroundColor: Colors.white,
-  borderTopWidth: 1,
-  borderTopColor: Colors.gray[200],
-} as const;
-
-const tabBarLabelStyle = {
-  fontSize: 11,
-  fontWeight: '500',
-} as const;
-
-const screenOptions = {
-  tabBarActiveTintColor: Colors.primary.DEFAULT,
-  tabBarInactiveTintColor: Colors.gray[400],
-  tabBarStyle,
-  tabBarLabelStyle,
-  headerShown: false,
-} as const;
 
 export default function TabLayout() {
   const hasSession = useAuthStore((state) => !!state.session);
@@ -50,7 +29,15 @@ export default function TabLayout() {
   }
 
   return (
-    <Tabs screenOptions={screenOptions}>
+    <Tabs
+      tabBar={(props) => <LiquidTabBar {...props} />}
+      screenOptions={{
+        headerShown: false,
+        tabBarShowLabel: false, // Labels are managed in the custom bar or hidden
+        tabBarActiveTintColor: Colors.primary.DEFAULT,
+        tabBarInactiveTintColor: Colors.gray[400],
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
@@ -86,7 +73,9 @@ export default function TabLayout() {
             <MessageCircle size={size} color={color} />
           ),
           tabBarBadge: unreadCount > 0 ? (unreadCount > 9 ? '9+' : unreadCount) : undefined,
-          tabBarBadgeStyle: { backgroundColor: Colors.primary.DEFAULT, fontSize: 10 },
+          // Badge needs to be handled in custom tab bar if not supported automatically
+          // Note: custom tabBar prop usually overrides default badge rendering of standard tabs. 
+          // We might need to pass badge count to LiquidTabBar.
         }}
       />
       <Tabs.Screen

@@ -1,37 +1,37 @@
-import React, { useRef, useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TextInput,
-  TouchableOpacity,
-  ActivityIndicator,
-} from 'react-native';
+import { CategoryPill } from '@/components/common/CategoryPill';
+import { EmptyState } from '@/components/common/EmptyState';
+import { FiltersBottomSheet } from '@/components/providers/FiltersBottomSheet';
+import { ProviderCard } from '@/components/providers/ProviderCard';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { Colors } from '@/constants/Colors';
+import { Config } from '@/constants/Config';
+import { Layout } from '@/constants/Layout';
+import { useCategories } from '@/hooks/useCategories';
+import { useSearchProviders } from '@/hooks/useProviders';
+import { debounce } from '@/lib/utils';
+import { useSearchStore } from '@/stores/searchStore';
+import { ProviderFilters, ProviderListItem } from '@/types';
+import BottomSheet from '@gorhom/bottom-sheet';
 import { useLocalSearchParams } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import {
+  Grid,
+  List,
   Search as SearchIcon,
   SlidersHorizontal,
   X,
-  Grid,
-  List,
 } from 'lucide-react-native';
-import BottomSheet from '@gorhom/bottom-sheet';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { Colors } from '@/constants/Colors';
-import { Layout } from '@/constants/Layout';
-import { Config } from '@/constants/Config';
-import { useSearchProviders } from '@/hooks/useProviders';
-import { useCategories } from '@/hooks/useCategories';
-import { useSearchStore } from '@/stores/searchStore';
-import { ProviderCard } from '@/components/providers/ProviderCard';
-import { FiltersBottomSheet } from '@/components/providers/FiltersBottomSheet';
-import { CategoryPill } from '@/components/common/CategoryPill';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { EmptyState } from '@/components/common/EmptyState';
-import { ProviderFilters, ProviderListItem } from '@/types';
-import { debounce } from '@/lib/utils';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SearchScreen() {
   const params = useLocalSearchParams<{ category?: string }>();
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: Layout.spacing.lg,
-    paddingBottom: Layout.spacing.xxl,
+    paddingBottom: 120,
     flexGrow: 1,
   },
   gridRow: {

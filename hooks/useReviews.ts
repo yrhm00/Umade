@@ -2,22 +2,22 @@
  * Hook pour gérer les avis (reviews)
  */
 
-import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-  useInfiniteQuery,
-} from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from './useAuth';
 import { Config } from '@/constants/Config';
+import { supabase } from '@/lib/supabase';
 import {
-  Review,
-  ReviewWithDetails,
   CreateReviewInput,
+  Review,
   ReviewStats,
+  ReviewWithDetails,
   ReviewableBooking,
 } from '@/types';
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
+import { useAuth } from './useAuth';
 
 const REVIEWS_PER_PAGE = 10;
 
@@ -93,6 +93,7 @@ async function fetchUserReviews(userId: string): Promise<ReviewWithDetails[]> {
     .select(
       `
       *,
+      client:profiles!reviews_client_id_fkey(id, full_name, avatar_url),
       booking:bookings(
         id,
         booking_date,

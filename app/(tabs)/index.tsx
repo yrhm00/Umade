@@ -1,26 +1,25 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  FlatList,
-  TouchableOpacity,
-  RefreshControl,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Bell, Search, ChevronRight } from 'lucide-react-native';
+import { CategoryPill } from '@/components/common/CategoryPill';
+import { ProviderCard } from '@/components/providers/ProviderCard';
+import { Avatar } from '@/components/ui/Avatar';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
 import { useAuth } from '@/hooks/useAuth';
 import { useCategories } from '@/hooks/useCategories';
 import { useTopProviders } from '@/hooks/useProviders';
-import { Avatar } from '@/components/ui/Avatar';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { CategoryPill } from '@/components/common/CategoryPill';
-import { ProviderCard } from '@/components/providers/ProviderCard';
-import { EmptyState } from '@/components/common/EmptyState';
+import { useRouter } from 'expo-router';
+import { Bell, ChevronRight, Search } from 'lucide-react-native';
+import React, { useState } from 'react';
+import {
+  FlatList,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -90,14 +89,19 @@ export default function HomeScreen() {
             <Text style={styles.userName}>{firstName}</Text>
           </View>
           <View style={styles.headerRight}>
-            <TouchableOpacity style={styles.iconButton}>
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={() => router.push('/notifications/index')}
+            >
               <Bell size={24} color={Colors.text.primary} />
             </TouchableOpacity>
-            <Avatar
-              source={profile?.avatar_url}
-              name={profile?.full_name || '?'}
-              size="md"
-            />
+            <TouchableOpacity onPress={() => router.push('/(tabs)/profile')}>
+              <Avatar
+                source={profile?.avatar_url}
+                name={profile?.full_name || '?'}
+                size="md"
+              />
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -211,7 +215,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: Layout.spacing.xxl,
+    paddingBottom: 120,
   },
 
   // Header

@@ -2,11 +2,10 @@
  * Hook pour gérer les favoris
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase, Favorite } from '@/lib/supabase';
 import { Config } from '@/constants/Config';
+import { Favorite, supabase } from '@/lib/supabase';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from './useAuth';
-import { ProviderListItem } from '@/types';
 
 interface FavoriteWithProvider extends Favorite {
   providers?: {
@@ -76,7 +75,8 @@ export function useFavorites() {
             review_count,
             city,
             profiles:user_id (avatar_url),
-            categories (id, name, icon, slug)
+            categories (id, name, icon, slug),
+            portfolio_images (image_url)
           )
         `)
         .eq('user_id', userId)

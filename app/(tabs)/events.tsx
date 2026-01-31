@@ -1,24 +1,24 @@
-import React, { useState, useMemo } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  RefreshControl,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Plus } from 'lucide-react-native';
+import { BookingCard } from '@/components/booking/BookingCard';
+import { EmptyState } from '@/components/common/EmptyState';
+import { EventCard } from '@/components/events/EventCard';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
-import { useUserEvents } from '@/hooks/useEvents';
 import { useBookings } from '@/hooks/useBookings';
-import { EventCard } from '@/components/events/EventCard';
-import { BookingCard } from '@/components/booking/BookingCard';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { EmptyState } from '@/components/common/EmptyState';
+import { useUserEvents } from '@/hooks/useEvents';
 import { EventWithBookings } from '@/types';
+import { useRouter } from 'expo-router';
+import { Plus } from 'lucide-react-native';
+import React, { useMemo, useState } from 'react';
+import {
+  FlatList,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type TabType = 'events' | 'bookings';
 type FilterType = 'upcoming' | 'past';
@@ -312,6 +312,6 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingHorizontal: Layout.spacing.lg,
-    paddingBottom: Layout.spacing.xl,
+    paddingBottom: 120,
   },
 });

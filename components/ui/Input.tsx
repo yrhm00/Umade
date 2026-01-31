@@ -3,14 +3,13 @@ import { Layout } from '@/constants/Layout';
 import { Eye, EyeOff } from 'lucide-react-native';
 import React, { useCallback, useRef, useState } from 'react';
 import {
-    InteractionManager,
-    StyleSheet,
-    Text,
-    TextInput,
-    TextInputProps,
-    TouchableOpacity,
-    View,
-    ViewStyle,
+  StyleSheet,
+  Text,
+  TextInput,
+  TextInputProps,
+  TouchableOpacity,
+  View,
+  ViewStyle
 } from 'react-native';
 
 interface InputProps extends TextInputProps {
@@ -68,6 +67,13 @@ export const Input = React.memo(function Input({
     styles.inputContainer,
     isFocused && styles.inputContainerFocused,
     error && styles.inputContainerError,
+    // Fix for multiline inputs (textarea)
+    props.multiline && {
+      height: undefined,
+      minHeight: Layout.inputHeight,
+      alignItems: 'flex-start' as const,
+      paddingVertical: Layout.spacing.sm
+    }
   ];
 
   return (
@@ -75,13 +81,18 @@ export const Input = React.memo(function Input({
       {label && <Text style={styles.label}>{label}</Text>}
 
       <View style={inputContainerStyles}>
-        {leftIcon && <View style={styles.iconLeft}>{leftIcon}</View>}
+        {leftIcon && (
+          <View style={[styles.iconLeft, props.multiline && { paddingTop: Layout.spacing.xs }]}>
+            {leftIcon}
+          </View>
+        )}
 
         <TextInput
           style={[
             styles.input,
             leftIcon ? styles.inputWithLeftIcon : undefined,
             (rightIcon || isPassword) ? styles.inputWithRightIcon : undefined,
+            props.multiline && { height: undefined, textAlignVertical: 'top' }, // Reset height: 100% for auto-grow
             style,
           ]}
           placeholderTextColor={Colors.gray[400]}
@@ -105,7 +116,9 @@ export const Input = React.memo(function Input({
         )}
 
         {rightIcon && !isPassword && (
-          <View style={styles.iconRight}>{rightIcon}</View>
+          <View style={[styles.iconRight, props.multiline && { paddingTop: Layout.spacing.xs }]}>
+            {rightIcon}
+          </View>
         )}
       </View>
 

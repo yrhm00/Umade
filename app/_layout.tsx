@@ -4,10 +4,12 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { RealtimeProvider } from '@/components/providers/RealtimeProvider';
+import { TopEdgeGradient } from '@/components/ui/TopEdgeGradient';
 import { queryClient } from '@/lib/queryClient';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -64,24 +66,29 @@ export default function RootLayout() {
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
-          <StatusBar style="auto" />
-          <Stack screenOptions={stackScreenOptions}>
-            <Stack.Screen name="(auth)" />
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="onboarding" />
-            <Stack.Screen name="provider/[id]" options={providerScreenOptions} />
-            <Stack.Screen name="event/create" />
-            <Stack.Screen name="event/[id]" />
-            <Stack.Screen name="booking/[providerId]" />
-            <Stack.Screen name="booking/[id]/details" />
-            <Stack.Screen name="chat/[conversationId]" options={chatScreenOptions} />
-            <Stack.Screen name="chat/new" options={{ headerShown: false }} />
-            <Stack.Screen name="reviews/write/[bookingId]" />
-            <Stack.Screen name="reviews/provider/[providerId]" />
-            <Stack.Screen name="reviews/user" />
-            <Stack.Screen name="notifications/index" />
-            <Stack.Screen name="settings/notifications" />
-          </Stack>
+          <RealtimeProvider>
+            <StatusBar style="auto" />
+            <View style={{ flex: 1 }}>
+              <Stack screenOptions={stackScreenOptions}>
+                <Stack.Screen name="(auth)" />
+                <Stack.Screen name="(tabs)" />
+                <Stack.Screen name="onboarding" />
+                <Stack.Screen name="provider/[id]" options={providerScreenOptions} />
+                <Stack.Screen name="event/create" />
+                <Stack.Screen name="event/[id]" />
+                <Stack.Screen name="booking/[providerId]" />
+                <Stack.Screen name="booking/[id]/details" />
+                <Stack.Screen name="chat/[conversationId]" options={chatScreenOptions} />
+                <Stack.Screen name="chat/new" options={{ headerShown: false }} />
+                <Stack.Screen name="reviews/write/[bookingId]" />
+                <Stack.Screen name="reviews/provider/[providerId]" />
+                <Stack.Screen name="reviews/user" />
+                <Stack.Screen name="notifications/index" />
+                <Stack.Screen name="settings/notifications" />
+              </Stack>
+              <TopEdgeGradient />
+            </View>
+          </RealtimeProvider>
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

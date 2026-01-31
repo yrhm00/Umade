@@ -1,31 +1,33 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import {
-  User,
-  Heart,
-  Settings,
-  HelpCircle,
-  FileText,
-  LogOut,
-  ChevronRight,
-  Star,
-  Bell,
-} from 'lucide-react-native';
+import { Avatar } from '@/components/ui/Avatar';
+import { Badge } from '@/components/ui/Badge';
+import { Card } from '@/components/ui/Card';
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
 import { useAuth } from '@/hooks/useAuth';
-import { Avatar } from '@/components/ui/Avatar';
-import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
+import { useClientStats } from '@/hooks/useClientStats';
+import { useRouter } from 'expo-router';
+import {
+  Bell,
+  ChevronRight,
+  FileText,
+  Heart,
+  HelpCircle,
+  LogOut,
+  Settings,
+  Star,
+  User,
+} from 'lucide-react-native';
+import React from 'react';
+import {
+  Alert,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface MenuItemProps {
   icon: React.ReactNode;
@@ -67,7 +69,8 @@ function MenuItem({ icon, label, onPress, badge, destructive }: MenuItemProps) {
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { profile, signOut, isLoading } = useAuth();
+  const { profile, signOut, isLoading: authLoading } = useAuth();
+  const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useClientStats();
 
   const handleSignOut = () => {
     Alert.alert(
@@ -91,6 +94,13 @@ export default function ProfileScreen() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={statsLoading}
+            onRefresh={refetchStats}
+            tintColor={Colors.primary.DEFAULT}
+          />
+        }
       >
         {/* Header */}
         <View style={styles.header}>
@@ -119,7 +129,10 @@ export default function ProfileScreen() {
               />
             </View>
           </View>
-          <TouchableOpacity style={styles.editButton}>
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={() => router.push('/profile/edit')}
+          >
             <Text style={styles.editButtonText}>Modifier le profil</Text>
           </TouchableOpacity>
         </Card>
@@ -128,17 +141,17 @@ export default function ProfileScreen() {
         {profile?.role === 'client' && (
           <View style={styles.statsContainer}>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>12</Text>
+              <Text style={styles.statValue}>{stats?.bookingsCount || 0}</Text>
               <Text style={styles.statLabel}>Réservations</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>5</Text>
+              <Text style={styles.statValue}>{stats?.favoritesCount || 0}</Text>
               <Text style={styles.statLabel}>Favoris</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>8</Text>
+              <Text style={styles.statValue}>{stats?.reviewsCount || 0}</Text>
               <Text style={styles.statLabel}>Avis</Text>
             </View>
           </View>
@@ -151,13 +164,13 @@ export default function ProfileScreen() {
             <MenuItem
               icon={<User size={20} color={Colors.primary.DEFAULT} />}
               label="Informations personnelles"
-              onPress={() => {}}
+              onPress={() => router.push('/profile/edit')}
             />
             <View style={styles.menuDivider} />
             <MenuItem
               icon={<Heart size={20} color={Colors.primary.DEFAULT} />}
               label="Mes favoris"
-              onPress={() => {}}
+              onPress={() => router.push('/favorites')}
             />
             <View style={styles.menuDivider} />
             <MenuItem
@@ -186,13 +199,13 @@ export default function ProfileScreen() {
             <MenuItem
               icon={<HelpCircle size={20} color={Colors.primary.DEFAULT} />}
               label="Aide & Support"
-              onPress={() => {}}
+              onPress={() => router.push('/help')}
             />
             <View style={styles.menuDivider} />
             <MenuItem
               icon={<FileText size={20} color={Colors.primary.DEFAULT} />}
               label="Conditions d'utilisation"
-              onPress={() => {}}
+              onPress={() => router.push('/legal/terms')}
             />
           </Card>
         </View>
@@ -221,7 +234,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background.secondary,
   },
   scrollContent: {
-    paddingBottom: Layout.spacing.xl,
+    paddingBottom: 120, // Increased to account for Floating Tab Bar
   },
   header: {
     paddingHorizontal: Layout.spacing.lg,

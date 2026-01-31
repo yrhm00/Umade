@@ -1,29 +1,46 @@
-import React, { useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList } from 'react-native';
-import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { EmptyState } from '@/components/common/EmptyState';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
-import { useConversations } from '@/hooks/useConversations';
+import { useConversations, useHideConversation, usePinConversation } from '@/hooks/useConversations';
 import { useRealtimeConversations } from '@/hooks/useRealtimeMessages';
-import { ConversationCard } from '@/components/chat/ConversationCard';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { EmptyState } from '@/components/common/EmptyState';
 import { ConversationWithDetails } from '@/types';
+import { useRouter } from 'expo-router';
+import React, { useCallback } from 'react';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { SwipeableConversationItem } from '@/components/chat/SwipeableConversationItem';
 
 export default function MessagesScreen() {
   const router = useRouter();
   const { data: conversations, isLoading, refetch, isRefetching } =
     useConversations();
 
+  const { mutate: pinConversation } = usePinConversation();
+  const { mutate: hideConversation } = useHideConversation();
+
   // Real-time subscription for new messages across all conversations
   useRealtimeConversations();
 
+  const handlePin = useCallback((id: string, currentPinnedState: boolean) => {
+    pinConversation({ conversationId: id, isPinned: !currentPinnedState });
+  }, [pinConversation]);
+
+  const handleHide = useCallback((id: string) => {
+    hideConversation(id);
+  }, [hideConversation]);
+
   const renderItem = useCallback(
     ({ item }: { item: ConversationWithDetails }) => (
-      <ConversationCard conversation={item} />
+      <SwipeableConversationItem
+        conversation={item}
+        isPinned={(item as any).isPinned}
+        onPin={handlePin}
+        onHide={handleHide}
+      />
     ),
-    []
+    [handlePin, handleHide]
   );
 
   const keyExtractor = useCallback(
@@ -85,7 +102,8 @@ const styles = StyleSheet.create({
     color: Colors.text.primary,
   },
   list: {
-    paddingVertical: Layout.spacing.sm,
+    paddingTop: Layout.spacing.sm,
+    paddingBottom: 120,
   },
   separator: {
     height: 1,

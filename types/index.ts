@@ -141,6 +141,10 @@ export interface BookingWithDetails {
     title: string;
     event_date: string;
   };
+  profiles?: {
+    full_name: string | null;
+    avatar_url: string | null;
+  };
 }
 
 export interface CreateBookingInput {
