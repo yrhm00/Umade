@@ -1,11 +1,11 @@
-import React from 'react';
-import { StyleSheet, Alert } from 'react-native';
-import { useRouter, Stack } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { WizardEventForm } from '@/components/events/WizardEventForm';
 import { Colors } from '@/constants/Colors';
 import { useCreateEvent } from '@/hooks/useEvents';
-import { EventForm } from '@/components/events/EventForm';
 import { CreateEventInput } from '@/types';
+import { Stack, useRouter } from 'expo-router';
+import React from 'react';
+import { Alert, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function CreateEventScreen() {
   const router = useRouter();
@@ -33,10 +33,11 @@ export default function CreateEventScreen() {
           headerTitle: 'Nouvel événement',
           headerTintColor: Colors.text.primary,
           headerStyle: { backgroundColor: Colors.background.secondary },
+          headerShadowVisible: false, // Cleaner look for wizard
         }}
       />
       <SafeAreaView style={styles.container} edges={['bottom']}>
-        <EventForm onSubmit={handleSubmit} isLoading={isPending} />
+        <WizardEventForm onSubmit={handleSubmit} isLoading={isPending} />
       </SafeAreaView>
     </>
   );

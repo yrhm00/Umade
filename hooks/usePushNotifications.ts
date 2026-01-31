@@ -7,12 +7,12 @@
  * Sans ces dépendances, les fonctions sont des no-ops.
  */
 
-import { useEffect, useRef, useCallback, useState } from 'react';
-import { Platform } from 'react-native';
-import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
-import { useAuth } from './useAuth';
 import { useNotificationStore } from '@/stores/notificationStore';
+import { useRouter } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Platform } from 'react-native';
+import { useAuth } from './useAuth';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyModule = any;
@@ -93,21 +93,33 @@ export function usePushNotifications() {
 
       // Obtenir le token
       const projectId = Constants?.expoConfig?.extra?.eas?.projectId;
-      const token = await Notifications.getExpoPushTokenAsync({
-        projectId,
-      });
 
-      // Configuration Android
-      if (Platform.OS === 'android' && Notifications.setNotificationChannelAsync) {
-        Notifications.setNotificationChannelAsync('default', {
-          name: 'default',
-          importance: Notifications.AndroidImportance?.MAX ?? 4,
-          vibrationPattern: [0, 250, 250, 250],
-          lightColor: '#5E4074',
-        });
+      // Si pas de projectId, on ne peut pas obtenir le token (Expo Go ou dev build sans EAS)
+      if (!projectId) {
+        console.log('Push notifications: No projectId configured. Skipping token registration.');
+        return null;
       }
 
-      return token.data;
+      try {
+        const token = await Notifications.getExpoPushTokenAsync({
+          projectId,
+        });
+
+        // Configuration Android
+        if (Platform.OS === 'android' && Notifications.setNotificationChannelAsync) {
+          Notifications.setNotificationChannelAsync('default', {
+            name: 'default',
+            importance: Notifications.AndroidImportance?.MAX ?? 4,
+            vibrationPattern: [0, 250, 250, 250],
+            lightColor: '#5E4074',
+          });
+        }
+
+        return token.data;
+      } catch (error) {
+        console.log('Push notifications: Failed to get token:', error);
+        return null;
+      }
     }, []);
 
   // Sauvegarder le token en BDD (utilise profiles.push_token)

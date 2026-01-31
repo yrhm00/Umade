@@ -1,30 +1,30 @@
-import React, { useState, useMemo } from 'react';
+import { BookingConfirmation } from '@/components/booking/BookingConfirmation';
+import { DateTimePicker } from '@/components/booking/DateTimePicker';
+import { ServiceSelector } from '@/components/booking/ServiceSelector';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { Colors } from '@/constants/Colors';
+import { Layout } from '@/constants/Layout';
+import { useProviderAvailability } from '@/hooks/useAvailability';
+import { useCreateBooking } from '@/hooks/useBookings';
+import { useUserEvents } from '@/hooks/useEvents';
+import { useProviderDetail } from '@/hooks/useProviders';
+import { Service } from '@/types';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { ArrowLeft, ArrowRight, Check } from 'lucide-react-native';
+import React, { useMemo, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
   Alert,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, ArrowRight, Check } from 'lucide-react-native';
-import { Colors } from '@/constants/Colors';
-import { Layout } from '@/constants/Layout';
-import { useProviderDetail } from '@/hooks/useProviders';
-import { useUserEvents } from '@/hooks/useEvents';
-import { useProviderAvailability } from '@/hooks/useAvailability';
-import { useCreateBooking } from '@/hooks/useBookings';
-import { ServiceSelector } from '@/components/booking/ServiceSelector';
-import { DateTimePicker } from '@/components/booking/DateTimePicker';
-import { BookingConfirmation } from '@/components/booking/BookingConfirmation';
-import { Input } from '@/components/ui/Input';
-import { Button } from '@/components/ui/Button';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { Service, Event } from '@/types';
 
 type BookingStep = 'service' | 'datetime' | 'event' | 'notes' | 'confirm';
 
@@ -54,7 +54,6 @@ export default function BookingFlowScreen() {
   // Form state
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [clientMessage, setClientMessage] = useState('');
 
@@ -80,7 +79,7 @@ export default function BookingFlowScreen() {
       case 'service':
         return !!selectedService;
       case 'datetime':
-        return !!selectedDate && !!selectedSlot;
+        return !!selectedDate; // Removed selectedSlot check
       case 'event':
         return true; // optional
       case 'notes':
@@ -109,7 +108,7 @@ export default function BookingFlowScreen() {
   };
 
   const handleConfirm = () => {
-    if (!selectedService || !selectedDate || !selectedSlot || !providerId) return;
+    if (!selectedService || !selectedDate || !providerId) return;
 
     createBooking(
       {
@@ -117,7 +116,7 @@ export default function BookingFlowScreen() {
         service_id: selectedService.id,
         event_id: selectedEventId || undefined,
         booking_date: selectedDate,
-        start_time: selectedSlot,
+        // start_time is optional now
         total_price: selectedService.price,
         client_message: clientMessage.trim() || undefined,
       } as any,
@@ -224,10 +223,7 @@ export default function BookingFlowScreen() {
                 selectedDate={selectedDate}
                 onSelectDate={(date) => {
                   setSelectedDate(date);
-                  setSelectedSlot(null);
                 }}
-                selectedSlot={selectedSlot}
-                onSelectSlot={setSelectedSlot}
               />
             )}
 
@@ -266,7 +262,7 @@ export default function BookingFlowScreen() {
                           style={[
                             styles.eventOption,
                             selectedEventId === event.id &&
-                              styles.eventOptionSelected,
+                            styles.eventOptionSelected,
                           ]}
                           onPress={() => setSelectedEventId(event.id)}
                         >
@@ -274,7 +270,7 @@ export default function BookingFlowScreen() {
                             style={[
                               styles.eventOptionText,
                               selectedEventId === event.id &&
-                                styles.eventOptionTextSelected,
+                              styles.eventOptionTextSelected,
                             ]}
                           >
                             {event.title}
@@ -315,7 +311,7 @@ export default function BookingFlowScreen() {
                 providerName={provider.business_name}
                 service={selectedService}
                 date={selectedDate}
-                time={selectedSlot}
+                time={null}
                 eventTitle={selectedEvent?.title}
                 notes={clientMessage || undefined}
               />

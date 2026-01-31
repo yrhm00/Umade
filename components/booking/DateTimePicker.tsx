@@ -1,9 +1,14 @@
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { ChevronLeft, ChevronRight } from 'lucide-react-native';
-import { DayAvailability } from '@/types';
 import { Colors } from '@/constants/Colors';
-import { Layout } from '@/constants/Layout';
+import { DayAvailability } from '@/types';
+import { ChevronLeft, ChevronRight } from 'lucide-react-native';
+import React, { useMemo } from 'react';
+import {
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
 
 interface DateTimePickerProps {
   year: number;
@@ -12,11 +17,10 @@ interface DateTimePickerProps {
   availabilityMap: Map<string, DayAvailability>;
   selectedDate: string | null;
   onSelectDate: (date: string) => void;
-  selectedSlot: string | null;
-  onSelectSlot: (slot: string) => void;
 }
 
-const DAYS_OF_WEEK = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+// iOS style abbreviated days
+const DAYS_OF_WEEK = ['LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM', 'DIM'];
 
 const MONTH_NAMES = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -30,8 +34,6 @@ export function DateTimePicker({
   availabilityMap,
   selectedDate,
   onSelectDate,
-  selectedSlot,
-  onSelectSlot,
 }: DateTimePickerProps) {
   const today = new Date();
   const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -55,6 +57,22 @@ export function DateTimePicker({
 
     return days;
   }, [year, month]);
+
+  // Split days into weeks for better grid layout
+  const weeks = useMemo(() => {
+    const result: (number | null)[][] = [];
+    for (let i = 0; i < calendarDays.length; i += 7) {
+      result.push(calendarDays.slice(i, i + 7));
+    }
+    // Ensure last week has 7 days
+    if (result.length > 0) {
+      const lastWeek = result[result.length - 1];
+      while (lastWeek.length < 7) {
+        lastWeek.push(null);
+      }
+    }
+    return result;
+  }, [calendarDays]);
 
   const handlePrevMonth = () => {
     if (month === 1) {
@@ -81,114 +99,108 @@ export function DateTimePicker({
 
   return (
     <View style={styles.container}>
-      {/* Month navigation */}
-      <View style={styles.monthHeader}>
-        <TouchableOpacity
-          onPress={handlePrevMonth}
-          disabled={!canGoPrev}
-          style={[styles.navButton, !canGoPrev && styles.navButtonDisabled]}
-        >
-          <ChevronLeft size={24} color={canGoPrev ? Colors.text.primary : Colors.gray[300]} />
-        </TouchableOpacity>
-        <Text style={styles.monthTitle}>
-          {MONTH_NAMES[month - 1]} {year}
-        </Text>
-        <TouchableOpacity onPress={handleNextMonth} style={styles.navButton}>
-          <ChevronRight size={24} color={Colors.text.primary} />
-        </TouchableOpacity>
-      </View>
+      {/* iOS-style calendar card */}
+      <View style={styles.calendarCard}>
+        {/* Month navigation - iOS style */}
+        <View style={styles.monthHeader}>
+          <TouchableOpacity
+            onPress={handlePrevMonth}
+            disabled={!canGoPrev}
+            style={styles.navButton}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <ChevronLeft
+              size={22}
+              color={canGoPrev ? Colors.text.secondary : Colors.gray[200]}
+              strokeWidth={2.5}
+            />
+          </TouchableOpacity>
 
-      {/* Day of week headers */}
-      <View style={styles.weekRow}>
-        {DAYS_OF_WEEK.map((day) => (
-          <View key={day} style={styles.weekDayCell}>
-            <Text style={styles.weekDayText}>{day}</Text>
-          </View>
-        ))}
-      </View>
+          <Text style={styles.monthTitle}>
+            {MONTH_NAMES[month - 1]} {year}
+          </Text>
 
-      {/* Calendar grid */}
-      <View style={styles.calendarGrid}>
-        {calendarDays.map((day, index) => {
-          if (day === null) {
-            return <View key={`empty-${index}`} style={styles.dayCell} />;
-          }
+          <TouchableOpacity
+            onPress={handleNextMonth}
+            style={styles.navButton}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <ChevronRight
+              size={22}
+              color={Colors.text.secondary}
+              strokeWidth={2.5}
+            />
+          </TouchableOpacity>
+        </View>
 
-          const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-          const isPast = dateStr < todayStr;
-          const isToday = dateStr === todayStr;
-          const isSelected = dateStr === selectedDate;
-          const availability = availabilityMap.get(dateStr);
-          const hasSlots = !!availability && availability.slots.length > 0;
-          const isDisabled = isPast || !hasSlots;
+        {/* Day of week headers - iOS style */}
+        <View style={styles.weekRow}>
+          {DAYS_OF_WEEK.map((day) => (
+            <View key={day} style={styles.weekDayCell}>
+              <Text style={styles.weekDayText}>{day}</Text>
+            </View>
+          ))}
+        </View>
 
-          return (
-            <TouchableOpacity
-              key={dateStr}
-              style={[
-                styles.dayCell,
-                isToday && styles.dayCellToday,
-                isSelected && styles.dayCellSelected,
-                isDisabled && styles.dayCellDisabled,
-              ]}
-              onPress={() => !isDisabled && onSelectDate(dateStr)}
-              disabled={isDisabled}
-            >
-              <Text
-                style={[
-                  styles.dayText,
-                  isToday && styles.dayTextToday,
-                  isSelected && styles.dayTextSelected,
-                  isDisabled && styles.dayTextDisabled,
-                  hasSlots && !isDisabled && styles.dayTextAvailable,
-                ]}
-              >
-                {day}
-              </Text>
-              {hasSlots && !isDisabled && !isSelected && (
-                <View style={styles.availableDot} />
-              )}
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+        {/* Calendar grid - iOS style rows */}
+        <View style={styles.calendarGrid}>
+          {weeks.map((week, weekIndex) => (
+            <View key={weekIndex} style={styles.weekGridRow}>
+              {week.map((day, dayIndex) => {
+                if (day === null) {
+                  return <View key={`empty-${weekIndex}-${dayIndex}`} style={styles.dayCell} />;
+                }
 
-      {/* Time slots */}
-      {selectedDate && (
-        <View style={styles.slotsSection}>
-          <Text style={styles.slotsTitle}>Créneaux disponibles</Text>
-          {selectedDayAvailability && selectedDayAvailability.slots.length > 0 ? (
-            <View style={styles.slotsGrid}>
-              {selectedDayAvailability.slots.map((slot) => {
-                const slotKey = slot.start_time;
-                const isSlotSelected = slotKey === selectedSlot;
+                const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const isPast = dateStr < todayStr;
+                const isToday = dateStr === todayStr;
+                const isSelected = dateStr === selectedDate;
+                const availability = availabilityMap.get(dateStr);
+                const hasSlots = !!availability && availability.slots.length > 0;
+                const isDisabled = isPast || !hasSlots;
 
                 return (
                   <TouchableOpacity
-                    key={slotKey}
-                    style={[
-                      styles.slotChip,
-                      isSlotSelected && styles.slotChipSelected,
-                    ]}
-                    onPress={() => onSelectSlot(slotKey)}
+                    key={dateStr}
+                    style={styles.dayCell}
+                    onPress={() => !isDisabled && onSelectDate(dateStr)}
+                    disabled={isDisabled}
+                    activeOpacity={0.6}
                   >
-                    <Text
-                      style={[
-                        styles.slotText,
-                        isSlotSelected && styles.slotTextSelected,
-                      ]}
-                    >
-                      {slot.start_time.slice(0, 5)}
-                    </Text>
+                    <View style={[
+                      styles.dayInner,
+                      isSelected && styles.dayInnerSelected,
+                      isToday && !isSelected && styles.dayInnerToday,
+                    ]}>
+                      <Text
+                        style={[
+                          styles.dayText,
+                          isToday && !isSelected && styles.dayTextToday,
+                          isSelected && styles.dayTextSelected,
+                          isDisabled && styles.dayTextDisabled,
+                        ]}
+                      >
+                        {day}
+                      </Text>
+                    </View>
+                    {/* Availability indicator dot */}
+                    {hasSlots && !isDisabled && !isSelected && (
+                      <View style={styles.availableDot} />
+                    )}
                   </TouchableOpacity>
                 );
               })}
             </View>
-          ) : (
-            <Text style={styles.noSlotsText}>
-              Aucun créneau disponible pour cette date
-            </Text>
-          )}
+          ))}
+        </View>
+      </View>
+
+      {/* Time slots removed - Day based only */}
+      {selectedDate && !availabilityMap.get(selectedDate)?.isAvailable && (
+        <View style={styles.noSlotsContainer}>
+          <Text style={styles.noSlotsText}>
+            Ce jour n'est pas disponible
+          </Text>
         </View>
       )}
     </View>
@@ -197,133 +209,127 @@ export function DateTimePicker({
 
 const styles = StyleSheet.create({
   container: {
+    marginTop: 8,
+  },
+  calendarCard: {
     backgroundColor: Colors.white,
-    borderRadius: Layout.radius.lg,
-    padding: Layout.spacing.md,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingTop: 16,
+    paddingBottom: 12,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   monthHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: Layout.spacing.md,
+    marginBottom: 20,
+    paddingHorizontal: 4,
   },
   navButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  navButtonDisabled: {
-    opacity: 0.3,
+    borderRadius: 18,
   },
   monthTitle: {
-    fontSize: Layout.fontSize.lg,
+    fontSize: 17,
     fontWeight: '600',
     color: Colors.text.primary,
+    letterSpacing: -0.3,
+    fontFamily: Platform.OS === 'ios' ? 'SF Pro Display' : undefined,
   },
   weekRow: {
     flexDirection: 'row',
-    marginBottom: Layout.spacing.xs,
+    marginBottom: 8,
+    paddingHorizontal: 2,
   },
   weekDayCell: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: Layout.spacing.xs,
+    paddingVertical: 4,
   },
   weekDayText: {
-    fontSize: Layout.fontSize.xs,
+    fontSize: 11,
     fontWeight: '600',
-    color: Colors.text.tertiary,
+    color: Colors.gray[400],
+    letterSpacing: 0.5,
+    fontFamily: Platform.OS === 'ios' ? 'SF Pro Text' : undefined,
   },
   calendarGrid: {
+    paddingHorizontal: 2,
+  },
+  weekGridRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    marginBottom: 2,
   },
   dayCell: {
-    width: '14.28%',
+    flex: 1,
     aspectRatio: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: Layout.radius.sm,
+    position: 'relative',
   },
-  dayCellToday: {
-    borderWidth: 1,
-    borderColor: Colors.primary[200],
+  dayInner: {
+    width: 36,
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 18,
   },
-  dayCellSelected: {
+  dayInnerSelected: {
     backgroundColor: Colors.primary.DEFAULT,
   },
-  dayCellDisabled: {
-    opacity: 0.3,
+  dayInnerToday: {
+    backgroundColor: Colors.gray[100],
   },
   dayText: {
-    fontSize: Layout.fontSize.sm,
+    fontSize: 17,
+    fontWeight: '400',
     color: Colors.text.primary,
+    fontFamily: Platform.OS === 'ios' ? 'SF Pro Display' : undefined,
   },
   dayTextToday: {
-    fontWeight: '700',
+    fontWeight: '600',
     color: Colors.primary.DEFAULT,
   },
   dayTextSelected: {
     color: Colors.white,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   dayTextDisabled: {
-    color: Colors.gray[400],
-  },
-  dayTextAvailable: {
-    fontWeight: '600',
+    color: Colors.gray[300],
   },
   availableDot: {
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: Colors.success.DEFAULT,
+    backgroundColor: Colors.primary.light,
     position: 'absolute',
-    bottom: 6,
+    bottom: 4,
   },
-  slotsSection: {
-    marginTop: Layout.spacing.lg,
-    paddingTop: Layout.spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: Colors.gray[100],
-  },
-  slotsTitle: {
-    fontSize: Layout.fontSize.md,
-    fontWeight: '600',
-    color: Colors.text.primary,
-    marginBottom: Layout.spacing.md,
-  },
-  slotsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Layout.spacing.sm,
-  },
-  slotChip: {
-    paddingHorizontal: Layout.spacing.md,
-    paddingVertical: Layout.spacing.sm,
-    borderRadius: Layout.radius.md,
-    borderWidth: 1.5,
-    borderColor: Colors.gray[200],
-    backgroundColor: Colors.white,
-  },
-  slotChipSelected: {
-    borderColor: Colors.primary.DEFAULT,
-    backgroundColor: Colors.primary[50],
-  },
-  slotText: {
-    fontSize: Layout.fontSize.sm,
-    fontWeight: '500',
-    color: Colors.text.secondary,
-  },
-  slotTextSelected: {
-    color: Colors.primary.DEFAULT,
+  noSlotsContainer: {
+    marginTop: 20,
+    backgroundColor: Colors.gray[50],
+    borderRadius: 12,
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+    alignItems: 'center',
   },
   noSlotsText: {
-    fontSize: Layout.fontSize.sm,
+    fontSize: 14,
     color: Colors.text.tertiary,
-    textAlign: 'center',
-    paddingVertical: Layout.spacing.lg,
+    fontFamily: Platform.OS === 'ios' ? 'SF Pro Text' : undefined,
   },
 });

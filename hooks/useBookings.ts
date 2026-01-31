@@ -2,9 +2,9 @@
  * Hook pour gérer les réservations
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase, Booking, InsertTables, BookingStatus } from '@/lib/supabase';
 import { Config } from '@/constants/Config';
+import { Booking, BookingStatus, InsertTables, supabase } from '@/lib/supabase';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from './useAuth';
 
 interface BookingWithDetails extends Booking {
@@ -20,6 +20,10 @@ interface BookingWithDetails extends Booking {
     id: string;
     name: string;
     price: number;
+  };
+  profiles?: {
+    full_name: string | null;
+    avatar_url: string | null;
   };
 }
 
@@ -58,11 +62,14 @@ export function useBookings(status?: BookingStatus) {
   });
 }
 
-export function useProviderBookings(status?: BookingStatus) {
+export type BookingFilter = BookingStatus | 'upcoming';
+
+export function useProviderBookings(filter?: BookingFilter) {
   const { profile } = useAuth();
+  const today = new Date().toISOString().split('T')[0];
 
   return useQuery({
-    queryKey: [Config.cacheKeys.bookings, 'provider', profile?.id, status],
+    queryKey: [Config.cacheKeys.bookings, 'provider', profile?.id, filter],
     queryFn: async (): Promise<BookingWithDetails[]> => {
       if (!profile?.id) return [];
 
@@ -82,14 +89,63 @@ export function useProviderBookings(status?: BookingStatus) {
           profiles:client_id (full_name, avatar_url),
           services (id, name, price)
         `)
-        .eq('provider_id', providerData.id)
-        .order('booking_date', { ascending: true });
+        .eq('provider_id', providerData.id);
 
-      if (status) {
-        query = query.eq('status', status);
+      if (filter === 'upcoming') {
+        query = query
+          .gte('booking_date', today)
+          .in('status', ['confirmed', 'pending'])
+          .order('booking_date', { ascending: true })
+          .order('start_time', { ascending: true });
+      } else {
+        if (filter) {
+          query = query.eq('status', filter);
+        }
+        // Default order for history/all
+        query = query
+          .order('booking_date', { ascending: false })
+          .order('start_time', { ascending: false });
       }
 
       const { data, error } = await query;
+
+      if (error) throw error;
+      return (data || []) as BookingWithDetails[];
+    },
+    enabled: !!profile?.id,
+  });
+}
+
+export function useUpcomingProviderBookings(limit = 3) {
+  const { profile } = useAuth();
+  const today = new Date().toISOString().split('T')[0];
+
+  return useQuery({
+    queryKey: [Config.cacheKeys.bookings, 'provider', 'upcoming', profile?.id],
+    queryFn: async (): Promise<BookingWithDetails[]> => {
+      if (!profile?.id) return [];
+
+      const { data: providerData } = await supabase
+        .from('providers')
+        .select('id')
+        .eq('user_id', profile.id)
+        .single();
+
+      if (!providerData) return [];
+
+      const { data, error } = await supabase
+        .from('bookings')
+        .select(`
+          *,
+          profiles:client_id (full_name, avatar_url),
+          services (id, name, price)
+        `)
+        .eq('provider_id', providerData.id)
+        .gte('booking_date', today)
+        .in('status', ['confirmed', 'pending'])
+        .order('booking_date', { ascending: true })
+        .order('start_time', { ascending: true })
+        .limit(limit);
 
       if (error) throw error;
       return (data || []) as BookingWithDetails[];
