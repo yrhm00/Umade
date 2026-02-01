@@ -2,30 +2,32 @@
  * Bottom sheet pour les filtres d'inspirations (Phase 9)
  */
 
-import React, { forwardRef, useCallback, useMemo } from 'react';
+import { AnimatedButton } from '@/components/ui/AnimatedButton';
+import { PressableScale } from '@/components/ui/PressableScale';
+import { Colors } from '@/constants/Colors';
+import { Layout } from '@/constants/Layout';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Pressable,
-} from 'react-native';
+  EVENT_TYPES,
+  EventType,
+  INSPIRATION_STYLES,
+  InspirationFilters,
+  InspirationStyle,
+} from '@/types/inspiration';
 import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetView,
 } from '@gorhom/bottom-sheet';
-import { X, Check } from 'lucide-react-native';
-import { Colors } from '@/constants/Colors';
-import { Layout } from '@/constants/Layout';
-import { AnimatedButton } from '@/components/ui/AnimatedButton';
-import { PressableScale } from '@/components/ui/PressableScale';
+import { Check, X } from 'lucide-react-native';
+import React, { forwardRef, useCallback, useMemo } from 'react';
 import {
-  InspirationFilters,
-  EventType,
-  InspirationStyle,
-  EVENT_TYPES,
-  INSPIRATION_STYLES,
-} from '@/types/inspiration';
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface FilterSheetProps {
   filters: InspirationFilters;
@@ -35,7 +37,10 @@ interface FilterSheetProps {
 
 export const FilterSheet = forwardRef<BottomSheet, FilterSheetProps>(
   function FilterSheet({ filters, onFiltersChange, onClose }, ref) {
-    const snapPoints = useMemo(() => ['70%'], []);
+    const snapPoints = useMemo(() => ['75%'], []);
+    const insets = useSafeAreaInsets();
+    const colors = useColors();
+    const isDark = useIsDarkTheme();
 
     const renderBackdrop = useCallback(
       (props: React.ComponentProps<typeof BottomSheetBackdrop>) => (
@@ -43,30 +48,38 @@ export const FilterSheet = forwardRef<BottomSheet, FilterSheetProps>(
           {...props}
           disappearsOnIndex={-1}
           appearsOnIndex={0}
-          opacity={0.5}
+          opacity={isDark ? 0.7 : 0.5}
         />
       ),
-      []
+      [isDark]
     );
 
-    const handleEventTypeSelect = (type: EventType | null) => {
+    const handleEventTypeSelect = (type: EventType) => {
+      const current = filters.event_types || [];
+      const isSelected = current.includes(type);
       onFiltersChange({
         ...filters,
-        event_type: filters.event_type === type ? null : type,
+        event_types: isSelected
+          ? current.filter((t) => t !== type)
+          : [...current, type],
       });
     };
 
-    const handleStyleSelect = (style: InspirationStyle | null) => {
+    const handleStyleSelect = (style: InspirationStyle) => {
+      const current = filters.styles || [];
+      const isSelected = current.includes(style);
       onFiltersChange({
         ...filters,
-        style: filters.style === style ? null : style,
+        styles: isSelected
+          ? current.filter((s) => s !== style)
+          : [...current, style],
       });
     };
 
     const handleReset = () => {
       onFiltersChange({
-        event_type: null,
-        style: null,
+        event_types: [],
+        styles: [],
         searchQuery: filters.searchQuery,
       });
     };
@@ -75,7 +88,7 @@ export const FilterSheet = forwardRef<BottomSheet, FilterSheetProps>(
       onClose();
     };
 
-    const hasFilters = filters.event_type || filters.style;
+    const hasFilters = (filters.event_types?.length ?? 0) > 0 || (filters.styles?.length ?? 0) > 0;
 
     return (
       <BottomSheet
@@ -84,16 +97,16 @@ export const FilterSheet = forwardRef<BottomSheet, FilterSheetProps>(
         snapPoints={snapPoints}
         enablePanDownToClose
         backdropComponent={renderBackdrop}
-        backgroundStyle={styles.sheetBackground}
-        handleIndicatorStyle={styles.handleIndicator}
+        backgroundStyle={[styles.sheetBackground, { backgroundColor: colors.background }]}
+        handleIndicatorStyle={[styles.handleIndicator, { backgroundColor: colors.border }]}
       >
         <BottomSheetView style={styles.container}>
           {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>Filtres</Text>
+          <View style={[styles.header, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.headerTitle, { color: colors.text }]}>Filtres</Text>
             <PressableScale onPress={onClose} haptic="light">
-              <View style={styles.closeButton}>
-                <X size={20} color={Colors.text.primary} />
+              <View style={[styles.closeButton, { backgroundColor: isDark ? colors.backgroundTertiary : Colors.gray[100] }]}>
+                <X size={20} color={colors.text} />
               </View>
             </PressableScale>
           </View>
@@ -104,13 +117,13 @@ export const FilterSheet = forwardRef<BottomSheet, FilterSheetProps>(
           >
             {/* Type d'evenement */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Type d'evenement</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Type d'evenement</Text>
               <View style={styles.chipsContainer}>
                 {Object.entries(EVENT_TYPES).map(([value, label]) => (
                   <FilterChip
                     key={value}
                     label={label}
-                    selected={filters.event_type === value}
+                    selected={filters.event_types?.includes(value as EventType) ?? false}
                     onPress={() => handleEventTypeSelect(value as EventType)}
                   />
                 ))}
@@ -119,13 +132,13 @@ export const FilterSheet = forwardRef<BottomSheet, FilterSheetProps>(
 
             {/* Style */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Style</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Style</Text>
               <View style={styles.chipsContainer}>
                 {Object.entries(INSPIRATION_STYLES).map(([value, label]) => (
                   <FilterChip
                     key={value}
                     label={label}
-                    selected={filters.style === value}
+                    selected={filters.styles?.includes(value as InspirationStyle) ?? false}
                     onPress={() => handleStyleSelect(value as InspirationStyle)}
                   />
                 ))}
@@ -134,7 +147,10 @@ export const FilterSheet = forwardRef<BottomSheet, FilterSheetProps>(
           </ScrollView>
 
           {/* Actions */}
-          <View style={styles.actions}>
+          <View style={[styles.actions, {
+            paddingBottom: Math.max(insets.bottom, Layout.spacing.xl) + Layout.spacing.md,
+            borderTopColor: colors.border
+          }]}>
             {hasFilters && (
               <AnimatedButton
                 title="Effacer"
@@ -169,15 +185,32 @@ interface FilterChipProps {
 }
 
 function FilterChip({ label, selected, onPress }: FilterChipProps) {
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
+
   return (
     <Pressable
       onPress={onPress}
-      style={[styles.chip, selected && styles.chipSelected]}
+      style={[
+        styles.chip,
+        {
+          backgroundColor: isDark ? colors.backgroundTertiary : Colors.gray[100],
+          borderColor: isDark ? 'transparent' : Colors.gray[200]
+        },
+        selected && {
+          backgroundColor: colors.primary,
+          borderColor: colors.primary,
+        }
+      ]}
     >
       {selected && (
         <Check size={14} color={Colors.white} style={styles.chipCheck} />
       )}
-      <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
+      <Text style={[
+        styles.chipText,
+        { color: colors.text },
+        selected && { color: Colors.white }
+      ]}>
         {label}
       </Text>
     </Pressable>
@@ -186,12 +219,10 @@ function FilterChip({ label, selected, onPress }: FilterChipProps) {
 
 const styles = StyleSheet.create({
   sheetBackground: {
-    backgroundColor: Colors.white,
     borderTopLeftRadius: Layout.radius.xl,
     borderTopRightRadius: Layout.radius.xl,
   },
   handleIndicator: {
-    backgroundColor: Colors.gray[300],
     width: 40,
   },
   container: {
@@ -204,18 +235,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingBottom: Layout.spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.gray[200],
   },
   headerTitle: {
     fontSize: Layout.fontSize.xl,
     fontWeight: '700',
-    color: Colors.text.primary,
   },
   closeButton: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: Colors.gray[100],
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -229,7 +257,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: Layout.fontSize.md,
     fontWeight: '600',
-    color: Colors.text.primary,
     marginBottom: Layout.spacing.md,
   },
   chipsContainer: {
@@ -242,33 +269,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: Layout.spacing.md,
     paddingVertical: Layout.spacing.sm,
-    backgroundColor: Colors.gray[100],
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: Colors.gray[200],
-  },
-  chipSelected: {
-    backgroundColor: Colors.primary.DEFAULT,
-    borderColor: Colors.primary.DEFAULT,
   },
   chipCheck: {
     marginRight: 4,
   },
   chipText: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.primary,
     fontWeight: '500',
-  },
-  chipTextSelected: {
-    color: Colors.white,
   },
   actions: {
     flexDirection: 'row',
     gap: Layout.spacing.md,
     paddingVertical: Layout.spacing.lg,
-    paddingBottom: Layout.spacing.xl,
     borderTopWidth: 1,
-    borderTopColor: Colors.gray[200],
   },
   resetButton: {
     flex: 1,

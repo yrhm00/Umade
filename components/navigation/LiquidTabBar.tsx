@@ -1,4 +1,4 @@
-import { Colors } from '@/constants/Colors';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Canvas, Group, LinearGradient, RoundedRect, Shadow, vec } from "@shopify/react-native-skia";
 import { BlurView } from 'expo-blur';
@@ -16,6 +16,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export function LiquidTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
     const insets = useSafeAreaInsets();
+    const colors = useColors();
+    const isDark = useIsDarkTheme();
 
     // Use React state for layout width to avoid accessing shared value during render
     const [measuredWidth, setMeasuredWidth] = React.useState(0);
@@ -65,19 +67,46 @@ export function LiquidTabBar({ state, descriptors, navigation }: BottomTabBarPro
         }
     }, [activeIndex, measuredWidth]);
 
+    // Dynamic styles based on theme
+    const glassOverlayColor = isDark
+        ? 'rgba(26, 22, 37, 0.7)'
+        : 'rgba(255, 255, 255, 0.4)';
+
+    const glassGradientColors = isDark
+        ? ["rgba(95, 74, 139, 0.3)", "rgba(95, 74, 139, 0.1)"]
+        : ["rgba(255, 255, 255, 0.3)", "rgba(255, 255, 255, 0.05)"];
+
+    const glassStrokeColors = isDark
+        ? ["rgba(143, 119, 184, 0.5)", "rgba(143, 119, 184, 0.0)"]
+        : ["rgba(255, 255, 255, 0.9)", "rgba(255, 255, 255, 0.0)"];
+
+    const glassBottomColors = isDark
+        ? ["transparent", "rgba(143, 119, 184, 0.3)"]
+        : ["transparent", "rgba(255, 255, 255, 0.5)"];
+
+    const borderColor = isDark
+        ? 'rgba(95, 74, 139, 0.4)'
+        : 'rgba(255, 255, 255, 0.4)';
+
     return (
-        <View style={[styles.floatingContainer, { bottom: insets.bottom + 10 }]}>
+        <View style={[
+            styles.floatingContainer,
+            {
+                bottom: insets.bottom + 10,
+                borderColor: borderColor,
+            }
+        ]}>
             {/* 
                 Floating Glass Background 
                 Made "Ultra Glassy" by reducing opacity and using light tint
             */}
             <BlurView
                 intensity={Platform.OS === 'ios' ? 40 : 0}
-                tint="light"
+                tint={isDark ? 'dark' : 'light'}
                 style={StyleSheet.absoluteFillObject}
             />
             {/* Fallback & tint overlay for cleaner glass look */}
-            <View style={[StyleSheet.absoluteFillObject, styles.glassOverlay]} />
+            <View style={[StyleSheet.absoluteFillObject, { backgroundColor: glassOverlayColor, zIndex: -1 }]} />
 
             <View style={styles.content} onLayout={onLayout}>
                 {/* Skia Layer for "The Lens" */}
@@ -109,7 +138,7 @@ export function LiquidTabBar({ state, descriptors, navigation }: BottomTabBarPro
                                 <LinearGradient
                                     start={vec(0, 0)}
                                     end={vec(0, 60)}
-                                    colors={["rgba(255, 255, 255, 0.3)", "rgba(255, 255, 255, 0.05)"]}
+                                    colors={glassGradientColors}
                                 />
                             </RoundedRect>
 
@@ -126,7 +155,7 @@ export function LiquidTabBar({ state, descriptors, navigation }: BottomTabBarPro
                                 <LinearGradient
                                     start={vec(0, 6)}
                                     end={vec(0, 30)}
-                                    colors={["rgba(255, 255, 255, 0.9)", "rgba(255, 255, 255, 0.0)"]}
+                                    colors={glassStrokeColors}
                                 />
                             </RoundedRect>
 
@@ -143,7 +172,7 @@ export function LiquidTabBar({ state, descriptors, navigation }: BottomTabBarPro
                                 <LinearGradient
                                     start={vec(0, 50)}
                                     end={vec(0, 64)}
-                                    colors={["transparent", "rgba(255, 255, 255, 0.5)"]}
+                                    colors={glassBottomColors}
                                 />
                             </RoundedRect>
                         </Group>
@@ -185,9 +214,8 @@ export function LiquidTabBar({ state, descriptors, navigation }: BottomTabBarPro
                     const animatedIconStyle = useAnimatedStyle(() => {
                         return {
                             transform: [{ scale: withTiming(isFocused ? 1.1 : 1, { duration: 200 }) }],
-                            // Keep opacity slightly higher (0.7) for non-active to ensure visibility on transparent glass
                             opacity: withTiming(isFocused ? 1 : 0.6, { duration: 200 }),
-                            marginBottom: withTiming(isFocused ? 2 : 0, { duration: 200 }) // Slight lift
+                            marginBottom: withTiming(isFocused ? 2 : 0, { duration: 200 })
                         };
                     });
 
@@ -214,19 +242,22 @@ export function LiquidTabBar({ state, descriptors, navigation }: BottomTabBarPro
                                 <Animated.View style={[styles.iconContainer, animatedIconStyle]}>
                                     {Icon && Icon({
                                         focused: isFocused,
-                                        // Use slightly darker/richer colors to pop against the glass
-                                        color: isFocused ? Colors.primary.DEFAULT : Colors.gray[500],
+                                        color: isFocused ? colors.primary : colors.textTertiary,
                                         size: 24
                                     })}
                                 </Animated.View>
 
-                                <Animated.Text style={[styles.label, animatedTextStyle]}>
+                                <Animated.Text style={[
+                                    styles.label,
+                                    animatedTextStyle,
+                                    { color: colors.text }
+                                ]}>
                                     {typeof label === 'string' ? label : ''}
                                 </Animated.Text>
                             </View>
 
                             {badge != null && (
-                                <View style={[styles.badgeContainer, options.tabBarBadgeStyle]}>
+                                <View style={styles.badgeContainer}>
                                     <Text style={styles.badgeText}>
                                         {badge}
                                     </Text>
@@ -245,25 +276,16 @@ const styles = StyleSheet.create({
         position: 'absolute',
         left: 20,
         right: 20,
-        height: 70, // Increased height for text
+        height: 70,
         backgroundColor: 'transparent',
-        borderRadius: 35, // Fully rounded pill
+        borderRadius: 35,
         overflow: 'hidden',
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.4)', // Subtle glass border
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.15, // Floating shadow
+        shadowOpacity: 0.15,
         shadowRadius: 20,
         elevation: 8,
-    },
-    glassOverlay: {
-        backgroundColor: 'rgba(255,255,255,0.4)', // Very sheer white tint
-        zIndex: -1,
-    },
-    fallbackBg: {
-        backgroundColor: Platform.OS === 'ios' ? 'transparent' : 'rgba(255,255,255,0.85)',
-        zIndex: -1,
     },
     content: {
         flexDirection: 'row',
@@ -291,7 +313,6 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 10,
         fontWeight: '600',
-        color: Colors.text.primary,
         marginTop: 2,
         zIndex: 2,
     },
@@ -299,7 +320,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 6,
         right: '15%',
-        backgroundColor: Colors.error.DEFAULT,
+        backgroundColor: '#EF4444',
         borderRadius: 10,
         minWidth: 16,
         height: 16,
@@ -307,11 +328,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: 4,
         borderWidth: 1.5,
-        borderColor: Colors.white,
+        borderColor: '#FFFFFF',
         zIndex: 3,
     },
     badgeText: {
-        color: Colors.white,
+        color: '#FFFFFF',
         fontSize: 9,
         fontWeight: 'bold',
         textAlign: 'center',

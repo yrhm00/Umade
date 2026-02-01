@@ -1,23 +1,24 @@
 /**
  * Grille Masonry style Pinterest pour les inspirations (Phase 9)
+ * Dark Mode Support
  */
 
-import React, { useMemo, useCallback } from 'react';
+import { Layout } from '@/constants/Layout';
+import { useColors } from '@/hooks/useColors';
+import { InspirationWithProvider } from '@/types/inspiration';
+import React, { useCallback, useMemo } from 'react';
 import {
-  View,
-  StyleSheet,
-  RefreshControl,
   ActivityIndicator,
+  RefreshControl,
   ScrollView,
+  StyleSheet,
+  View,
 } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
-import { Colors } from '@/constants/Colors';
-import { Layout } from '@/constants/Layout';
-import { InspirationWithProvider } from '@/types/inspiration';
 import {
+  CARD_GAP,
   InspirationCard,
   InspirationCardSkeleton,
-  CARD_GAP,
 } from './InspirationCard';
 
 interface MasonryGridProps {
@@ -25,6 +26,7 @@ interface MasonryGridProps {
   onItemPress?: (inspiration: InspirationWithProvider) => void;
   onEndReached?: () => void;
   onRefresh?: () => Promise<void>;
+  onScroll?: (scrollY: number) => void;
   isLoading?: boolean;
   isLoadingMore?: boolean;
   isRefreshing?: boolean;
@@ -37,12 +39,15 @@ export function MasonryGrid({
   onItemPress,
   onEndReached,
   onRefresh,
+  onScroll: onScrollProp,
   isLoading = false,
   isLoadingMore = false,
   isRefreshing = false,
   ListHeaderComponent,
   ListEmptyComponent,
 }: MasonryGridProps) {
+  const colors = useColors();
+
   // Diviser les items en 2 colonnes avec equilibrage par hauteur estimee
   const { leftColumn, rightColumn } = useMemo(() => {
     const left: InspirationWithProvider[] = [];
@@ -82,8 +87,11 @@ export function MasonryGrid({
       if (isCloseToBottom && onEndReached && !isLoadingMore) {
         onEndReached();
       }
+
+      // Report scroll position to parent
+      onScrollProp?.(contentOffset.y);
     },
-    [onEndReached, isLoadingMore]
+    [onEndReached, isLoadingMore, onScrollProp]
   );
 
   const handleRefresh = useCallback(async () => {
@@ -129,8 +137,8 @@ export function MasonryGrid({
             <RefreshControl
               refreshing={isRefreshing}
               onRefresh={handleRefresh}
-              tintColor={Colors.primary.DEFAULT}
-              colors={[Colors.primary.DEFAULT]}
+              tintColor={colors.primary}
+              colors={[colors.primary]}
             />
           ) : undefined
         }
@@ -154,8 +162,8 @@ export function MasonryGrid({
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={handleRefresh}
-            tintColor={Colors.primary.DEFAULT}
-            colors={[Colors.primary.DEFAULT]}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
           />
         ) : undefined
       }
@@ -191,7 +199,7 @@ export function MasonryGrid({
       {/* Loading more indicator */}
       {isLoadingMore && (
         <View style={styles.loadingMore}>
-          <ActivityIndicator size="small" color={Colors.primary.DEFAULT} />
+          <ActivityIndicator size="small" color={colors.primary} />
         </View>
       )}
 
@@ -207,7 +215,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     paddingHorizontal: Layout.spacing.md,
-    paddingTop: Layout.spacing.md,
+    paddingTop: Layout.spacing.xs,
   },
   emptyContainer: {
     flexGrow: 1,

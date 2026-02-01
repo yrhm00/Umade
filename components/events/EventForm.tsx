@@ -1,19 +1,19 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
-import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { CreateEventInput } from '@/types';
+import React, { useState } from 'react';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
 
 interface EventFormProps {
   initialValues?: Partial<CreateEventInput>;
@@ -37,6 +37,8 @@ export function EventForm({
   isLoading,
   submitLabel = 'Créer l\'événement',
 }: EventFormProps) {
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
   const [title, setTitle] = useState(initialValues?.title || '');
   const [eventType, setEventType] = useState(initialValues?.event_type || '');
   const [eventDate, setEventDate] = useState(initialValues?.event_date || '');
@@ -109,7 +111,7 @@ export function EventForm({
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
-        style={styles.flex}
+        style={[styles.flex, { backgroundColor: colors.background }]}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
@@ -122,21 +124,34 @@ export function EventForm({
           error={errors.title}
         />
 
-        <Text style={styles.label}>Type d'événement *</Text>
+        <Text style={[styles.label, { color: colors.text }]}>Type d'événement *</Text>
         <View style={styles.typeGrid}>
           {EVENT_TYPES.map((type) => (
             <TouchableOpacity
               key={type.value}
               style={[
                 styles.typeChip,
-                eventType === type.value && styles.typeChipActive,
+                {
+                  backgroundColor: isDark ? colors.backgroundTertiary : Colors.white,
+                  borderColor: isDark ? colors.border : Colors.gray[200]
+                },
+                eventType === type.value && {
+                  borderColor: colors.primary,
+                  backgroundColor: isDark ? colors.backgroundTertiary : Colors.primary[50], // Or a dark-mode specific selected BG
+                },
+                eventType === type.value && isDark && {
+                  backgroundColor: colors.primary, // More distinct in dark mode
+                  borderColor: colors.primary
+                }
               ]}
               onPress={() => setEventType(type.value)}
             >
               <Text
                 style={[
                   styles.typeChipText,
-                  eventType === type.value && styles.typeChipTextActive,
+                  { color: colors.textSecondary },
+                  eventType === type.value && { color: colors.primary },
+                  eventType === type.value && isDark && { color: Colors.white }
                 ]}
               >
                 {type.label}
@@ -145,7 +160,7 @@ export function EventForm({
           ))}
         </View>
         {errors.eventType && (
-          <Text style={styles.errorText}>{errors.eventType}</Text>
+          <Text style={[styles.errorText, { color: colors.error }]}>{errors.eventType}</Text>
         )}
 
         <Input
@@ -172,7 +187,7 @@ export function EventForm({
           keyboardType="number-pad"
         />
 
-        <Text style={styles.label}>Budget (optionnel)</Text>
+        <Text style={[styles.label, { color: colors.text }]}>Budget (optionnel)</Text>
         <View style={styles.budgetRow}>
           <View style={styles.budgetField}>
             <Input
@@ -182,7 +197,7 @@ export function EventForm({
               keyboardType="decimal-pad"
             />
           </View>
-          <Text style={styles.budgetSeparator}>—</Text>
+          <Text style={[styles.budgetSeparator, { color: colors.textTertiary }]}>—</Text>
           <View style={styles.budgetField}>
             <Input
               placeholder="Max €"
@@ -229,7 +244,6 @@ const styles = StyleSheet.create({
   label: {
     fontSize: Layout.fontSize.sm,
     fontWeight: '500',
-    color: Colors.text.primary,
     marginBottom: Layout.spacing.xs,
   },
   typeGrid: {
@@ -243,24 +257,13 @@ const styles = StyleSheet.create({
     paddingVertical: Layout.spacing.sm,
     borderRadius: Layout.radius.full,
     borderWidth: 1.5,
-    borderColor: Colors.gray[200],
-    backgroundColor: Colors.white,
-  },
-  typeChipActive: {
-    borderColor: Colors.primary.DEFAULT,
-    backgroundColor: Colors.primary[50],
   },
   typeChipText: {
     fontSize: Layout.fontSize.sm,
     fontWeight: '500',
-    color: Colors.text.secondary,
-  },
-  typeChipTextActive: {
-    color: Colors.primary.DEFAULT,
   },
   errorText: {
     fontSize: Layout.fontSize.xs,
-    color: Colors.error.DEFAULT,
     marginTop: -Layout.spacing.sm,
     marginBottom: Layout.spacing.md,
   },
@@ -274,7 +277,6 @@ const styles = StyleSheet.create({
   },
   budgetSeparator: {
     fontSize: Layout.fontSize.lg,
-    color: Colors.text.tertiary,
     marginTop: 12,
   },
   textArea: {

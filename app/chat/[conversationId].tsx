@@ -1,12 +1,20 @@
+/**
+ * Chat Screen
+ * Dark Mode Support
+ */
+
+import { BookingActionCard } from '@/components/chat/BookingActionCard';
 import { ChatHeader } from '@/components/chat/ChatHeader';
 import { ChatInput } from '@/components/chat/ChatInput';
 import { DateSeparator } from '@/components/chat/DateSeparator';
 import { EmptyChat } from '@/components/chat/EmptyChat';
 import { MessageBubble } from '@/components/chat/MessageBubble';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
 import { useAuth } from '@/hooks/useAuth';
+import { useChatBooking } from '@/hooks/useChatBooking';
+import { useColors } from '@/hooks/useColors';
+import { useConversation } from '@/hooks/useConversations';
 import { useMarkAsRead, useMessages, useSendMessage } from '@/hooks/useMessages';
 import { useRealtimeMessages } from '@/hooks/useRealtimeMessages';
 import { MessageWithSender } from '@/types';
@@ -35,6 +43,7 @@ export default function ChatScreen() {
     conversationId: string;
   }>();
   const { userId } = useAuth();
+  const colors = useColors();
   const flatListRef = useRef<FlatList>(null);
 
   const {
@@ -51,7 +60,7 @@ export default function ChatScreen() {
   // Real-time subscription
   useRealtimeMessages(conversationId);
 
-  // New hooks moved to top level
+  // Conversation and booking data
   const { data: conversation } = useConversation(conversationId);
   const isProvider = conversation?.provider_id === userId;
   const { booking, updateStatus, isUpdating } = useChatBooking(conversationId);
@@ -120,29 +129,27 @@ export default function ChatScreen() {
     if (!isFetchingNextPage) return null;
     return (
       <View style={styles.loadingMore}>
-        <ActivityIndicator size="small" color={Colors.primary.DEFAULT} />
+        <ActivityIndicator size="small" color={colors.primary} />
       </View>
     );
-  }, [isFetchingNextPage]);
+  }, [isFetchingNextPage, colors.primary]);
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
         <ChatHeader conversationId={conversationId ?? ''} />
         <LoadingSpinner fullScreen message="Chargement..." />
       </SafeAreaView>
     );
   }
 
-  // ... (existing helper functions)
-
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
       <ChatHeader conversationId={conversationId ?? ''} />
 
       {/* Booking Action Card (Pending Request) */}
       {booking && (
-        <View style={styles.actionCardContainer}>
+        <View style={[styles.actionCardContainer, { backgroundColor: colors.background }]}>
           <BookingActionCard
             booking={booking}
             isProvider={isProvider}
@@ -153,7 +160,6 @@ export default function ChatScreen() {
       )}
 
       <KeyboardAvoidingView
-        // ...
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
@@ -184,20 +190,12 @@ export default function ChatScreen() {
   );
 }
 
-import { BookingActionCard } from '@/components/chat/BookingActionCard';
-import { useChatBooking } from '@/hooks/useChatBooking';
-import { useConversation } from '@/hooks/useConversations';
-
-// ... existing code ...
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background.primary,
   },
   actionCardContainer: {
     zIndex: 10,
-    backgroundColor: Colors.background.primary,
   },
   keyboardView: {
     flex: 1,

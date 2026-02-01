@@ -133,28 +133,90 @@ export const Colors = {
 // Type helper
 export type ColorKey = keyof typeof Colors;
 
-// Export pour usage avec useColorScheme
-export default {
-  light: {
-    text: Colors.text.primary,
-    textSecondary: Colors.text.secondary,
-    background: Colors.background.primary,
-    backgroundSecondary: Colors.background.secondary,
-    tint: Colors.primary.DEFAULT,
-    tabIconDefault: Colors.gray[400],
-    tabIconSelected: Colors.primary.DEFAULT,
-    border: Colors.gray[200],
-    card: Colors.white,
-  },
-  dark: {
-    text: Colors.white,
-    textSecondary: Colors.gray[400],
-    background: Colors.gray[900],
-    backgroundSecondary: Colors.gray[800],
-    tint: Colors.primary.light,
-    tabIconDefault: Colors.gray[600],
-    tabIconSelected: Colors.primary.light,
-    border: Colors.gray[700],
-    card: Colors.gray[800],
-  },
+// ============================================
+// Theme Colors Type (pour useColors hook)
+// ============================================
+
+export interface ThemeColors {
+  text: string;
+  textSecondary: string;
+  textTertiary: string;
+  background: string;
+  backgroundSecondary: string;
+  backgroundTertiary: string;
+  tint: string;
+  tabIconDefault: string;
+  tabIconSelected: string;
+  border: string;
+  card: string;
+  cardBorder: string;
+  // Semantic
+  success: string;
+  warning: string;
+  error: string;
+  // Primary access
+  primary: string;
+  primaryLight: string;
+  // Glass
+  glassBackground: string;
+  glassBorder: string;
+}
+
+// ============================================
+// Light Theme
+// ============================================
+
+export const LightColors: ThemeColors = {
+  text: Colors.text.primary,
+  textSecondary: Colors.text.secondary,
+  textTertiary: Colors.text.tertiary,
+  background: Colors.background.primary,
+  backgroundSecondary: Colors.background.secondary,
+  backgroundTertiary: Colors.background.tertiary,
+  tint: Colors.primary.DEFAULT,
+  tabIconDefault: Colors.gray[400],
+  tabIconSelected: Colors.primary.DEFAULT,
+  border: Colors.gray[200],
+  card: Colors.white,
+  cardBorder: Colors.gray[200],
+  success: Colors.success.DEFAULT,
+  warning: Colors.warning.DEFAULT,
+  error: Colors.error.DEFAULT,
+  primary: Colors.primary.DEFAULT,
+  primaryLight: Colors.primary.light,
+  glassBackground: Colors.glass.background,
+  glassBorder: Colors.glass.border,
 };
+
+// ============================================
+// Dark Theme
+// ============================================
+
+export const DarkColors: ThemeColors = {
+  text: '#FFFFFF',
+  textSecondary: Colors.gray[300],
+  textTertiary: Colors.gray[400],
+  background: '#0D0B12',
+  backgroundSecondary: '#1A1625',
+  backgroundTertiary: '#252033',
+  tint: Colors.primary.light,
+  tabIconDefault: Colors.gray[500],
+  tabIconSelected: Colors.primary.light,
+  border: '#2C2242',
+  card: '#1A1625',
+  cardBorder: '#2C2242',
+  success: Colors.success.DEFAULT,
+  warning: Colors.warning.DEFAULT,
+  error: Colors.error.DEFAULT,
+  primary: Colors.primary.light,
+  primaryLight: Colors.primary[200],
+  glassBackground: 'rgba(26, 22, 37, 0.85)',
+  glassBorder: 'rgba(95, 74, 139, 0.3)',
+};
+
+// Export pour usage avec useColorScheme (legacy)
+export default {
+  light: LightColors,
+  dark: DarkColors,
+};
+

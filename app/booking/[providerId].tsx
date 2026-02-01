@@ -1,3 +1,8 @@
+/**
+ * Booking Flow Screen
+ * Dark Mode Support
+ */
+
 import { BookingConfirmation } from '@/components/booking/BookingConfirmation';
 import { DateTimePicker } from '@/components/booking/DateTimePicker';
 import { ServiceSelector } from '@/components/booking/ServiceSelector';
@@ -8,6 +13,7 @@ import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
 import { useProviderAvailability } from '@/hooks/useAvailability';
 import { useCreateBooking } from '@/hooks/useBookings';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { useUserEvents } from '@/hooks/useEvents';
 import { useProviderDetail } from '@/hooks/useProviders';
 import { Service } from '@/types';
@@ -40,6 +46,8 @@ const STEP_TITLES: Record<BookingStep, string> = {
 
 export default function BookingFlowScreen() {
   const router = useRouter();
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
   const { providerId } = useLocalSearchParams<{ providerId: string }>();
 
   const { data: provider, isLoading: providerLoading } =
@@ -79,11 +87,11 @@ export default function BookingFlowScreen() {
       case 'service':
         return !!selectedService;
       case 'datetime':
-        return !!selectedDate; // Removed selectedSlot check
+        return !!selectedDate;
       case 'event':
-        return true; // optional
+        return true;
       case 'notes':
-        return true; // optional
+        return true;
       case 'confirm':
         return true;
       default:
@@ -116,7 +124,6 @@ export default function BookingFlowScreen() {
         service_id: selectedService.id,
         event_id: selectedEventId || undefined,
         booking_date: selectedDate,
-        // start_time is optional now
         total_price: selectedService.price,
         client_message: clientMessage.trim() || undefined,
       } as any,
@@ -149,9 +156,9 @@ export default function BookingFlowScreen() {
 
   if (!provider) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundSecondary }]}>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Prestataire non trouvé</Text>
+          <Text style={[styles.errorText, { color: colors.textSecondary }]}>Prestataire non trouvé</Text>
           <Button title="Retour" onPress={() => router.back()} variant="outline" />
         </View>
       </SafeAreaView>
@@ -162,17 +169,20 @@ export default function BookingFlowScreen() {
     (s) => s.is_active !== false
   );
 
+  const eventOptionBg = isDark ? colors.card : Colors.white;
+  const eventOptionSelectedBg = isDark ? colors.backgroundTertiary : `${colors.primary}10`;
+
   return (
     <>
       <Stack.Screen
         options={{
           headerShown: true,
           headerTitle: provider.business_name,
-          headerTintColor: Colors.text.primary,
-          headerStyle: { backgroundColor: Colors.background.secondary },
+          headerTintColor: colors.text,
+          headerStyle: { backgroundColor: colors.backgroundSecondary },
         }}
       />
-      <SafeAreaView style={styles.container} edges={['bottom']}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundSecondary }]} edges={['bottom']}>
         {/* Progress bar */}
         <View style={styles.progressContainer}>
           {STEPS.map((step, index) => (
@@ -180,15 +190,16 @@ export default function BookingFlowScreen() {
               key={step}
               style={[
                 styles.progressDot,
-                index <= currentStepIndex && styles.progressDotActive,
+                { backgroundColor: colors.border },
+                index <= currentStepIndex && { backgroundColor: colors.primary },
               ]}
             />
           ))}
         </View>
 
         {/* Step title */}
-        <Text style={styles.stepTitle}>{STEP_TITLES[currentStep]}</Text>
-        <Text style={styles.stepSubtitle}>
+        <Text style={[styles.stepTitle, { color: colors.text }]}>{STEP_TITLES[currentStep]}</Text>
+        <Text style={[styles.stepSubtitle, { color: colors.textTertiary }]}>
           Étape {currentStepIndex + 1} sur {STEPS.length}
         </Text>
 
@@ -232,26 +243,28 @@ export default function BookingFlowScreen() {
                 <TouchableOpacity
                   style={[
                     styles.eventOption,
-                    !selectedEventId && styles.eventOptionSelected,
+                    { backgroundColor: eventOptionBg, borderColor: colors.border },
+                    !selectedEventId && { borderColor: colors.primary, backgroundColor: eventOptionSelectedBg },
                   ]}
                   onPress={() => setSelectedEventId(null)}
                 >
                   <Text
                     style={[
                       styles.eventOptionText,
-                      !selectedEventId && styles.eventOptionTextSelected,
+                      { color: colors.text },
+                      !selectedEventId && { color: colors.primary },
                     ]}
                   >
                     Sans événement
                   </Text>
-                  <Text style={styles.eventOptionDesc}>
+                  <Text style={[styles.eventOptionDesc, { color: colors.textSecondary }]}>
                     Réservation indépendante
                   </Text>
                 </TouchableOpacity>
 
                 {events && events.length > 0 && (
                   <>
-                    <Text style={styles.eventSectionLabel}>
+                    <Text style={[styles.eventSectionLabel, { color: colors.textSecondary }]}>
                       Ou lier à un événement existant :
                     </Text>
                     {events
@@ -261,21 +274,21 @@ export default function BookingFlowScreen() {
                           key={event.id}
                           style={[
                             styles.eventOption,
-                            selectedEventId === event.id &&
-                            styles.eventOptionSelected,
+                            { backgroundColor: eventOptionBg, borderColor: colors.border },
+                            selectedEventId === event.id && { borderColor: colors.primary, backgroundColor: eventOptionSelectedBg },
                           ]}
                           onPress={() => setSelectedEventId(event.id)}
                         >
                           <Text
                             style={[
                               styles.eventOptionText,
-                              selectedEventId === event.id &&
-                              styles.eventOptionTextSelected,
+                              { color: colors.text },
+                              selectedEventId === event.id && { color: colors.primary },
                             ]}
                           >
                             {event.title}
                           </Text>
-                          <Text style={styles.eventOptionDesc}>
+                          <Text style={[styles.eventOptionDesc, { color: colors.textSecondary }]}>
                             {new Date(event.event_date).toLocaleDateString(
                               'fr-BE',
                               {
@@ -320,10 +333,10 @@ export default function BookingFlowScreen() {
         </KeyboardAvoidingView>
 
         {/* Bottom navigation */}
-        <View style={styles.bottomBar}>
+        <View style={[styles.bottomBar, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
           <TouchableOpacity style={styles.backButton} onPress={goBack}>
-            <ArrowLeft size={20} color={Colors.text.secondary} />
-            <Text style={styles.backText}>Retour</Text>
+            <ArrowLeft size={20} color={colors.textSecondary} />
+            <Text style={[styles.backText, { color: colors.textSecondary }]}>Retour</Text>
           </TouchableOpacity>
 
           {currentStep === 'confirm' ? (
@@ -358,7 +371,6 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: Colors.background.secondary,
   },
   errorContainer: {
     flex: 1,
@@ -369,7 +381,6 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: Layout.fontSize.lg,
-    color: Colors.text.secondary,
   },
   progressContainer: {
     flexDirection: 'row',
@@ -382,20 +393,14 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 4,
     borderRadius: 2,
-    backgroundColor: Colors.gray[200],
-  },
-  progressDotActive: {
-    backgroundColor: Colors.primary.DEFAULT,
   },
   stepTitle: {
     fontSize: Layout.fontSize.xl,
     fontWeight: '700',
-    color: Colors.text.primary,
     paddingHorizontal: Layout.spacing.lg,
   },
   stepSubtitle: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.tertiary,
     paddingHorizontal: Layout.spacing.lg,
     marginBottom: Layout.spacing.md,
   },
@@ -403,42 +408,28 @@ const styles = StyleSheet.create({
     padding: Layout.spacing.lg,
     paddingBottom: Layout.spacing.xxl,
   },
-  // Event step
   eventStep: {
     gap: Layout.spacing.sm,
   },
   eventOption: {
-    backgroundColor: Colors.white,
     borderRadius: Layout.radius.md,
     borderWidth: 1.5,
-    borderColor: Colors.gray[200],
     padding: Layout.spacing.md,
-  },
-  eventOptionSelected: {
-    borderColor: Colors.primary.DEFAULT,
-    backgroundColor: Colors.primary[50],
   },
   eventOptionText: {
     fontSize: Layout.fontSize.md,
     fontWeight: '600',
-    color: Colors.text.primary,
-  },
-  eventOptionTextSelected: {
-    color: Colors.primary.DEFAULT,
   },
   eventOptionDesc: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
     marginTop: Layout.spacing.xs,
   },
   eventSectionLabel: {
     fontSize: Layout.fontSize.sm,
     fontWeight: '500',
-    color: Colors.text.secondary,
     marginTop: Layout.spacing.md,
     marginBottom: Layout.spacing.xs,
   },
-  // Notes step
   notesStep: {
     flex: 1,
   },
@@ -447,7 +438,6 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
     paddingTop: Layout.spacing.sm,
   },
-  // Bottom bar
   bottomBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -455,8 +445,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Layout.spacing.lg,
     paddingVertical: Layout.spacing.md,
     borderTopWidth: 1,
-    borderTopColor: Colors.gray[200],
-    backgroundColor: Colors.white,
   },
   backButton: {
     flexDirection: 'row',
@@ -466,7 +454,6 @@ const styles = StyleSheet.create({
   },
   backText: {
     fontSize: Layout.fontSize.md,
-    color: Colors.text.secondary,
   },
   confirmButton: {
     flex: 1,

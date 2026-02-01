@@ -1,5 +1,10 @@
+/**
+ * Create Event Screen
+ * Dark Mode Support
+ */
+
 import { WizardEventForm } from '@/components/events/WizardEventForm';
-import { Colors } from '@/constants/Colors';
+import { useColors } from '@/hooks/useColors';
 import { useCreateEvent } from '@/hooks/useEvents';
 import { CreateEventInput } from '@/types';
 import { Stack, useRouter } from 'expo-router';
@@ -9,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function CreateEventScreen() {
   const router = useRouter();
+  const colors = useColors();
   const { mutate: createEvent, isPending } = useCreateEvent();
 
   const handleSubmit = (input: CreateEventInput) => {
@@ -31,12 +37,12 @@ export default function CreateEventScreen() {
         options={{
           headerShown: true,
           headerTitle: 'Nouvel événement',
-          headerTintColor: Colors.text.primary,
-          headerStyle: { backgroundColor: Colors.background.secondary },
-          headerShadowVisible: false, // Cleaner look for wizard
+          headerTintColor: colors.text,
+          headerStyle: { backgroundColor: colors.backgroundSecondary },
+          headerShadowVisible: false,
         }}
       />
-      <SafeAreaView style={styles.container} edges={['bottom']}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundSecondary }]} edges={['bottom']}>
         <WizardEventForm onSubmit={handleSubmit} isLoading={isPending} />
       </SafeAreaView>
     </>
@@ -46,6 +52,5 @@ export default function CreateEventScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background.secondary,
   },
 });

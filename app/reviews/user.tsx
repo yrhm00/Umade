@@ -1,27 +1,33 @@
+/**
+ * User Reviews Screen
+ * Dark Mode Support
+ */
+
+import { ReviewCard } from '@/components/reviews';
+import { Card } from '@/components/ui/Card';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { Layout } from '@/constants/Layout';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
+import { useReviewableBookings, useUserReviews } from '@/hooks/useReviews';
+import { formatDate } from '@/lib/utils';
+import { ReviewWithDetails, ReviewableBooking } from '@/types';
+import { Stack, useRouter } from 'expo-router';
+import { Plus, Star } from 'lucide-react-native';
 import React, { useCallback, useMemo } from 'react';
 import {
-  View,
-  Text,
   FlatList,
-  StyleSheet,
-  TouchableOpacity,
   RefreshControl,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { useRouter, Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Plus, Star } from 'lucide-react-native';
-import { ReviewCard } from '@/components/reviews';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
-import { useUserReviews, useReviewableBookings } from '@/hooks/useReviews';
-import { ReviewWithDetails, ReviewableBooking } from '@/types';
-import { Colors } from '@/constants/Colors';
-import { Layout } from '@/constants/Layout';
-import { formatDate } from '@/lib/utils';
 
 export default function UserReviewsScreen() {
   const router = useRouter();
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
 
   const {
     data: reviews,
@@ -49,24 +55,24 @@ export default function UserReviewsScreen() {
     (booking: ReviewableBooking) => (
       <Card key={booking.id} variant="outlined" style={styles.bookingCard}>
         <View style={styles.bookingInfo}>
-          <Text style={styles.bookingProvider}>
+          <Text style={[styles.bookingProvider, { color: colors.text }]}>
             {booking.provider?.business_name}
           </Text>
-          <Text style={styles.bookingService}>{booking.service?.name}</Text>
-          <Text style={styles.bookingDate}>
+          <Text style={[styles.bookingService, { color: colors.textSecondary }]}>{booking.service?.name}</Text>
+          <Text style={[styles.bookingDate, { color: colors.textTertiary }]}>
             {formatDate(booking.booking_date)}
           </Text>
         </View>
         <TouchableOpacity
-          style={styles.writeReviewButton}
+          style={[styles.writeReviewButton, { backgroundColor: colors.primary }]}
           onPress={() => router.push(`/reviews/write/${booking.id}`)}
         >
-          <Plus size={16} color={Colors.white} />
+          <Plus size={16} color="#FFFFFF" />
           <Text style={styles.writeReviewText}>Laisser un avis</Text>
         </TouchableOpacity>
       </Card>
     ),
-    [router]
+    [router, colors]
   );
 
   const renderItem = useCallback(
@@ -85,35 +91,35 @@ export default function UserReviewsScreen() {
     return (
       <View style={styles.pendingSection}>
         <View style={styles.sectionHeader}>
-          <Star size={20} color={Colors.warning.DEFAULT} />
-          <Text style={styles.sectionTitle}>
+          <Star size={20} color="#F59E0B" />
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
             Avis en attente ({reviewableBookings.length})
           </Text>
         </View>
-        <Text style={styles.sectionSubtitle}>
+        <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
           Ces réservations attendent votre avis
         </Text>
         {reviewableBookings.map(renderReviewableBooking)}
       </View>
     );
-  }, [reviewableBookings, renderReviewableBooking]);
+  }, [reviewableBookings, renderReviewableBooking, colors]);
 
   const ListEmpty = useMemo(() => {
     if (isLoading) return null;
     return (
       <View style={styles.emptyContainer}>
-        <Star size={48} color={Colors.gray[300]} />
-        <Text style={styles.emptyTitle}>Aucun avis</Text>
-        <Text style={styles.emptySubtitle}>
+        <Star size={48} color={colors.textTertiary} />
+        <Text style={[styles.emptyTitle, { color: colors.text }]}>Aucun avis</Text>
+        <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
           Vos avis apparaîtront ici après avoir noté vos prestataires.
         </Text>
       </View>
     );
-  }, [isLoading]);
+  }, [isLoading, colors]);
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundSecondary }]} edges={['top', 'bottom']}>
         <Stack.Screen
           options={{
             headerShown: true,
@@ -127,7 +133,7 @@ export default function UserReviewsScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundSecondary }]} edges={['bottom']}>
       <Stack.Screen
         options={{
           headerShown: true,
@@ -149,7 +155,7 @@ export default function UserReviewsScreen() {
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={handleRefresh}
-            tintColor={Colors.primary.DEFAULT}
+            tintColor={colors.primary}
           />
         }
       />
@@ -160,7 +166,6 @@ export default function UserReviewsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background.tertiary,
   },
   listContent: {
     padding: Layout.spacing.md,
@@ -178,11 +183,9 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: Layout.fontSize.lg,
     fontWeight: '600',
-    color: Colors.text.primary,
   },
   sectionSubtitle: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
     marginBottom: Layout.spacing.md,
   },
   bookingCard: {
@@ -196,23 +199,19 @@ const styles = StyleSheet.create({
   bookingProvider: {
     fontSize: Layout.fontSize.md,
     fontWeight: '600',
-    color: Colors.text.primary,
   },
   bookingService: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
     marginTop: 2,
   },
   bookingDate: {
     fontSize: Layout.fontSize.xs,
-    color: Colors.text.tertiary,
     marginTop: 2,
   },
   writeReviewButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Layout.spacing.xs,
-    backgroundColor: Colors.primary.DEFAULT,
     paddingHorizontal: Layout.spacing.md,
     paddingVertical: Layout.spacing.sm,
     borderRadius: Layout.radius.md,
@@ -220,7 +219,7 @@ const styles = StyleSheet.create({
   writeReviewText: {
     fontSize: Layout.fontSize.sm,
     fontWeight: '600',
-    color: Colors.white,
+    color: '#FFFFFF',
   },
   emptyContainer: {
     flex: 1,
@@ -232,13 +231,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: Layout.fontSize.lg,
     fontWeight: '600',
-    color: Colors.text.primary,
     marginTop: Layout.spacing.md,
     marginBottom: Layout.spacing.sm,
   },
   emptySubtitle: {
     fontSize: Layout.fontSize.md,
-    color: Colors.text.secondary,
     textAlign: 'center',
     lineHeight: 22,
   },

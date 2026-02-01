@@ -1,5 +1,6 @@
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { Eye, EyeOff } from 'lucide-react-native';
 import React, { useCallback, useRef, useState } from 'react';
 import {
@@ -34,6 +35,8 @@ export const Input = React.memo(function Input({
   onBlur,
   ...props
 }: InputProps) {
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const focusTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -65,8 +68,19 @@ export const Input = React.memo(function Input({
 
   const inputContainerStyles = [
     styles.inputContainer,
-    isFocused && styles.inputContainerFocused,
-    error && styles.inputContainerError,
+    {
+      backgroundColor: colors.card,
+      borderColor: colors.border,
+      shadowColor: isDark ? colors.primary : Colors.primary.DEFAULT,
+    },
+    isFocused && {
+      borderColor: colors.primary,
+      shadowOpacity: 0.1,
+      elevation: 2,
+    },
+    error && {
+      borderColor: colors.error,
+    },
     // Fix for multiline inputs (textarea)
     props.multiline && {
       height: undefined,
@@ -78,7 +92,7 @@ export const Input = React.memo(function Input({
 
   return (
     <View style={[styles.container, containerStyle]}>
-      {label && <Text style={styles.label}>{label}</Text>}
+      {label && <Text style={[styles.label, { color: colors.text }]}>{label}</Text>}
 
       <View style={inputContainerStyles}>
         {leftIcon && (
@@ -90,12 +104,13 @@ export const Input = React.memo(function Input({
         <TextInput
           style={[
             styles.input,
+            { color: colors.text },
             leftIcon ? styles.inputWithLeftIcon : undefined,
             (rightIcon || isPassword) ? styles.inputWithRightIcon : undefined,
             props.multiline && { height: undefined, textAlignVertical: 'top' }, // Reset height: 100% for auto-grow
             style,
           ]}
-          placeholderTextColor={Colors.gray[400]}
+          placeholderTextColor={colors.textTertiary}
           secureTextEntry={isPassword && !showPassword}
           onFocus={handleFocus}
           onBlur={handleBlur}
@@ -108,9 +123,9 @@ export const Input = React.memo(function Input({
             onPress={() => setIsPasswordVisible(!isPasswordVisible)}
           >
             {showPassword ? (
-              <EyeOff size={20} color={Colors.gray[500]} />
+              <EyeOff size={20} color={colors.textTertiary} />
             ) : (
-              <Eye size={20} color={Colors.gray[500]} />
+              <Eye size={20} color={colors.textTertiary} />
             )}
           </TouchableOpacity>
         )}
@@ -122,8 +137,8 @@ export const Input = React.memo(function Input({
         )}
       </View>
 
-      {error && <Text style={styles.error}>{error}</Text>}
-      {hint && !error && <Text style={styles.hint}>{hint}</Text>}
+      {error && <Text style={[styles.error, { color: colors.error }]}>{error}</Text>}
+      {hint && !error && <Text style={[styles.hint, { color: colors.textTertiary }]}>{hint}</Text>}
     </View>
   );
 });
@@ -135,41 +150,27 @@ const styles = StyleSheet.create({
   label: {
     fontSize: Layout.fontSize.sm,
     fontWeight: '500',
-    color: Colors.text.primary,
     marginBottom: Layout.spacing.xs,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.white,
     borderRadius: Layout.radius.md,
     borderWidth: 1.5,
-    borderColor: Colors.gray[200],
     height: Layout.inputHeight,
     // Shadow toujours présente sur iOS (avec opacité 0) pour que le CALayer
     // existe dès le départ. Changer UNIQUEMENT shadowOpacity au focus
     // évite la restructuration native qui tue le firstResponder.
-    shadowColor: Colors.primary.DEFAULT,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0,
     shadowRadius: 4,
     elevation: 0,
-  },
-  inputContainerFocused: {
-    borderColor: Colors.primary.DEFAULT,
-    // Seul shadowOpacity change → pas de nouveau CALayer → pas de perte de focus
-    shadowOpacity: 0.1,
-    elevation: 2,
-  },
-  inputContainerError: {
-    borderColor: Colors.error.DEFAULT,
   },
   input: {
     flex: 1,
     height: '100%',
     paddingHorizontal: Layout.spacing.md,
     fontSize: Layout.fontSize.md,
-    color: Colors.text.primary,
   },
   inputWithLeftIcon: {
     paddingLeft: 0,
@@ -185,12 +186,10 @@ const styles = StyleSheet.create({
   },
   error: {
     fontSize: Layout.fontSize.xs,
-    color: Colors.error.DEFAULT,
     marginTop: Layout.spacing.xs,
   },
   hint: {
     fontSize: Layout.fontSize.xs,
-    color: Colors.text.tertiary,
     marginTop: Layout.spacing.xs,
   },
 });

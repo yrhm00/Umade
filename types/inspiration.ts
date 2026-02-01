@@ -106,8 +106,8 @@ export interface InspirationDetail extends InspirationWithProvider {
 // ============================================
 
 export interface InspirationFilters {
-  event_type?: EventType | null;
-  style?: InspirationStyle | null;
+  event_types?: EventType[];  // Changé: tableau pour multi-sélection
+  styles?: InspirationStyle[];  // Changé: tableau pour multi-sélection
   searchQuery?: string;
   providerId?: string;
 }

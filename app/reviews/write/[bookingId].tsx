@@ -1,14 +1,20 @@
-import React from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
-import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+/**
+ * Write Review Screen
+ * Dark Mode Support
+ */
+
 import { ReviewForm } from '@/components/reviews';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { useColors } from '@/hooks/useColors';
 import { useBookingForReview, useCreateReview } from '@/hooks/useReviews';
-import { Colors } from '@/constants/Colors';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import React from 'react';
+import { Alert, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function WriteReviewScreen() {
   const router = useRouter();
+  const colors = useColors();
   const { bookingId } = useLocalSearchParams<{ bookingId: string }>();
 
   const { data: booking, isLoading } = useBookingForReview(bookingId ?? '');
@@ -46,7 +52,7 @@ export default function WriteReviewScreen() {
 
   if (isLoading || !booking) {
     return (
-      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
         <Stack.Screen
           options={{
             headerShown: true,
@@ -60,7 +66,7 @@ export default function WriteReviewScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom']}>
       <Stack.Screen
         options={{
           headerShown: true,
@@ -80,6 +86,5 @@ export default function WriteReviewScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background.primary,
   },
 });

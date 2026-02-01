@@ -1,47 +1,55 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Image,
-  TouchableOpacity,
-  Dimensions,
-  FlatList,
-  Share,
-} from 'react-native';
-import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import {
-  ArrowLeft,
-  Heart,
-  Share2,
-  MapPin,
-  Star,
-  Clock,
-  MessageCircle,
-  ChevronRight,
-  Phone,
-  Globe,
-} from 'lucide-react-native';
-import { useProviderDetail } from '@/hooks/useProviders';
-import { useProviderInspirations } from '@/hooks/useInspirations';
-import { useFavoriteIds, useToggleFavorite } from '@/hooks/useFavorites';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { Button } from '@/components/ui/Button';
+/**
+ * Provider Detail Screen
+ * Dark Mode Support
+ */
+
 import { RatingStars } from '@/components/common/RatingStars';
-import { Avatar } from '@/components/ui/Avatar';
 import { InspirationCard } from '@/components/inspirations/InspirationCard';
+import { Avatar } from '@/components/ui/Avatar';
+import { Button } from '@/components/ui/Button';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
+import { useFavoriteIds, useToggleFavorite } from '@/hooks/useFavorites';
+import { useProviderInspirations } from '@/hooks/useInspirations';
+import { useProviderDetail } from '@/hooks/useProviders';
 import { formatPrice } from '@/lib/utils';
-import { Sparkles } from 'lucide-react-native';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import {
+  ArrowLeft,
+  ChevronRight,
+  Clock,
+  Globe,
+  Heart,
+  MapPin,
+  MessageCircle,
+  Phone,
+  Share2,
+  Sparkles,
+  Star,
+} from 'lucide-react-native';
+import React, { useState } from 'react';
+import {
+  Dimensions,
+  FlatList,
+  Image,
+  ScrollView,
+  Share,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 const GALLERY_IMAGE_HEIGHT = 300;
 
 export default function ProviderDetailScreen() {
   const router = useRouter();
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const { data: provider, isLoading, error } = useProviderDetail(id);
@@ -49,7 +57,6 @@ export default function ProviderDetailScreen() {
   const { data: favoriteIds = [] } = useFavoriteIds();
   const { mutate: toggleFavorite, isPending: isFavoriteLoading } = useToggleFavorite();
 
-  // Flatten inspirations pages
   const inspirations = inspirationsData?.pages.flatMap((page) => page) ?? [];
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -76,7 +83,6 @@ export default function ProviderDetailScreen() {
   };
 
   const handleContact = () => {
-    // TODO: Créer conversation et naviguer vers chat
     router.push(`/chat/new?providerId=${id}`);
   };
 
@@ -90,9 +96,9 @@ export default function ProviderDetailScreen() {
 
   if (error || !provider) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Prestataire non trouvé</Text>
+          <Text style={[styles.errorText, { color: colors.textSecondary }]}>Prestataire non trouvé</Text>
           <Button title="Retour" onPress={handleBack} variant="outline" />
         </View>
       </SafeAreaView>
@@ -104,6 +110,10 @@ export default function ProviderDetailScreen() {
   const reviews = provider.reviews || [];
   const minPrice =
     services.length > 0 ? Math.min(...services.map((s) => s.price)) : null;
+
+  const categoryBadgeBg = isDark ? colors.backgroundTertiary : `${colors.primary}10`;
+  const serviceCardBg = isDark ? colors.card : '#F9FAFB';
+  const reviewCardBg = isDark ? colors.card : '#F9FAFB';
 
   return (
     <>
@@ -131,8 +141,8 @@ export default function ProviderDetailScreen() {
               >
                 <Heart
                   size={22}
-                  color={isFavorite ? Colors.error.DEFAULT : Colors.white}
-                  fill={isFavorite ? Colors.error.DEFAULT : 'transparent'}
+                  color={isFavorite ? colors.error : Colors.white}
+                  fill={isFavorite ? colors.error : 'transparent'}
                 />
               </TouchableOpacity>
             </View>
@@ -141,12 +151,12 @@ export default function ProviderDetailScreen() {
       />
 
       <ScrollView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: colors.background }]}
         showsVerticalScrollIndicator={false}
         bounces={false}
       >
         {/* Gallery */}
-        <View style={styles.galleryContainer}>
+        <View style={[styles.galleryContainer, { backgroundColor: colors.backgroundTertiary }]}>
           {images.length > 0 ? (
             <>
               <FlatList
@@ -169,7 +179,6 @@ export default function ProviderDetailScreen() {
                   />
                 )}
               />
-              {/* Pagination dots */}
               {images.length > 1 && (
                 <View style={styles.paginationDots}>
                   {images.map((_, index) => (
@@ -187,7 +196,7 @@ export default function ProviderDetailScreen() {
           ) : (
             <View style={styles.placeholderImage}>
               <Text style={styles.placeholderEmoji}>📸</Text>
-              <Text style={styles.placeholderText}>Pas de photos</Text>
+              <Text style={[styles.placeholderText, { color: colors.textSecondary }]}>Pas de photos</Text>
             </View>
           )}
         </View>
@@ -195,10 +204,10 @@ export default function ProviderDetailScreen() {
         {/* Main Info */}
         <View style={styles.content}>
           <View style={styles.mainInfo}>
-            <Text style={styles.businessName}>{provider.business_name}</Text>
+            <Text style={[styles.businessName, { color: colors.text }]}>{provider.business_name}</Text>
 
-            <View style={styles.categoryBadge}>
-              <Text style={styles.categoryText}>
+            <View style={[styles.categoryBadge, { backgroundColor: categoryBadgeBg }]}>
+              <Text style={[styles.categoryText, { color: colors.primary }]}>
                 {provider.category?.name || 'Prestataire'}
               </Text>
             </View>
@@ -211,14 +220,14 @@ export default function ProviderDetailScreen() {
                   reviewCount={provider.review_count || 0}
                 />
               ) : (
-                <Text style={styles.newBadge}>Nouveau</Text>
+                <Text style={[styles.newBadge, { color: colors.primary }]}>Nouveau</Text>
               )}
             </View>
 
             {provider.city && (
               <View style={styles.locationRow}>
-                <MapPin size={16} color={Colors.text.secondary} />
-                <Text style={styles.locationText}>
+                <MapPin size={16} color={colors.textSecondary} />
+                <Text style={[styles.locationText, { color: colors.textSecondary }]}>
                   {provider.address || provider.city}
                 </Text>
               </View>
@@ -228,16 +237,16 @@ export default function ProviderDetailScreen() {
             <View style={styles.contactInfo}>
               {provider.business_phone && (
                 <View style={styles.contactItem}>
-                  <Phone size={16} color={Colors.text.secondary} />
-                  <Text style={styles.contactText}>
+                  <Phone size={16} color={colors.textSecondary} />
+                  <Text style={[styles.contactText, { color: colors.textSecondary }]}>
                     {provider.business_phone}
                   </Text>
                 </View>
               )}
               {provider.website && (
                 <View style={styles.contactItem}>
-                  <Globe size={16} color={Colors.text.secondary} />
-                  <Text style={styles.contactText} numberOfLines={1}>
+                  <Globe size={16} color={colors.textSecondary} />
+                  <Text style={[styles.contactText, { color: colors.textSecondary }]} numberOfLines={1}>
                     {provider.website}
                   </Text>
                 </View>
@@ -248,34 +257,34 @@ export default function ProviderDetailScreen() {
           {/* Description */}
           {provider.description && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>À propos</Text>
-              <Text style={styles.description}>{provider.description}</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>À propos</Text>
+              <Text style={[styles.description, { color: colors.textSecondary }]}>{provider.description}</Text>
             </View>
           )}
 
           {/* Services */}
           {services.length > 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Services</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Services</Text>
               {services.map((service) => (
-                <View key={service.id} style={styles.serviceCard}>
+                <View key={service.id} style={[styles.serviceCard, { backgroundColor: serviceCardBg }]}>
                   <View style={styles.serviceInfo}>
-                    <Text style={styles.serviceName}>{service.name}</Text>
+                    <Text style={[styles.serviceName, { color: colors.text }]}>{service.name}</Text>
                     {service.description && (
-                      <Text style={styles.serviceDescription} numberOfLines={2}>
+                      <Text style={[styles.serviceDescription, { color: colors.textSecondary }]} numberOfLines={2}>
                         {service.description}
                       </Text>
                     )}
                     {service.duration_minutes && (
                       <View style={styles.durationRow}>
-                        <Clock size={14} color={Colors.text.tertiary} />
-                        <Text style={styles.durationText}>
+                        <Clock size={14} color={colors.textTertiary} />
+                        <Text style={[styles.durationText, { color: colors.textTertiary }]}>
                           {service.duration_minutes} min
                         </Text>
                       </View>
                     )}
                   </View>
-                  <Text style={styles.servicePrice}>
+                  <Text style={[styles.servicePrice, { color: colors.primary }]}>
                     {formatPrice(service.price)}
                   </Text>
                 </View>
@@ -287,20 +296,20 @@ export default function ProviderDetailScreen() {
           {reviews.length > 0 && (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Avis</Text>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>Avis</Text>
                 {reviews.length > 3 && (
                   <TouchableOpacity
                     style={styles.seeAllButton}
                     onPress={() => router.push(`/reviews/provider/${id}`)}
                   >
-                    <Text style={styles.seeAllText}>Voir tous</Text>
-                    <ChevronRight size={16} color={Colors.primary.DEFAULT} />
+                    <Text style={[styles.seeAllText, { color: colors.primary }]}>Voir tous</Text>
+                    <ChevronRight size={16} color={colors.primary} />
                   </TouchableOpacity>
                 )}
               </View>
 
               {reviews.slice(0, 3).map((review) => (
-                <View key={review.id} style={styles.reviewCard}>
+                <View key={review.id} style={[styles.reviewCard, { backgroundColor: reviewCardBg }]}>
                   <View style={styles.reviewHeader}>
                     <Avatar
                       source={review.client?.avatar_url ?? undefined}
@@ -308,7 +317,7 @@ export default function ProviderDetailScreen() {
                       size="sm"
                     />
                     <View style={styles.reviewerInfo}>
-                      <Text style={styles.reviewerName}>
+                      <Text style={[styles.reviewerName, { color: colors.text }]}>
                         {review.client?.full_name || 'Anonyme'}
                       </Text>
                       <RatingStars
@@ -317,7 +326,7 @@ export default function ProviderDetailScreen() {
                         showValue={false}
                       />
                     </View>
-                    <Text style={styles.reviewDate}>
+                    <Text style={[styles.reviewDate, { color: colors.textTertiary }]}>
                       {new Date(review.created_at!).toLocaleDateString('fr-BE', {
                         month: 'short',
                         year: 'numeric',
@@ -325,14 +334,14 @@ export default function ProviderDetailScreen() {
                     </Text>
                   </View>
                   {review.comment && (
-                    <Text style={styles.reviewComment}>{review.comment}</Text>
+                    <Text style={[styles.reviewComment, { color: colors.textSecondary }]}>{review.comment}</Text>
                   )}
                   {review.provider_response && (
-                    <View style={styles.providerResponse}>
-                      <Text style={styles.providerResponseLabel}>
+                    <View style={[styles.providerResponse, { borderTopColor: colors.border }]}>
+                      <Text style={[styles.providerResponseLabel, { color: colors.primary }]}>
                         Réponse du prestataire
                       </Text>
-                      <Text style={styles.providerResponseText}>
+                      <Text style={[styles.providerResponseText, { color: colors.textSecondary }]}>
                         {review.provider_response}
                       </Text>
                     </View>
@@ -345,10 +354,10 @@ export default function ProviderDetailScreen() {
           {/* Empty reviews state */}
           {reviews.length === 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Avis</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Avis</Text>
               <View style={styles.emptyReviews}>
-                <Star size={40} color={Colors.gray[300]} />
-                <Text style={styles.emptyReviewsText}>
+                <Star size={40} color={colors.border} />
+                <Text style={[styles.emptyReviewsText, { color: colors.textSecondary }]}>
                   Aucun avis pour le moment
                 </Text>
               </View>
@@ -360,8 +369,8 @@ export default function ProviderDetailScreen() {
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <View style={styles.sectionTitleRow}>
-                  <Sparkles size={20} color={Colors.primary.DEFAULT} />
-                  <Text style={[styles.sectionTitle, { marginBottom: 0, marginLeft: 8 }]}>
+                  <Sparkles size={20} color={colors.primary} />
+                  <Text style={[styles.sectionTitle, { marginBottom: 0, marginLeft: 8, color: colors.text }]}>
                     Inspirations
                   </Text>
                 </View>
@@ -370,8 +379,8 @@ export default function ProviderDetailScreen() {
                     style={styles.seeAllButton}
                     onPress={() => router.push(`/(tabs)` as any)}
                   >
-                    <Text style={styles.seeAllText}>Voir tous</Text>
-                    <ChevronRight size={16} color={Colors.primary.DEFAULT} />
+                    <Text style={[styles.seeAllText, { color: colors.primary }]}>Voir tous</Text>
+                    <ChevronRight size={16} color={colors.primary} />
                   </TouchableOpacity>
                 )}
               </View>
@@ -396,20 +405,20 @@ export default function ProviderDetailScreen() {
       </ScrollView>
 
       {/* Bottom CTA */}
-      <SafeAreaView edges={['bottom']} style={styles.bottomBar}>
+      <SafeAreaView edges={['bottom']} style={[styles.bottomBar, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
         <View style={styles.bottomContent}>
           {minPrice && (
             <View style={styles.priceContainer}>
-              <Text style={styles.priceLabel}>À partir de</Text>
-              <Text style={styles.priceValue}>{formatPrice(minPrice)}</Text>
+              <Text style={[styles.priceLabel, { color: colors.textSecondary }]}>À partir de</Text>
+              <Text style={[styles.priceValue, { color: colors.text }]}>{formatPrice(minPrice)}</Text>
             </View>
           )}
           <View style={styles.bottomButtons}>
             <TouchableOpacity
-              style={styles.contactButton}
+              style={[styles.contactButton, { borderColor: colors.primary }]}
               onPress={handleContact}
             >
-              <MessageCircle size={20} color={Colors.primary.DEFAULT} />
+              <MessageCircle size={20} color={colors.primary} />
             </TouchableOpacity>
             <Button
               title="Réserver"
@@ -427,7 +436,6 @@ export default function ProviderDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background.primary,
   },
   errorContainer: {
     flex: 1,
@@ -438,7 +446,6 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: Layout.fontSize.lg,
-    color: Colors.text.secondary,
   },
 
   // Header buttons
@@ -458,7 +465,6 @@ const styles = StyleSheet.create({
   // Gallery
   galleryContainer: {
     height: GALLERY_IMAGE_HEIGHT,
-    backgroundColor: Colors.gray[200],
   },
   galleryImage: {
     width,
@@ -494,7 +500,6 @@ const styles = StyleSheet.create({
   placeholderText: {
     marginTop: Layout.spacing.sm,
     fontSize: Layout.fontSize.md,
-    color: Colors.text.secondary,
   },
 
   // Content
@@ -507,12 +512,10 @@ const styles = StyleSheet.create({
   businessName: {
     fontSize: Layout.fontSize['2xl'],
     fontWeight: '700',
-    color: Colors.text.primary,
     marginBottom: Layout.spacing.sm,
   },
   categoryBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: Colors.primary[50],
     paddingVertical: Layout.spacing.xs,
     paddingHorizontal: Layout.spacing.md,
     borderRadius: Layout.radius.full,
@@ -521,7 +524,6 @@ const styles = StyleSheet.create({
   categoryText: {
     fontSize: Layout.fontSize.sm,
     fontWeight: '500',
-    color: Colors.primary.DEFAULT,
   },
   metaRow: {
     flexDirection: 'row',
@@ -530,7 +532,6 @@ const styles = StyleSheet.create({
   },
   newBadge: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.primary.DEFAULT,
     fontWeight: '500',
   },
   locationRow: {
@@ -541,7 +542,6 @@ const styles = StyleSheet.create({
   },
   locationText: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
   },
   contactInfo: {
     marginTop: Layout.spacing.sm,
@@ -554,7 +554,6 @@ const styles = StyleSheet.create({
   },
   contactText: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
     flex: 1,
   },
 
@@ -571,7 +570,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: Layout.fontSize.lg,
     fontWeight: '600',
-    color: Colors.text.primary,
     marginBottom: Layout.spacing.md,
   },
   seeAllButton: {
@@ -580,12 +578,10 @@ const styles = StyleSheet.create({
   },
   seeAllText: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.primary.DEFAULT,
     fontWeight: '500',
   },
   description: {
     fontSize: Layout.fontSize.md,
-    color: Colors.text.secondary,
     lineHeight: 24,
   },
 
@@ -594,7 +590,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    backgroundColor: Colors.gray[50],
     padding: Layout.spacing.md,
     borderRadius: Layout.radius.md,
     marginBottom: Layout.spacing.sm,
@@ -606,12 +601,10 @@ const styles = StyleSheet.create({
   serviceName: {
     fontSize: Layout.fontSize.md,
     fontWeight: '600',
-    color: Colors.text.primary,
     marginBottom: Layout.spacing.xs,
   },
   serviceDescription: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
     marginBottom: Layout.spacing.xs,
   },
   durationRow: {
@@ -621,17 +614,14 @@ const styles = StyleSheet.create({
   },
   durationText: {
     fontSize: Layout.fontSize.xs,
-    color: Colors.text.tertiary,
   },
   servicePrice: {
     fontSize: Layout.fontSize.lg,
     fontWeight: '700',
-    color: Colors.primary.DEFAULT,
   },
 
   // Reviews
   reviewCard: {
-    backgroundColor: Colors.gray[50],
     padding: Layout.spacing.md,
     borderRadius: Layout.radius.md,
     marginBottom: Layout.spacing.sm,
@@ -648,32 +638,26 @@ const styles = StyleSheet.create({
   reviewerName: {
     fontSize: Layout.fontSize.sm,
     fontWeight: '600',
-    color: Colors.text.primary,
   },
   reviewDate: {
     fontSize: Layout.fontSize.xs,
-    color: Colors.text.tertiary,
   },
   reviewComment: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
     lineHeight: 20,
   },
   providerResponse: {
     marginTop: Layout.spacing.sm,
     paddingTop: Layout.spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: Colors.gray[200],
   },
   providerResponseLabel: {
     fontSize: Layout.fontSize.xs,
     fontWeight: '600',
-    color: Colors.primary.DEFAULT,
     marginBottom: Layout.spacing.xs,
   },
   providerResponseText: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
     fontStyle: 'italic',
   },
   emptyReviews: {
@@ -683,7 +667,6 @@ const styles = StyleSheet.create({
   emptyReviewsText: {
     marginTop: Layout.spacing.sm,
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
   },
 
   // Bottom bar
@@ -692,9 +675,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: Colors.white,
     borderTopWidth: 1,
-    borderTopColor: Colors.gray[200],
   },
   bottomContent: {
     flexDirection: 'row',
@@ -705,12 +686,10 @@ const styles = StyleSheet.create({
   priceContainer: {},
   priceLabel: {
     fontSize: Layout.fontSize.xs,
-    color: Colors.text.secondary,
   },
   priceValue: {
     fontSize: Layout.fontSize.xl,
     fontWeight: '700',
-    color: Colors.text.primary,
   },
   bottomButtons: {
     flexDirection: 'row',
@@ -722,7 +701,6 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: Layout.radius.md,
     borderWidth: 1.5,
-    borderColor: Colors.primary.DEFAULT,
     justifyContent: 'center',
     alignItems: 'center',
   },

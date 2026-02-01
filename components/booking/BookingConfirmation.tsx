@@ -1,10 +1,15 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Calendar, Clock, MapPin, FileText } from 'lucide-react-native';
-import { Service } from '@/types';
-import { Colors } from '@/constants/Colors';
+/**
+ * Booking Confirmation Component
+ * Dark Mode Support
+ */
+
 import { Layout } from '@/constants/Layout';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { formatDate, formatPrice } from '@/lib/utils';
+import { Service } from '@/types';
+import { Calendar, Clock, FileText } from 'lucide-react-native';
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 
 interface BookingConfirmationProps {
   providerName: string;
@@ -23,72 +28,110 @@ export function BookingConfirmation({
   eventTitle,
   notes,
 }: BookingConfirmationProps) {
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Récapitulatif</Text>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.card,
+          shadowColor: isDark ? colors.primary : '#000000',
+          shadowOpacity: isDark ? 0.3 : 0.05,
+        },
+      ]}
+    >
+      <Text style={[styles.title, { color: colors.text }]}>Récapitulatif</Text>
 
       <View style={styles.section}>
-        <Text style={styles.sectionLabel}>Prestataire</Text>
-        <Text style={styles.sectionValue}>{providerName}</Text>
+        <Text style={[styles.sectionLabel, { color: colors.textTertiary }]}>
+          Prestataire
+        </Text>
+        <Text style={[styles.sectionValue, { color: colors.text }]}>
+          {providerName}
+        </Text>
       </View>
 
-      <View style={styles.divider} />
+      <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
       <View style={styles.section}>
-        <Text style={styles.sectionLabel}>Service</Text>
-        <Text style={styles.sectionValue}>{service.name}</Text>
+        <Text style={[styles.sectionLabel, { color: colors.textTertiary }]}>
+          Service
+        </Text>
+        <Text style={[styles.sectionValue, { color: colors.text }]}>
+          {service.name}
+        </Text>
         {service.duration_minutes != null && (
           <View style={styles.row}>
-            <Clock size={14} color={Colors.text.tertiary} />
-            <Text style={styles.meta}>{service.duration_minutes} min</Text>
+            <Clock size={14} color={colors.textTertiary} />
+            <Text style={[styles.meta, { color: colors.textTertiary }]}>
+              {service.duration_minutes} min
+            </Text>
           </View>
         )}
       </View>
 
-      <View style={styles.divider} />
+      <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
       <View style={styles.section}>
-        <Text style={styles.sectionLabel}>Date et heure</Text>
+        <Text style={[styles.sectionLabel, { color: colors.textTertiary }]}>
+          Date et heure
+        </Text>
         <View style={styles.row}>
-          <Calendar size={16} color={Colors.text.secondary} />
-          <Text style={styles.sectionValue}>{formatDate(date)}</Text>
+          <Calendar size={16} color={colors.textSecondary} />
+          <Text style={[styles.sectionValue, { color: colors.text }]}>
+            {formatDate(date)}
+          </Text>
         </View>
         {time && (
           <View style={styles.row}>
-            <Clock size={16} color={Colors.text.secondary} />
-            <Text style={styles.sectionValue}>{time.slice(0, 5)}</Text>
+            <Clock size={16} color={colors.textSecondary} />
+            <Text style={[styles.sectionValue, { color: colors.text }]}>
+              {time.slice(0, 5)}
+            </Text>
           </View>
         )}
       </View>
 
       {eventTitle && (
         <>
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Événement lié</Text>
-            <Text style={styles.sectionValue}>{eventTitle}</Text>
+            <Text style={[styles.sectionLabel, { color: colors.textTertiary }]}>
+              Événement lié
+            </Text>
+            <Text style={[styles.sectionValue, { color: colors.text }]}>
+              {eventTitle}
+            </Text>
           </View>
         </>
       )}
 
       {notes && (
         <>
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Notes</Text>
+            <Text style={[styles.sectionLabel, { color: colors.textTertiary }]}>
+              Notes
+            </Text>
             <View style={styles.row}>
-              <FileText size={16} color={Colors.text.secondary} />
-              <Text style={styles.notesText}>{notes}</Text>
+              <FileText size={16} color={colors.textSecondary} />
+              <Text style={[styles.notesText, { color: colors.textSecondary }]}>
+                {notes}
+              </Text>
             </View>
           </View>
         </>
       )}
 
-      <View style={styles.divider} />
+      <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
       <View style={styles.totalSection}>
-        <Text style={styles.totalLabel}>Total</Text>
-        <Text style={styles.totalPrice}>{formatPrice(service.price)}</Text>
+        <Text style={[styles.totalLabel, { color: colors.text }]}>Total</Text>
+        <Text style={[styles.totalPrice, { color: colors.primary }]}>
+          {formatPrice(service.price)}
+        </Text>
       </View>
     </View>
   );
@@ -96,19 +139,15 @@ export function BookingConfirmation({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.white,
     borderRadius: Layout.radius.lg,
     padding: Layout.spacing.lg,
-    shadowColor: Colors.black,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
   },
   title: {
     fontSize: Layout.fontSize.lg,
     fontWeight: '700',
-    color: Colors.text.primary,
     marginBottom: Layout.spacing.lg,
   },
   section: {
@@ -117,14 +156,12 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: Layout.fontSize.xs,
     fontWeight: '600',
-    color: Colors.text.tertiary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   sectionValue: {
     fontSize: Layout.fontSize.md,
     fontWeight: '500',
-    color: Colors.text.primary,
   },
   row: {
     flexDirection: 'row',
@@ -133,17 +170,14 @@ const styles = StyleSheet.create({
   },
   meta: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.tertiary,
   },
   notesText: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
     flex: 1,
     lineHeight: 20,
   },
   divider: {
     height: 1,
-    backgroundColor: Colors.gray[100],
     marginVertical: Layout.spacing.md,
   },
   totalSection: {
@@ -154,11 +188,9 @@ const styles = StyleSheet.create({
   totalLabel: {
     fontSize: Layout.fontSize.lg,
     fontWeight: '600',
-    color: Colors.text.primary,
   },
   totalPrice: {
     fontSize: Layout.fontSize['2xl'],
     fontWeight: '700',
-    color: Colors.primary.DEFAULT,
   },
 });

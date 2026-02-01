@@ -1,12 +1,18 @@
-import React, { useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useFindOrCreateConversation } from '@/hooks/useConversations';
+/**
+ * New Conversation Screen
+ * Dark Mode Support
+ */
+
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { Colors } from '@/constants/Colors';
+import { useColors } from '@/hooks/useColors';
+import { useFindOrCreateConversation } from '@/hooks/useConversations';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect } from 'react';
+import { StyleSheet, View } from 'react-native';
 
 export default function NewConversationScreen() {
   const router = useRouter();
+  const colors = useColors();
   const { providerId } = useLocalSearchParams<{ providerId: string }>();
   const { mutate: findOrCreate, isPending, error } =
     useFindOrCreateConversation();
@@ -19,7 +25,6 @@ export default function NewConversationScreen() {
 
     findOrCreate(providerId, {
       onSuccess: (conversation) => {
-        // Replace current screen so back button goes to previous page, not this loading screen
         router.replace(`/chat/${conversation.id}`);
       },
       onError: () => {
@@ -29,7 +34,7 @@ export default function NewConversationScreen() {
   }, [providerId, findOrCreate, router]);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <LoadingSpinner
         fullScreen
         message={
@@ -45,6 +50,5 @@ export default function NewConversationScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background.primary,
   },
 });

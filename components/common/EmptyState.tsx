@@ -1,8 +1,8 @@
-import React from 'react';
-import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 import { Button } from '@/components/ui/Button';
-import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
+import { useColors } from '@/hooks/useColors';
+import React from 'react';
+import { StyleSheet, Text, View, ViewStyle } from 'react-native';
 
 interface EmptyStateProps {
   icon?: string;
@@ -21,12 +21,14 @@ export function EmptyState({
   onAction,
   style,
 }: EmptyStateProps) {
+  const colors = useColors();
+
   return (
     <View style={[styles.container, style]}>
       {icon && <Text style={styles.icon}>{icon}</Text>}
-      <Text style={styles.title}>{title}</Text>
+      <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
       {description && (
-        <Text style={styles.description}>{description}</Text>
+        <Text style={[styles.description, { color: colors.textSecondary }]}>{description}</Text>
       )}
       {actionLabel && onAction && (
         <Button
@@ -55,13 +57,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: Layout.fontSize.lg,
     fontWeight: '600',
-    color: Colors.text.primary,
     textAlign: 'center',
     marginBottom: Layout.spacing.sm,
   },
   description: {
     fontSize: Layout.fontSize.md,
-    color: Colors.text.secondary,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: Layout.spacing.lg,

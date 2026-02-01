@@ -1,19 +1,25 @@
+/**
+ * Onboarding Screen
+ * Dark Mode Support
+ */
+
 import { Button } from '@/components/ui/Button';
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import {
-    Dimensions,
-    FlatList,
-    StyleSheet,
-    Text,
-    View,
-    ViewToken,
+  Dimensions,
+  FlatList,
+  StyleSheet,
+  Text,
+  View,
+  ViewToken,
 } from 'react-native';
 import {
-    useSharedValue
+  useSharedValue
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -24,7 +30,8 @@ interface OnboardingSlide {
   emoji: string;
   title: string;
   description: string;
-  backgroundColor: string;
+  backgroundColorLight: string;
+  backgroundColorDark: string;
 }
 
 const slides: OnboardingSlide[] = [
@@ -34,7 +41,8 @@ const slides: OnboardingSlide[] = [
     title: 'Trouvez les meilleurs prestataires',
     description:
       'Parcourez notre catalogue de professionnels de l\'événementiel triés sur le volet.',
-    backgroundColor: Colors.primary[50],
+    backgroundColorLight: Colors.primary[50],
+    backgroundColorDark: '#1A1A2E',
   },
   {
     id: '2',
@@ -42,7 +50,8 @@ const slides: OnboardingSlide[] = [
     title: 'Réservez en quelques clics',
     description:
       'Consultez les disponibilités et réservez directement le prestataire de votre choix.',
-    backgroundColor: Colors.secondary.DEFAULT,
+    backgroundColorLight: Colors.secondary.DEFAULT,
+    backgroundColorDark: '#16213E',
   },
   {
     id: '3',
@@ -50,7 +59,8 @@ const slides: OnboardingSlide[] = [
     title: 'Communiquez facilement',
     description:
       'Échangez avec vos prestataires via notre messagerie intégrée.',
-    backgroundColor: Colors.primary[100],
+    backgroundColorLight: Colors.primary[100],
+    backgroundColorDark: '#1A1A3E',
   },
   {
     id: '4',
@@ -58,12 +68,15 @@ const slides: OnboardingSlide[] = [
     title: 'Partagez votre expérience',
     description:
       'Laissez des avis pour aider la communauté à faire les meilleurs choix.',
-    backgroundColor: Colors.success.light,
+    backgroundColorLight: Colors.success.light,
+    backgroundColorDark: '#1E3A2E',
   },
 ];
 
 export default function OnboardingScreen() {
   const router = useRouter();
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
   const { updateProfile, profile } = useAuthStore();
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
@@ -96,8 +109,7 @@ export default function OnboardingScreen() {
   const completeOnboarding = async () => {
     try {
       await updateProfile({ is_onboarded: true });
-      
-      // Redirection selon le rôle
+
       if (profile?.role === 'provider') {
         router.replace('/(provider)/dashboard');
       } else {
@@ -109,12 +121,13 @@ export default function OnboardingScreen() {
   };
 
   const renderSlide = ({ item, index }: { item: OnboardingSlide; index: number }) => {
+    const bgColor = isDark ? item.backgroundColorDark : item.backgroundColorLight;
     return (
-      <View style={[styles.slide, { backgroundColor: item.backgroundColor }]}>
+      <View style={[styles.slide, { backgroundColor: bgColor }]}>
         <View style={styles.slideContent}>
           <Text style={styles.emoji}>{item.emoji}</Text>
-          <Text style={styles.slideTitle}>{item.title}</Text>
-          <Text style={styles.slideDescription}>{item.description}</Text>
+          <Text style={[styles.slideTitle, { color: colors.text }]}>{item.title}</Text>
+          <Text style={[styles.slideDescription, { color: colors.textSecondary }]}>{item.description}</Text>
         </View>
       </View>
     );
@@ -123,7 +136,7 @@ export default function OnboardingScreen() {
   const isLastSlide = currentIndex === slides.length - 1;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         {!isLastSlide && (
           <Button
@@ -157,7 +170,8 @@ export default function OnboardingScreen() {
             key={index}
             style={[
               styles.dot,
-              currentIndex === index && styles.dotActive,
+              { backgroundColor: colors.border },
+              currentIndex === index && { backgroundColor: colors.primary, width: 24 },
             ]}
           />
         ))}
@@ -188,7 +202,6 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
   },
   header: {
     flexDirection: 'row',
@@ -213,13 +226,11 @@ const styles = StyleSheet.create({
   slideTitle: {
     fontSize: Layout.fontSize['2xl'],
     fontWeight: '700',
-    color: Colors.text.primary,
     textAlign: 'center',
     marginBottom: Layout.spacing.md,
   },
   slideDescription: {
     fontSize: Layout.fontSize.md,
-    color: Colors.text.secondary,
     textAlign: 'center',
     lineHeight: 24,
   },
@@ -234,11 +245,6 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: Colors.gray[300],
-  },
-  dotActive: {
-    width: 24,
-    backgroundColor: Colors.primary.DEFAULT,
   },
   footer: {
     paddingHorizontal: Layout.spacing.lg,

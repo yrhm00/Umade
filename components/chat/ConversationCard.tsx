@@ -1,12 +1,12 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
 import { Avatar } from '@/components/ui/Avatar';
+import { Layout } from '@/constants/Layout';
+import { useColors } from '@/hooks/useColors';
+import { formatRelativeTime } from '@/lib/utils';
 import { useAuthStore } from '@/stores/authStore';
 import { ConversationWithDetails } from '@/types';
-import { Colors } from '@/constants/Colors';
-import { Layout } from '@/constants/Layout';
-import { formatRelativeTime } from '@/lib/utils';
+import { useRouter } from 'expo-router';
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface ConversationCardProps {
   conversation: ConversationWithDetails;
@@ -17,6 +17,7 @@ export const ConversationCard = React.memo(function ConversationCard({
 }: ConversationCardProps) {
   const router = useRouter();
   const userId = useAuthStore((state) => state.user?.id);
+  const colors = useColors();
 
   const isClient = conversation.client_id === userId;
   const displayName = isClient
@@ -31,14 +32,14 @@ export const ConversationCard = React.memo(function ConversationCard({
 
   return (
     <TouchableOpacity
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.card }]}
       onPress={() => router.push(`/chat/${conversation.id}`)}
       activeOpacity={0.7}
     >
       <View style={styles.avatarContainer}>
         <Avatar source={avatarUrl} name={displayName} size="lg" />
         {hasUnread && (
-          <View style={styles.unreadBadge}>
+          <View style={[styles.unreadBadge, { backgroundColor: colors.primary }]}>
             <Text style={styles.unreadCount}>
               {conversation.unread_count > 9
                 ? '9+'
@@ -51,13 +52,13 @@ export const ConversationCard = React.memo(function ConversationCard({
       <View style={styles.content}>
         <View style={styles.header}>
           <Text
-            style={[styles.name, hasUnread && styles.nameBold]}
+            style={[styles.name, { color: colors.text }, hasUnread && styles.nameBold]}
             numberOfLines={1}
           >
             {displayName}
           </Text>
           {lastMessage?.created_at && (
-            <Text style={styles.time}>
+            <Text style={[styles.time, { color: colors.textTertiary }]}>
               {formatRelativeTime(lastMessage.created_at)}
             </Text>
           )}
@@ -66,14 +67,18 @@ export const ConversationCard = React.memo(function ConversationCard({
         <View style={styles.messageRow}>
           {lastMessage ? (
             <Text
-              style={[styles.lastMessage, hasUnread && styles.lastMessageBold]}
+              style={[
+                styles.lastMessage,
+                { color: colors.textSecondary },
+                hasUnread && { color: colors.text, fontWeight: '500' }
+              ]}
               numberOfLines={1}
             >
               {lastMessage.sender_id === userId && 'Vous: '}
               {lastMessage.content}
             </Text>
           ) : (
-            <Text style={styles.noMessage}>Nouvelle conversation</Text>
+            <Text style={[styles.noMessage, { color: colors.textTertiary }]}>Nouvelle conversation</Text>
           )}
         </View>
       </View>
@@ -87,7 +92,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: Layout.spacing.lg,
     paddingVertical: Layout.spacing.md,
-    backgroundColor: Colors.white,
     gap: Layout.spacing.md,
   },
   avatarContainer: {
@@ -100,7 +104,6 @@ const styles = StyleSheet.create({
     minWidth: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: Colors.primary.DEFAULT,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 4,
@@ -108,7 +111,7 @@ const styles = StyleSheet.create({
   unreadCount: {
     fontSize: 11,
     fontWeight: '700',
-    color: Colors.white,
+    color: '#FFFFFF',
   },
   content: {
     flex: 1,
@@ -122,7 +125,6 @@ const styles = StyleSheet.create({
   name: {
     flex: 1,
     fontSize: Layout.fontSize.md,
-    color: Colors.text.primary,
     marginRight: Layout.spacing.sm,
   },
   nameBold: {
@@ -130,7 +132,6 @@ const styles = StyleSheet.create({
   },
   time: {
     fontSize: Layout.fontSize.xs,
-    color: Colors.text.tertiary,
   },
   messageRow: {
     flexDirection: 'row',
@@ -139,15 +140,9 @@ const styles = StyleSheet.create({
   lastMessage: {
     flex: 1,
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
-  },
-  lastMessageBold: {
-    color: Colors.text.primary,
-    fontWeight: '500',
   },
   noMessage: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.tertiary,
     fontStyle: 'italic',
   },
 });

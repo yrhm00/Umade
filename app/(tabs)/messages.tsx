@@ -1,7 +1,7 @@
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
+import { useColors } from '@/hooks/useColors';
 import { useConversations, useHideConversation, usePinConversation } from '@/hooks/useConversations';
 import { useRealtimeConversations } from '@/hooks/useRealtimeMessages';
 import { ConversationWithDetails } from '@/types';
@@ -14,6 +14,7 @@ import { SwipeableConversationItem } from '@/components/chat/SwipeableConversati
 
 export default function MessagesScreen() {
   const router = useRouter();
+  const colors = useColors();
   const { data: conversations, isLoading, refetch, isRefetching } =
     useConversations();
 
@@ -49,14 +50,14 @@ export default function MessagesScreen() {
   );
 
   const ItemSeparator = useCallback(
-    () => <View style={styles.separator} />,
-    []
+    () => <View style={[styles.separator, { backgroundColor: colors.border }]} />,
+    [colors.border]
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Messages</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+      <View style={[styles.header, { borderBottomColor: colors.border }]}>
+        <Text style={[styles.title, { color: colors.text }]}>Messages</Text>
       </View>
 
       {isLoading ? (
@@ -88,18 +89,15 @@ export default function MessagesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background.primary,
   },
   header: {
     paddingHorizontal: Layout.spacing.lg,
     paddingVertical: Layout.spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.gray[100],
   },
   title: {
     fontSize: Layout.fontSize['2xl'],
     fontWeight: '700',
-    color: Colors.text.primary,
   },
   list: {
     paddingTop: Layout.spacing.sm,
@@ -107,7 +105,6 @@ const styles = StyleSheet.create({
   },
   separator: {
     height: 1,
-    backgroundColor: Colors.gray[100],
     marginLeft: Layout.spacing.lg + 56 + Layout.spacing.md,
   },
 });

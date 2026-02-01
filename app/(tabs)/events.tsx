@@ -2,9 +2,9 @@ import { BookingCard } from '@/components/booking/BookingCard';
 import { EmptyState } from '@/components/common/EmptyState';
 import { EventCard } from '@/components/events/EventCard';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
 import { useBookings } from '@/hooks/useBookings';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { useUserEvents } from '@/hooks/useEvents';
 import { EventWithBookings } from '@/types';
 import { useRouter } from 'expo-router';
@@ -25,6 +25,8 @@ type FilterType = 'upcoming' | 'past';
 
 export default function EventsScreen() {
   const router = useRouter();
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
   const [activeTab, setActiveTab] = useState<TabType>('events');
   const [filter, setFilter] = useState<FilterType>('upcoming');
 
@@ -80,29 +82,36 @@ export default function EventsScreen() {
     <BookingCard booking={item} />
   );
 
+  // Theme-aware colors
+  const tabInactiveBg = isDark ? colors.backgroundTertiary : `${colors.primary}10`;
+  const tabActiveBg = colors.primary;
+
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundSecondary }]} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Mes événements</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Mes événements</Text>
         <TouchableOpacity
-          style={styles.addButton}
+          style={[styles.addButton, { backgroundColor: `${colors.primary}15` }]}
           onPress={() => router.push('/event/create' as any)}
         >
-          <Plus size={24} color={Colors.primary.DEFAULT} />
+          <Plus size={24} color={colors.primary} />
         </TouchableOpacity>
       </View>
 
       {/* Main Tabs: Events / Bookings */}
       <View style={styles.mainTabs}>
         <TouchableOpacity
-          style={[styles.mainTab, activeTab === 'events' && styles.mainTabActive]}
+          style={[
+            styles.mainTab,
+            { backgroundColor: activeTab === 'events' ? tabActiveBg : tabInactiveBg }
+          ]}
           onPress={() => setActiveTab('events')}
         >
           <Text
             style={[
               styles.mainTabText,
-              activeTab === 'events' && styles.mainTabTextActive,
+              { color: activeTab === 'events' ? '#FFFFFF' : colors.textSecondary },
             ]}
           >
             Événements
@@ -111,14 +120,14 @@ export default function EventsScreen() {
         <TouchableOpacity
           style={[
             styles.mainTab,
-            activeTab === 'bookings' && styles.mainTabActive,
+            { backgroundColor: activeTab === 'bookings' ? tabActiveBg : tabInactiveBg }
           ]}
           onPress={() => setActiveTab('bookings')}
         >
           <Text
             style={[
               styles.mainTabText,
-              activeTab === 'bookings' && styles.mainTabTextActive,
+              { color: activeTab === 'bookings' ? '#FFFFFF' : colors.textSecondary },
             ]}
           >
             Réservations
@@ -131,14 +140,14 @@ export default function EventsScreen() {
         <TouchableOpacity
           style={[
             styles.filterTab,
-            filter === 'upcoming' && styles.filterTabActive,
+            { borderBottomColor: filter === 'upcoming' ? colors.primary : colors.border },
           ]}
           onPress={() => setFilter('upcoming')}
         >
           <Text
             style={[
               styles.filterTabText,
-              filter === 'upcoming' && styles.filterTabTextActive,
+              { color: filter === 'upcoming' ? colors.primary : colors.textSecondary },
             ]}
           >
             À venir
@@ -147,14 +156,14 @@ export default function EventsScreen() {
         <TouchableOpacity
           style={[
             styles.filterTab,
-            filter === 'past' && styles.filterTabActive,
+            { borderBottomColor: filter === 'past' ? colors.primary : colors.border },
           ]}
           onPress={() => setFilter('past')}
         >
           <Text
             style={[
               styles.filterTabText,
-              filter === 'past' && styles.filterTabTextActive,
+              { color: filter === 'past' ? colors.primary : colors.textSecondary },
             ]}
           >
             Passés
@@ -174,7 +183,11 @@ export default function EventsScreen() {
             contentContainerStyle={styles.list}
             showsVerticalScrollIndicator={false}
             refreshControl={
-              <RefreshControl refreshing={false} onRefresh={handleRefresh} />
+              <RefreshControl
+                refreshing={false}
+                onRefresh={handleRefresh}
+                tintColor={colors.primary}
+              />
             }
           />
         ) : (
@@ -208,7 +221,11 @@ export default function EventsScreen() {
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={false} onRefresh={handleRefresh} />
+            <RefreshControl
+              refreshing={false}
+              onRefresh={handleRefresh}
+              tintColor={colors.primary}
+            />
           }
         />
       ) : (
@@ -241,7 +258,6 @@ export default function EventsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background.secondary,
   },
   header: {
     flexDirection: 'row',
@@ -253,13 +269,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: Layout.fontSize['2xl'],
     fontWeight: '700',
-    color: Colors.text.primary,
   },
   addButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: Colors.primary[50],
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -274,18 +288,10 @@ const styles = StyleSheet.create({
     paddingVertical: Layout.spacing.sm,
     alignItems: 'center',
     borderRadius: Layout.radius.md,
-    backgroundColor: Colors.gray[100],
-  },
-  mainTabActive: {
-    backgroundColor: Colors.primary.DEFAULT,
   },
   mainTabText: {
     fontSize: Layout.fontSize.sm,
     fontWeight: '600',
-    color: Colors.text.secondary,
-  },
-  mainTabTextActive: {
-    color: Colors.white,
   },
   filterTabs: {
     flexDirection: 'row',
@@ -297,18 +303,10 @@ const styles = StyleSheet.create({
     paddingVertical: Layout.spacing.sm,
     alignItems: 'center',
     borderBottomWidth: 2,
-    borderBottomColor: Colors.gray[200],
-  },
-  filterTabActive: {
-    borderBottomColor: Colors.primary.DEFAULT,
   },
   filterTabText: {
     fontSize: Layout.fontSize.sm,
     fontWeight: '500',
-    color: Colors.text.secondary,
-  },
-  filterTabTextActive: {
-    color: Colors.primary.DEFAULT,
   },
   list: {
     paddingHorizontal: Layout.spacing.lg,

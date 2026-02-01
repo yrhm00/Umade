@@ -1,8 +1,9 @@
-import React from 'react';
-import { View, Text, StyleSheet, ViewStyle } from 'react-native';
-import { Star } from 'lucide-react-native';
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
+import { Star } from 'lucide-react-native';
+import React from 'react';
+import { StyleSheet, Text, View, ViewStyle } from 'react-native';
 
 interface RatingStarsProps {
   rating: number;
@@ -21,9 +22,14 @@ export function RatingStars({
   reviewCount,
   style,
 }: RatingStarsProps) {
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
+
   const fullStars = Math.floor(rating);
   const hasHalfStar = rating - fullStars >= 0.5;
   const emptyStars = maxRating - fullStars - (hasHalfStar ? 1 : 0);
+
+  const emptyStarColor = isDark ? colors.textTertiary : Colors.gray[300];
 
   return (
     <View style={[styles.container, style]}>
@@ -41,7 +47,7 @@ export function RatingStars({
         {/* Half star */}
         {hasHalfStar && (
           <View style={{ position: 'relative' }}>
-            <Star size={size} color={Colors.gray[300]} />
+            <Star size={size} color={emptyStarColor} />
             <View style={styles.halfStarOverlay}>
               <Star
                 size={size}
@@ -54,16 +60,16 @@ export function RatingStars({
 
         {/* Empty stars */}
         {Array.from({ length: emptyStars }).map((_, i) => (
-          <Star key={`empty-${i}`} size={size} color={Colors.gray[300]} />
+          <Star key={`empty-${i}`} size={size} color={emptyStarColor} />
         ))}
       </View>
 
       {showValue && (
-        <Text style={styles.ratingText}>{rating.toFixed(1)}</Text>
+        <Text style={[styles.ratingText, { color: colors.text }]}>{rating.toFixed(1)}</Text>
       )}
 
       {reviewCount !== undefined && (
-        <Text style={styles.reviewCount}>({reviewCount})</Text>
+        <Text style={[styles.reviewCount, { color: colors.textSecondary }]}>({reviewCount})</Text>
       )}
     </View>
   );
@@ -87,10 +93,8 @@ const styles = StyleSheet.create({
   ratingText: {
     fontSize: Layout.fontSize.sm,
     fontWeight: '600',
-    color: Colors.text.primary,
   },
   reviewCount: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
   },
 });

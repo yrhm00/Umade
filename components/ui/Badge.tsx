@@ -1,12 +1,13 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ViewStyle,
-} from 'react-native';
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
+import React from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  ViewStyle,
+} from 'react-native';
 
 type BadgeVariant = 'default' | 'success' | 'warning' | 'error' | 'info';
 type BadgeSize = 'sm' | 'md';
@@ -19,14 +20,6 @@ interface BadgeProps {
   icon?: React.ReactNode;
 }
 
-const variantColors: Record<BadgeVariant, { bg: string; text: string }> = {
-  default: { bg: Colors.gray[100], text: Colors.gray[700] },
-  success: { bg: Colors.success.light, text: Colors.success.dark },
-  warning: { bg: Colors.warning.light, text: Colors.warning.dark },
-  error: { bg: Colors.error.light, text: Colors.error.dark },
-  info: { bg: Colors.primary[100], text: Colors.primary.DEFAULT },
-};
-
 export function Badge({
   label,
   variant = 'default',
@@ -34,14 +27,40 @@ export function Badge({
   style,
   icon,
 }: BadgeProps) {
-  const colors = variantColors[variant];
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
+
+  const variantColors: Record<BadgeVariant, { bg: string; text: string }> = {
+    default: {
+      bg: isDark ? colors.backgroundTertiary : Colors.gray[100],
+      text: isDark ? colors.textSecondary : Colors.gray[700]
+    },
+    success: {
+      bg: isDark ? 'rgba(34, 197, 94, 0.2)' : Colors.success.light,
+      text: isDark ? '#4ade80' : Colors.success.dark
+    },
+    warning: {
+      bg: isDark ? 'rgba(234, 179, 8, 0.2)' : Colors.warning.light,
+      text: isDark ? '#facc15' : Colors.warning.dark
+    },
+    error: {
+      bg: isDark ? 'rgba(239, 68, 68, 0.2)' : Colors.error.light,
+      text: isDark ? '#f87171' : Colors.error.dark
+    },
+    info: {
+      bg: isDark ? 'rgba(56, 189, 248, 0.2)' : Colors.primary[100],
+      text: isDark ? '#38bdf8' : Colors.primary.DEFAULT
+    },
+  };
+
+  const activeColors = variantColors[variant];
 
   return (
     <View
       style={[
         styles.base,
         styles[`size_${size}`],
-        { backgroundColor: colors.bg },
+        { backgroundColor: activeColors.bg },
         style,
       ]}
     >
@@ -50,7 +69,7 @@ export function Badge({
         style={[
           styles.text,
           styles[`text_${size}`],
-          { color: colors.text },
+          { color: activeColors.text },
         ]}
       >
         {label}

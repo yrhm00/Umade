@@ -1,4 +1,5 @@
 import { Colors } from '@/constants/Colors';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import {
@@ -29,6 +30,8 @@ export function IOSRangeCalendar({
     onRangeSelect,
     minDate = new Date().toISOString().split('T')[0],
 }: IOSRangeCalendarProps) {
+    const colors = useColors();
+    const isDark = useIsDarkTheme();
     const today = new Date();
     const [currentMonth, setCurrentMonth] = useState(today.getMonth() + 1);
     const [currentYear, setCurrentYear] = useState(today.getFullYear());
@@ -116,12 +119,12 @@ export function IOSRangeCalendar({
                 >
                     <ChevronLeft
                         size={22}
-                        color={canGoPrev ? Colors.text.secondary : Colors.gray[200]}
+                        color={canGoPrev ? colors.textSecondary : colors.border}
                         strokeWidth={2.5}
                     />
                 </TouchableOpacity>
 
-                <Text style={styles.monthTitle}>
+                <Text style={[styles.monthTitle, { color: colors.text }]}>
                     {MONTH_NAMES[currentMonth - 1]} {currentYear}
                 </Text>
 
@@ -132,7 +135,7 @@ export function IOSRangeCalendar({
                 >
                     <ChevronRight
                         size={22}
-                        color={Colors.text.secondary}
+                        color={colors.textSecondary}
                         strokeWidth={2.5}
                     />
                 </TouchableOpacity>
@@ -141,7 +144,7 @@ export function IOSRangeCalendar({
             <View style={styles.weekRow}>
                 {DAYS_OF_WEEK.map((day) => (
                     <View key={day} style={styles.weekDayCell}>
-                        <Text style={styles.weekDayText}>{day}</Text>
+                        <Text style={[styles.weekDayText, { color: colors.textTertiary }]}>{day}</Text>
                     </View>
                 ))}
             </View>
@@ -172,23 +175,24 @@ export function IOSRangeCalendar({
                                     activeOpacity={0.7}
                                 >
                                     {/* Connectivity lines for range */}
-                                    {isInRange && <View style={styles.rangeBackground} />}
-                                    {isStart && endDate && <View style={styles.rangeStartBackground} />}
-                                    {isEnd && startDate && <View style={styles.rangeEndBackground} />}
+                                    {isInRange && <View style={[styles.rangeBackground, { backgroundColor: isDark ? 'rgba(56, 189, 248, 0.2)' : Colors.primary.light + '40' }]} />}
+                                    {isStart && endDate && <View style={[styles.rangeStartBackground, { backgroundColor: isDark ? 'rgba(56, 189, 248, 0.2)' : Colors.primary.light + '40' }]} />}
+                                    {isEnd && startDate && <View style={[styles.rangeEndBackground, { backgroundColor: isDark ? 'rgba(56, 189, 248, 0.2)' : Colors.primary.light + '40' }]} />}
 
                                     <View style={[
                                         styles.dayInner,
-                                        isSelected && styles.dayInnerSelected,
+                                        isSelected && { backgroundColor: colors.primary },
                                         isInRange && styles.dayInnerRange,
-                                        isToday && !isSelected && !isInRange && styles.dayInnerToday,
+                                        isToday && !isSelected && !isInRange && { backgroundColor: isDark ? colors.backgroundTertiary : Colors.gray[100] },
                                     ]}>
                                         <Text
                                             style={[
                                                 styles.dayText,
-                                                isToday && !isSelected && !isInRange && styles.dayTextToday,
+                                                { color: colors.text },
+                                                isToday && !isSelected && !isInRange && { color: colors.primary, fontWeight: '600' },
                                                 isSelected && styles.dayTextSelected,
-                                                isInRange && styles.dayTextRange,
-                                                isPast && styles.dayTextDisabled,
+                                                isInRange && { color: colors.primary, fontWeight: '500' },
+                                                isPast && { color: colors.textTertiary },
                                             ]}
                                         >
                                             {day}
@@ -225,7 +229,6 @@ const styles = StyleSheet.create({
     monthTitle: {
         fontSize: 17,
         fontWeight: '600',
-        color: Colors.text.primary,
         letterSpacing: -0.3,
         fontFamily: Platform.OS === 'ios' ? 'SF Pro Display' : undefined,
     },
@@ -242,7 +245,6 @@ const styles = StyleSheet.create({
     weekDayText: {
         fontSize: 11,
         fontWeight: '600',
-        color: Colors.gray[400],
         letterSpacing: 0.5,
         fontFamily: Platform.OS === 'ios' ? 'SF Pro Text' : undefined,
     },
@@ -267,7 +269,6 @@ const styles = StyleSheet.create({
         right: -1,
         top: 2, // Adjusted vertically
         bottom: 2,
-        backgroundColor: Colors.primary.light + '40', // Very light transparency
     },
     rangeStartBackground: {
         position: 'absolute',
@@ -275,7 +276,6 @@ const styles = StyleSheet.create({
         right: -1,
         top: 2,
         bottom: 2,
-        backgroundColor: Colors.primary.light + '40',
         borderTopLeftRadius: 18,
         borderBottomLeftRadius: 18,
     },
@@ -285,7 +285,6 @@ const styles = StyleSheet.create({
         right: '50%',
         top: 2,
         bottom: 2,
-        backgroundColor: Colors.primary.light + '40',
         borderTopRightRadius: 18,
         borderBottomRightRadius: 18,
     },
@@ -297,34 +296,16 @@ const styles = StyleSheet.create({
         borderRadius: 18,
         zIndex: 2,
     },
-    dayInnerSelected: {
-        backgroundColor: Colors.primary.DEFAULT,
-    },
     dayInnerRange: {
         // Transparent, background is handled by rangeBackground
-    },
-    dayInnerToday: {
-        backgroundColor: Colors.gray[100],
     },
     dayText: {
         fontSize: 17,
         fontWeight: '400',
-        color: Colors.text.primary,
         fontFamily: Platform.OS === 'ios' ? 'SF Pro Display' : undefined,
-    },
-    dayTextToday: {
-        fontWeight: '600',
-        color: Colors.primary.DEFAULT,
     },
     dayTextSelected: {
         color: Colors.white,
         fontWeight: '600',
-    },
-    dayTextRange: {
-        color: Colors.primary.DEFAULT,
-        fontWeight: '500',
-    },
-    dayTextDisabled: {
-        color: Colors.gray[300],
     },
 });

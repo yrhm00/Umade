@@ -2,39 +2,44 @@
  * Vue detail d'une inspiration avec carousel (Phase 9)
  */
 
-import React, { useState, useRef, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Dimensions,
-  Pressable,
-  FlatList,
-  ViewToken,
-  Share,
-} from 'react-native';
-import { Image } from 'expo-image';
-import { BlurView } from 'expo-blur';
-import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
-import {
-  Heart,
-  Share2,
-  ChevronLeft,
-  ExternalLink,
-} from 'lucide-react-native';
-import { router } from 'expo-router';
+import { AnimatedButton } from '@/components/ui/AnimatedButton';
+import { Avatar } from '@/components/ui/Avatar';
+import { PressableScale } from '@/components/ui/PressableScale';
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
-import { PressableScale } from '@/components/ui/PressableScale';
-import { Avatar } from '@/components/ui/Avatar';
-import { AnimatedButton } from '@/components/ui/AnimatedButton';
+import { useAuth } from '@/hooks/useAuth';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
+import { useFindOrCreateConversation } from '@/hooks/useConversations';
+import { useInspirationFavoriteActions } from '@/hooks/useInspirationFavorites';
+import { useSendMessage } from '@/hooks/useMessages';
 import {
   InspirationDetail as InspirationDetailType,
   InspirationImage,
   getEventTypeLabel,
   getStyleLabel,
 } from '@/types/inspiration';
-import { useInspirationFavoriteActions } from '@/hooks/useInspirationFavorites';
+import { BlurView } from 'expo-blur';
+import { Image } from 'expo-image';
+import { router } from 'expo-router';
+import {
+  ChevronLeft,
+  ExternalLink,
+  Heart,
+  Share2
+} from 'lucide-react-native';
+import React, { useCallback, useRef, useState } from 'react';
+import {
+  Alert,
+  Dimensions,
+  FlatList,
+  Pressable,
+  Share,
+  StyleSheet,
+  Text,
+  View,
+  ViewToken,
+} from 'react-native';
+import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -47,10 +52,17 @@ export function InspirationDetail({
   inspiration,
   onClose,
 }: InspirationDetailProps) {
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isContacting, setIsContacting] = useState(false);
   const { isFavorite, toggleFavorite, isLoading } = useInspirationFavoriteActions();
   const isInspFavorite = isFavorite(inspiration.id);
   const flatListRef = useRef<FlatList>(null);
+
+  const { userId, isAuthenticated } = useAuth();
+  const { mutateAsync: findOrCreateConversation } = useFindOrCreateConversation();
+  const { mutateAsync: sendMessage } = useSendMessage();
 
   const images = inspiration.inspiration_images || [];
 
@@ -86,7 +98,47 @@ export function InspirationDetail({
 
   const handleProviderPress = () => {
     if (inspiration.providers?.id) {
-      router.push(`/provider/${inspiration.providers.id}`);
+      router.push(`/provider/${inspiration.providers.id}` as any);
+    }
+  };
+
+  const handleContactProvider = async () => {
+    if (!isAuthenticated || !userId) {
+      Alert.alert('Connexion requise', 'Veuillez vous connecter pour contacter ce prestataire.');
+      return;
+    }
+
+    if (!inspiration.providers?.id) {
+      Alert.alert('Erreur', 'Impossible de contacter ce prestataire.');
+      return;
+    }
+
+    setIsContacting(true);
+
+    try {
+      // 1. Find or create conversation with provider
+      const conversation = await findOrCreateConversation(inspiration.providers!.id);
+
+      // 2. Send inspiration context message
+      const contextMessage = JSON.stringify({
+        type: 'inspiration_context',
+        inspiration_id: inspiration.id,
+        title: inspiration.title || 'Inspiration',
+        image_url: images[0]?.image_url || '',
+      });
+
+      await sendMessage({
+        conversation_id: conversation.id,
+        content: contextMessage,
+      });
+
+      // 3. Navigate to chat
+      router.push(`/chat/${conversation.id}` as any);
+    } catch (error) {
+      console.error('Error contacting provider:', error);
+      Alert.alert('Erreur', 'Impossible de démarrer la conversation. Veuillez réessayer.');
+    } finally {
+      setIsContacting(false);
     }
   };
 
@@ -97,6 +149,7 @@ export function InspirationDetail({
       router.back();
     }
   };
+
 
   const renderImage = ({ item }: { item: InspirationImage }) => (
     <View style={styles.imageContainer}>
@@ -110,7 +163,7 @@ export function InspirationDetail({
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Carousel d'images */}
       <View style={styles.carouselContainer}>
         <FlatList
@@ -181,14 +234,14 @@ export function InspirationDetail({
       >
         {/* Badges */}
         <View style={styles.badges}>
-          <View style={styles.badge}>
+          <View style={[styles.badge, { backgroundColor: colors.primary }]}>
             <Text style={styles.badgeText}>
               {getEventTypeLabel(inspiration.event_type)}
             </Text>
           </View>
           {inspiration.style && (
-            <View style={[styles.badge, styles.badgeOutline]}>
-              <Text style={styles.badgeTextOutline}>
+            <View style={[styles.badge, styles.badgeOutline, { borderColor: colors.primary }]}>
+              <Text style={[styles.badgeTextOutline, { color: colors.primary }]}>
                 {getStyleLabel(inspiration.style)}
               </Text>
             </View>
@@ -197,35 +250,35 @@ export function InspirationDetail({
 
         {/* Titre */}
         {inspiration.title && (
-          <Text style={styles.title}>{inspiration.title}</Text>
+          <Text style={[styles.title, { color: colors.text }]}>{inspiration.title}</Text>
         )}
 
         {/* Description */}
         {inspiration.description && (
-          <Text style={styles.description}>{inspiration.description}</Text>
+          <Text style={[styles.description, { color: colors.textSecondary }]}>{inspiration.description}</Text>
         )}
 
         {/* Tags */}
         {inspiration.tags && inspiration.tags.length > 0 && (
           <View style={styles.tagsContainer}>
             {inspiration.tags.map((tag, index) => (
-              <View key={index} style={styles.tag}>
-                <Text style={styles.tagText}>#{tag}</Text>
+              <View key={index} style={[styles.tag, { backgroundColor: isDark ? colors.backgroundTertiary : Colors.gray[100] }]}>
+                <Text style={[styles.tagText, { color: colors.textSecondary }]}>#{tag}</Text>
               </View>
             ))}
           </View>
         )}
 
         {/* Stats */}
-        <View style={styles.stats}>
+        <View style={[styles.stats, { borderBottomColor: colors.border }]}>
           <View style={styles.stat}>
-            <Heart size={16} color={Colors.text.tertiary} />
-            <Text style={styles.statText}>
+            <Heart size={16} color={colors.textTertiary} />
+            <Text style={[styles.statText, { color: colors.textTertiary }]}>
               {inspiration.favorite_count} favoris
             </Text>
           </View>
           <View style={styles.stat}>
-            <Text style={styles.statText}>
+            <Text style={[styles.statText, { color: colors.textTertiary }]}>
               {inspiration.view_count} vues
             </Text>
           </View>
@@ -233,33 +286,37 @@ export function InspirationDetail({
 
         {/* Prestataire */}
         {inspiration.providers && (
-          <Pressable onPress={handleProviderPress} style={styles.providerCard}>
+          <Pressable
+            onPress={handleProviderPress}
+            style={[styles.providerCard, { backgroundColor: isDark ? colors.card : Colors.gray[50] }]}
+          >
             <Avatar
               source={inspiration.providers.profiles?.avatar_url}
               name={inspiration.providers.business_name}
               size="lg"
             />
             <View style={styles.providerInfo}>
-              <Text style={styles.providerName}>
+              <Text style={[styles.providerName, { color: colors.text }]}>
                 {inspiration.providers.business_name}
               </Text>
               {inspiration.providers.categories && (
-                <Text style={styles.providerCategory}>
+                <Text style={[styles.providerCategory, { color: colors.textSecondary }]}>
                   {inspiration.providers.categories.name}
                 </Text>
               )}
             </View>
-            <ExternalLink size={20} color={Colors.primary.DEFAULT} />
+            <ExternalLink size={20} color={colors.primary} />
           </Pressable>
         )}
 
         {/* CTA */}
         <AnimatedButton
-          title="Contacter le prestataire"
+          title={isContacting ? "Chargement..." : "Contacter le prestataire"}
           variant="primary"
           size="lg"
           fullWidth
-          onPress={handleProviderPress}
+          onPress={handleContactProvider}
+          disabled={isContacting}
           style={styles.ctaButton}
         />
 
@@ -273,7 +330,6 @@ export function InspirationDetail({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
   },
   carouselContainer: {
     height: SCREEN_HEIGHT * 0.5,
@@ -347,13 +403,11 @@ const styles = StyleSheet.create({
   badge: {
     paddingHorizontal: Layout.spacing.md,
     paddingVertical: Layout.spacing.xs,
-    backgroundColor: Colors.primary.DEFAULT,
     borderRadius: Layout.radius.full,
   },
   badgeOutline: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: Colors.primary.DEFAULT,
   },
   badgeText: {
     fontSize: Layout.fontSize.sm,
@@ -363,17 +417,14 @@ const styles = StyleSheet.create({
   badgeTextOutline: {
     fontSize: Layout.fontSize.sm,
     fontWeight: '600',
-    color: Colors.primary.DEFAULT,
   },
   title: {
     fontSize: Layout.fontSize['2xl'],
     fontWeight: '700',
-    color: Colors.text.primary,
     marginBottom: Layout.spacing.sm,
   },
   description: {
     fontSize: Layout.fontSize.md,
-    color: Colors.text.secondary,
     lineHeight: 24,
     marginBottom: Layout.spacing.md,
   },
@@ -386,12 +437,10 @@ const styles = StyleSheet.create({
   tag: {
     paddingHorizontal: Layout.spacing.sm,
     paddingVertical: 4,
-    backgroundColor: Colors.gray[100],
     borderRadius: Layout.radius.sm,
   },
   tagText: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
   },
   stats: {
     flexDirection: 'row',
@@ -399,7 +448,6 @@ const styles = StyleSheet.create({
     marginBottom: Layout.spacing.lg,
     paddingBottom: Layout.spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.gray[200],
   },
   stat: {
     flexDirection: 'row',
@@ -408,13 +456,11 @@ const styles = StyleSheet.create({
   },
   statText: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.tertiary,
   },
   providerCard: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: Layout.spacing.md,
-    backgroundColor: Colors.gray[50],
     borderRadius: Layout.radius.lg,
     marginBottom: Layout.spacing.lg,
   },
@@ -425,11 +471,9 @@ const styles = StyleSheet.create({
   providerName: {
     fontSize: Layout.fontSize.md,
     fontWeight: '600',
-    color: Colors.text.primary,
   },
   providerCategory: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
     marginTop: 2,
   },
   ctaButton: {
