@@ -28,6 +28,7 @@ import { Button } from '@/components/ui/Button';
 import { CustomCalendar } from '@/components/ui/CustomCalendar';
 import { Input } from '@/components/ui/Input';
 import { Colors } from '@/constants/Colors';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { CreateEventInput } from '@/types';
 
 interface WizardEventFormProps {
@@ -52,6 +53,8 @@ const EVENT_TYPES = [
 ];
 
 export function WizardEventForm({ onSubmit, isLoading }: WizardEventFormProps) {
+    const colors = useColors();
+    const isDark = useIsDarkTheme();
     const [currentStep, setCurrentStep] = useState(1);
 
     // Form State
@@ -134,15 +137,15 @@ export function WizardEventForm({ onSubmit, isLoading }: WizardEventFormProps) {
 
     const renderProgressBar = () => (
         <View style={styles.progressContainer}>
-            <View style={styles.progressBar}>
+            <View style={[styles.progressBar, { backgroundColor: colors.border }]}>
                 <View
                     style={[
                         styles.progressFill,
-                        { width: `${(currentStep / STEPS.length) * 100}%` }
+                        { width: `${(currentStep / STEPS.length) * 100}%`, backgroundColor: colors.primary }
                     ]}
                 />
             </View>
-            <Text style={styles.stepText}>
+            <Text style={[styles.stepText, { color: colors.textSecondary }]}>
                 Étape {currentStep} sur {STEPS.length}
             </Text>
         </View>
@@ -150,7 +153,7 @@ export function WizardEventForm({ onSubmit, isLoading }: WizardEventFormProps) {
 
     const renderStep1 = () => (
         <View style={styles.stepContent}>
-            <Text style={styles.stepTitle}>Commençons par l'essentiel ✨</Text>
+            <Text style={[styles.stepTitle, { color: colors.text }]}>Commençons par l'essentiel ✨</Text>
 
             <View style={styles.inputGroup}>
                 <Input
@@ -163,7 +166,7 @@ export function WizardEventForm({ onSubmit, isLoading }: WizardEventFormProps) {
             </View>
 
             <View style={styles.inputGroup}>
-                <Text style={styles.label}>C'est quel genre d'événement ?</Text>
+                <Text style={[styles.label, { color: colors.text }]}>C'est quel genre d'événement ?</Text>
                 <View style={styles.typeGrid}>
                     {EVENT_TYPES.map((type) => {
                         const Icon = type.icon;
@@ -171,13 +174,25 @@ export function WizardEventForm({ onSubmit, isLoading }: WizardEventFormProps) {
                         return (
                             <TouchableOpacity
                                 key={type.value}
-                                style={[styles.typeCard, isSelected && styles.typeCardSelected]}
+                                style={[
+                                    styles.typeCard,
+                                    { backgroundColor: colors.card, shadowColor: isDark ? '#000' : '#000' },
+                                    isSelected && { borderColor: colors.primary, backgroundColor: isDark ? colors.backgroundTertiary : Colors.primary['50'] }
+                                ]}
                                 onPress={() => setEventType(type.value)}
                             >
-                                <View style={[styles.iconCircle, isSelected && styles.iconCircleSelected]}>
-                                    <Icon size={20} color={isSelected ? Colors.white : Colors.primary.DEFAULT} />
+                                <View style={[
+                                    styles.iconCircle,
+                                    { backgroundColor: isDark ? colors.backgroundTertiary : Colors.primary['50'] },
+                                    isSelected && { backgroundColor: colors.primary }
+                                ]}>
+                                    <Icon size={20} color={isSelected ? Colors.white : colors.primary} />
                                 </View>
-                                <Text style={[styles.typeLabel, isSelected && styles.typeLabelSelected]}>
+                                <Text style={[
+                                    styles.typeLabel,
+                                    { color: colors.text },
+                                    isSelected && { color: colors.primary, fontWeight: '700' }
+                                ]}>
                                     {type.label}
                                 </Text>
                             </TouchableOpacity>
@@ -190,7 +205,7 @@ export function WizardEventForm({ onSubmit, isLoading }: WizardEventFormProps) {
 
     const renderStep2 = () => (
         <View style={styles.stepContent}>
-            <Text style={styles.stepTitle}>Quand ça se passe ? 📅</Text>
+            <Text style={[styles.stepTitle, { color: colors.text }]}>Quand ça se passe ? 📅</Text>
             <View style={styles.calendarContainer}>
                 <CustomCalendar
                     selectedDate={selectedDate}
@@ -198,8 +213,8 @@ export function WizardEventForm({ onSubmit, isLoading }: WizardEventFormProps) {
                 />
             </View>
             {selectedDate && (
-                <View style={styles.selectedDateBadge}>
-                    <Text style={styles.selectedDateText}>
+                <View style={[styles.selectedDateBadge, { backgroundColor: isDark ? colors.backgroundTertiary : Colors.primary['50'] }]}>
+                    <Text style={[styles.selectedDateText, { color: colors.primary }]}>
                         Date choisie : {format(new Date(selectedDate), 'dd MMMM yyyy', { locale: fr })}
                     </Text>
                 </View>
@@ -209,7 +224,7 @@ export function WizardEventForm({ onSubmit, isLoading }: WizardEventFormProps) {
 
     const renderStep3 = () => (
         <View style={styles.stepContent}>
-            <Text style={styles.stepTitle}>Où ça se passe ? 📍</Text>
+            <Text style={[styles.stepTitle, { color: colors.text }]}>Où ça se passe ? 📍</Text>
 
             <View style={styles.inputGroup}>
                 <Input
@@ -218,7 +233,7 @@ export function WizardEventForm({ onSubmit, isLoading }: WizardEventFormProps) {
                     value={location}
                     onChangeText={setLocation}
                     editable={!isLocationTBD}
-                    style={isLocationTBD ? styles.inputDisabled : undefined}
+                    style={isLocationTBD ? [styles.inputDisabled, { backgroundColor: colors.backgroundTertiary, color: colors.textTertiary }] : undefined}
                 />
             </View>
 
@@ -230,17 +245,21 @@ export function WizardEventForm({ onSubmit, isLoading }: WizardEventFormProps) {
                     if (newValue) setLocation('');
                 }}
             >
-                <View style={[styles.checkbox, isLocationTBD && styles.checkboxChecked]}>
+                <View style={[
+                    styles.checkbox,
+                    { borderColor: colors.border, backgroundColor: colors.card },
+                    isLocationTBD && { borderColor: colors.primary, backgroundColor: colors.primary }
+                ]}>
                     {isLocationTBD && <Check size={14} color={Colors.white} />}
                 </View>
-                <Text style={styles.checkboxLabel}>Je ne sais pas encore</Text>
+                <Text style={[styles.checkboxLabel, { color: colors.text }]}>Je ne sais pas encore</Text>
             </TouchableOpacity>
         </View>
     );
 
     const renderStep4 = () => (
         <View style={styles.stepContent}>
-            <Text style={styles.stepTitle}>Quelques détails en plus ? 📝</Text>
+            <Text style={[styles.stepTitle, { color: colors.text }]}>Quelques détails en plus ? 📝</Text>
 
             <View style={styles.inputGroup}>
                 <Input
@@ -249,11 +268,11 @@ export function WizardEventForm({ onSubmit, isLoading }: WizardEventFormProps) {
                     value={guestCount}
                     onChangeText={setGuestCount}
                     keyboardType="number-pad"
-                    leftIcon={<Users size={18} color={Colors.gray[400]} />}
+                    leftIcon={<Users size={18} color={colors.textTertiary} />}
                 />
             </View>
 
-            <Text style={styles.label}>Budget envisagé</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Budget envisagé</Text>
             <View style={styles.budgetRow}>
                 <View style={{ flex: 1 }}>
                     <Input
@@ -263,7 +282,7 @@ export function WizardEventForm({ onSubmit, isLoading }: WizardEventFormProps) {
                         keyboardType="decimal-pad"
                     />
                 </View>
-                <Text style={styles.budgetSep}>-</Text>
+                <Text style={[styles.budgetSep, { color: colors.textTertiary }]}>-</Text>
                 <View style={{ flex: 1 }}>
                     <Input
                         placeholder="Max €"
@@ -289,7 +308,7 @@ export function WizardEventForm({ onSubmit, isLoading }: WizardEventFormProps) {
     );
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.backgroundSecondary }]}>
             {renderProgressBar()}
 
             <ScrollView style={styles.scrollContent} contentContainerStyle={styles.scrollInner}>
@@ -299,17 +318,20 @@ export function WizardEventForm({ onSubmit, isLoading }: WizardEventFormProps) {
                 {currentStep === 4 && renderStep4()}
             </ScrollView>
 
-            <View style={styles.footer}>
+            <View style={[styles.footer, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
                 {error && (
-                    <View style={styles.errorBanner}>
-                        <Text style={styles.errorText}>{error}</Text>
+                    <View style={[styles.errorBanner, { backgroundColor: isDark ? 'rgba(239, 68, 68, 0.1)' : Colors.error['50'] }]}>
+                        <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
                     </View>
                 )}
 
                 <View style={styles.footerButtons}>
                     {currentStep > 1 ? (
-                        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-                            <ArrowLeft size={20} color={Colors.text.primary} />
+                        <TouchableOpacity
+                            style={[styles.backButton, { backgroundColor: colors.backgroundTertiary }]}
+                            onPress={handleBack}
+                        >
+                            <ArrowLeft size={20} color={colors.text} />
                         </TouchableOpacity>
                     ) : (
                         <View style={{ width: 44 }} /> // Spacer to keep layout balanced
@@ -332,7 +354,6 @@ export function WizardEventForm({ onSubmit, isLoading }: WizardEventFormProps) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: Colors.background.secondary,
     },
     progressContainer: {
         paddingHorizontal: 20,
@@ -341,18 +362,15 @@ const styles = StyleSheet.create({
     },
     progressBar: {
         height: 6,
-        backgroundColor: Colors.gray[200],
         borderRadius: 3,
         marginBottom: 8,
     },
     progressFill: {
         height: '100%',
-        backgroundColor: Colors.primary.DEFAULT,
         borderRadius: 3,
     },
     stepText: {
         fontSize: 12,
-        color: Colors.text.secondary,
         textAlign: 'right',
     },
     scrollContent: {
@@ -367,7 +385,6 @@ const styles = StyleSheet.create({
     stepTitle: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: Colors.text.primary,
         marginBottom: 24,
     },
     inputGroup: {
@@ -376,7 +393,6 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 14,
         fontWeight: '500',
-        color: Colors.text.primary,
         marginBottom: 10,
     },
     // Type Grid
@@ -387,42 +403,27 @@ const styles = StyleSheet.create({
     },
     typeCard: {
         width: '48%',
-        backgroundColor: Colors.white,
         padding: 16,
         borderRadius: 16,
         alignItems: 'center',
         borderWidth: 2,
         borderColor: 'transparent',
-        shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.05,
         shadowRadius: 3.84,
         elevation: 2,
     },
-    typeCardSelected: {
-        borderColor: Colors.primary.DEFAULT,
-        backgroundColor: Colors.primary['50'],
-    },
     iconCircle: {
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: Colors.primary['50'],
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 8,
     },
-    iconCircleSelected: {
-        backgroundColor: Colors.primary.DEFAULT,
-    },
     typeLabel: {
         fontSize: 14,
         fontWeight: '500',
-        color: Colors.text.primary,
-    },
-    typeLabelSelected: {
-        color: Colors.primary.DEFAULT,
-        fontWeight: '700',
     },
     // Calendar Step
     calendarContainer: {
@@ -431,13 +432,11 @@ const styles = StyleSheet.create({
     selectedDateBadge: {
         marginTop: 20,
         alignSelf: 'center',
-        backgroundColor: Colors.primary['50'],
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 20,
     },
     selectedDateText: {
-        color: Colors.primary.DEFAULT,
         fontWeight: '600',
     },
     // Location Step
@@ -451,23 +450,15 @@ const styles = StyleSheet.create({
         height: 22,
         borderRadius: 6,
         borderWidth: 2,
-        borderColor: Colors.gray[300],
         marginRight: 10,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: Colors.white,
-    },
-    checkboxChecked: {
-        borderColor: Colors.primary.DEFAULT,
-        backgroundColor: Colors.primary.DEFAULT,
     },
     checkboxLabel: {
         fontSize: 15,
-        color: Colors.text.primary,
     },
     inputDisabled: {
-        backgroundColor: Colors.gray[100],
-        color: Colors.gray[400],
+        // styles handled dynamically
     },
     // Budget & Footer
     budgetRow: {
@@ -478,23 +469,18 @@ const styles = StyleSheet.create({
     budgetSep: {
         marginHorizontal: 10,
         fontSize: 20,
-        color: Colors.gray[400],
     },
     footer: {
         padding: 20,
-        backgroundColor: Colors.white,
         borderTopWidth: 1,
-        borderTopColor: Colors.gray[100],
     },
     errorBanner: {
-        backgroundColor: Colors.error['50'],
         padding: 10,
         borderRadius: 8,
         marginBottom: 10,
         alignItems: 'center',
     },
     errorText: {
-        color: Colors.error.DEFAULT,
         fontSize: 13,
     },
     footerButtons: {
@@ -506,7 +492,6 @@ const styles = StyleSheet.create({
         width: 44,
         height: 44,
         borderRadius: 22,
-        backgroundColor: Colors.gray[100],
         alignItems: 'center',
         justifyContent: 'center',
     },

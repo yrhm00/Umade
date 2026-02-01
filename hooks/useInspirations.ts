@@ -5,10 +5,10 @@
 import { Config } from '@/constants/Config';
 import { supabase } from '@/lib/supabase';
 import {
+  InspirationDetail,
   InspirationFilters,
   InspirationSortBy,
   InspirationWithProvider,
-  InspirationDetail,
 } from '@/types/inspiration';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from './useAuth';
@@ -56,12 +56,12 @@ export function useInspirationFeed(
         .eq('is_active', true)
         .range(pageParam, pageParam + PAGE_SIZE - 1);
 
-      // Filtres
-      if (filters.event_type) {
-        query = query.eq('event_type', filters.event_type);
+      // Filtres multi-sélection
+      if (filters.event_types && filters.event_types.length > 0) {
+        query = query.in('event_type', filters.event_types);
       }
-      if (filters.style) {
-        query = query.eq('style', filters.style);
+      if (filters.styles && filters.styles.length > 0) {
+        query = query.in('style', filters.styles);
       }
       if (filters.providerId) {
         query = query.eq('provider_id', filters.providerId);

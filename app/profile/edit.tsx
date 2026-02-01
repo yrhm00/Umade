@@ -1,9 +1,10 @@
 /**
  * Page de modification du profil pour le client
+ * Dark Mode Support
  */
 
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { Colors } from '@/constants/Colors';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/authStore';
 import { useMutation } from '@tanstack/react-query';
@@ -40,6 +41,8 @@ interface FormData {
 export default function ClientProfileEditScreen() {
     const router = useRouter();
     const { profile, refreshProfile } = useAuthStore();
+    const colors = useColors();
+    const isDark = useIsDarkTheme();
     const [isUploading, setIsUploading] = useState(false);
 
     const [formData, setFormData] = useState<FormData>({
@@ -48,7 +51,6 @@ export default function ClientProfileEditScreen() {
         avatar_url: null,
     });
 
-    // Initialize form data
     useEffect(() => {
         if (profile) {
             setFormData({
@@ -59,7 +61,6 @@ export default function ClientProfileEditScreen() {
         }
     }, [profile]);
 
-    // Update mutation
     const updateMutation = useMutation({
         mutationFn: async (data: FormData) => {
             if (!profile?.id) {
@@ -95,18 +96,9 @@ export default function ClientProfileEditScreen() {
             'Changer la photo',
             'Choisissez une option',
             [
-                {
-                    text: 'Prendre une photo',
-                    onPress: handleTakePhoto,
-                },
-                {
-                    text: 'Choisir dans la galerie',
-                    onPress: handleChooseFromLibrary,
-                },
-                {
-                    text: 'Annuler',
-                    style: 'cancel',
-                },
+                { text: 'Prendre une photo', onPress: handleTakePhoto },
+                { text: 'Choisir dans la galerie', onPress: handleChooseFromLibrary },
+                { text: 'Annuler', style: 'cancel' },
             ],
             { cancelable: true }
         );
@@ -114,7 +106,6 @@ export default function ClientProfileEditScreen() {
 
     const handleTakePhoto = async () => {
         const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
-
         if (!permissionResult.granted) {
             Alert.alert('Permission requise', 'Veuillez autoriser l\'accès à la caméra');
             return;
@@ -134,7 +125,6 @@ export default function ClientProfileEditScreen() {
 
     const handleChooseFromLibrary = async () => {
         const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
         if (!permissionResult.granted) {
             Alert.alert('Permission requise', 'Veuillez autoriser l\'accès à la galerie photo');
             return;
@@ -159,7 +149,6 @@ export default function ClientProfileEditScreen() {
         setIsUploading(true);
         try {
             const fileName = `avatar-${profile.id}-${Date.now()}.jpg`;
-
             const binaryString = atob(base64);
             const bytes = new Uint8Array(binaryString.length);
             for (let i = 0; i < binaryString.length; i++) {
@@ -200,21 +189,21 @@ export default function ClientProfileEditScreen() {
         setFormData((prev) => ({ ...prev, [field]: value }));
     };
 
+    const inputBg = isDark ? colors.backgroundTertiary : colors.card;
+    const placeholderBg = isDark ? colors.backgroundTertiary : `${colors.primary}10`;
+
     return (
-        <SafeAreaView style={styles.container} edges={['top']}>
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
             <KeyboardAvoidingView
                 style={styles.keyboardView}
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             >
                 {/* Header */}
-                <View style={styles.header}>
-                    <TouchableOpacity
-                        style={styles.backButton}
-                        onPress={() => router.back()}
-                    >
-                        <ArrowLeft size={24} color={Colors.text.primary} />
+                <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+                    <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                        <ArrowLeft size={24} color={colors.text} />
                     </TouchableOpacity>
-                    <Text style={styles.title}>Modifier mon profil</Text>
+                    <Text style={[styles.title, { color: colors.text }]}>Modifier mon profil</Text>
                     <TouchableOpacity
                         style={styles.saveButton}
                         onPress={handleSave}
@@ -223,7 +212,7 @@ export default function ClientProfileEditScreen() {
                         {updateMutation.isPending ? (
                             <LoadingSpinner size="small" />
                         ) : (
-                            <Check size={24} color={Colors.primary.DEFAULT} />
+                            <Check size={24} color={colors.primary} />
                         )}
                     </TouchableOpacity>
                 </View>
@@ -241,7 +230,7 @@ export default function ClientProfileEditScreen() {
                             disabled={isUploading}
                         >
                             {isUploading ? (
-                                <View style={styles.avatarPlaceholder}>
+                                <View style={[styles.avatarPlaceholder, { backgroundColor: placeholderBg }]}>
                                     <LoadingSpinner size="small" />
                                 </View>
                             ) : formData.avatar_url ? (
@@ -251,40 +240,40 @@ export default function ClientProfileEditScreen() {
                                     resizeMode="cover"
                                 />
                             ) : (
-                                <View style={styles.avatarPlaceholder}>
-                                    <User size={40} color={Colors.gray[400]} />
+                                <View style={[styles.avatarPlaceholder, { backgroundColor: placeholderBg }]}>
+                                    <User size={40} color={colors.textTertiary} />
                                 </View>
                             )}
-                            <View style={styles.cameraButton}>
-                                <Camera size={16} color={Colors.white} />
+                            <View style={[styles.cameraButton, { backgroundColor: colors.primary, borderColor: colors.card }]}>
+                                <Camera size={16} color="#FFFFFF" />
                             </View>
                         </TouchableOpacity>
-                        <Text style={styles.avatarHint}>Appuyez pour changer la photo</Text>
+                        <Text style={[styles.avatarHint, { color: colors.textSecondary }]}>Appuyez pour changer la photo</Text>
                     </View>
 
                     {/* Form Section */}
                     <View style={styles.section}>
-                        <View style={styles.inputGroup}>
+                        <View style={[styles.inputGroup, { backgroundColor: inputBg, borderColor: colors.border }]}>
                             <View style={styles.inputIcon}>
-                                <User size={20} color={Colors.gray[400]} />
+                                <User size={20} color={colors.textTertiary} />
                             </View>
                             <TextInput
-                                style={styles.input}
+                                style={[styles.input, { color: colors.text }]}
                                 placeholder="Nom complet"
-                                placeholderTextColor={Colors.gray[400]}
+                                placeholderTextColor={colors.textTertiary}
                                 value={formData.full_name}
                                 onChangeText={(text) => updateField('full_name', text)}
                             />
                         </View>
 
-                        <View style={styles.inputGroup}>
+                        <View style={[styles.inputGroup, { backgroundColor: inputBg, borderColor: colors.border }]}>
                             <View style={styles.inputIcon}>
-                                <Phone size={20} color={Colors.gray[400]} />
+                                <Phone size={20} color={colors.textTertiary} />
                             </View>
                             <TextInput
-                                style={styles.input}
+                                style={[styles.input, { color: colors.text }]}
                                 placeholder="Téléphone"
-                                placeholderTextColor={Colors.gray[400]}
+                                placeholderTextColor={colors.textTertiary}
                                 value={formData.phone}
                                 onChangeText={(text) => updateField('phone', text)}
                                 keyboardType="phone-pad"
@@ -300,7 +289,6 @@ export default function ClientProfileEditScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: Colors.background.primary,
     },
     keyboardView: {
         flex: 1,
@@ -312,8 +300,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 12,
         borderBottomWidth: 1,
-        borderBottomColor: Colors.gray[100],
-        backgroundColor: Colors.white,
     },
     backButton: {
         width: 40,
@@ -324,7 +310,6 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 18,
         fontWeight: '600',
-        color: Colors.text.primary,
     },
     saveButton: {
         width: 40,
@@ -355,7 +340,6 @@ const styles = StyleSheet.create({
         width: 100,
         height: 100,
         borderRadius: 50,
-        backgroundColor: Colors.gray[100],
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -366,16 +350,13 @@ const styles = StyleSheet.create({
         width: 32,
         height: 32,
         borderRadius: 16,
-        backgroundColor: Colors.primary.DEFAULT,
         alignItems: 'center',
         justifyContent: 'center',
         borderWidth: 3,
-        borderColor: Colors.white,
     },
     avatarHint: {
         marginTop: 8,
         fontSize: 13,
-        color: Colors.text.secondary,
     },
     section: {
         marginBottom: 24,
@@ -383,11 +364,9 @@ const styles = StyleSheet.create({
     inputGroup: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: Colors.white,
         borderRadius: 12,
         marginBottom: 12,
         borderWidth: 1,
-        borderColor: Colors.gray[200],
     },
     inputIcon: {
         paddingHorizontal: 14,
@@ -396,7 +375,6 @@ const styles = StyleSheet.create({
     input: {
         flex: 1,
         fontSize: 16,
-        color: Colors.text.primary,
         paddingVertical: 14,
         paddingRight: 14,
     },

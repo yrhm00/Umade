@@ -1,4 +1,10 @@
+/**
+ * Date Time Picker Component
+ * Dark Mode Support
+ */
+
 import { Colors } from '@/constants/Colors';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { DayAvailability } from '@/types';
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import React, { useMemo } from 'react';
@@ -35,6 +41,8 @@ export function DateTimePicker({
   selectedDate,
   onSelectDate,
 }: DateTimePickerProps) {
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
   const today = new Date();
   const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
@@ -100,7 +108,16 @@ export function DateTimePicker({
   return (
     <View style={styles.container}>
       {/* iOS-style calendar card */}
-      <View style={styles.calendarCard}>
+      <View
+        style={[
+          styles.calendarCard,
+          {
+            backgroundColor: colors.card,
+            shadowColor: isDark ? colors.primary : '#000',
+            shadowOpacity: isDark ? 0.2 : 0.06,
+          },
+        ]}
+      >
         {/* Month navigation - iOS style */}
         <View style={styles.monthHeader}>
           <TouchableOpacity
@@ -111,12 +128,12 @@ export function DateTimePicker({
           >
             <ChevronLeft
               size={22}
-              color={canGoPrev ? Colors.text.secondary : Colors.gray[200]}
+              color={canGoPrev ? colors.textSecondary : colors.border}
               strokeWidth={2.5}
             />
           </TouchableOpacity>
 
-          <Text style={styles.monthTitle}>
+          <Text style={[styles.monthTitle, { color: colors.text }]}>
             {MONTH_NAMES[month - 1]} {year}
           </Text>
 
@@ -127,7 +144,7 @@ export function DateTimePicker({
           >
             <ChevronRight
               size={22}
-              color={Colors.text.secondary}
+              color={colors.textSecondary}
               strokeWidth={2.5}
             />
           </TouchableOpacity>
@@ -137,7 +154,9 @@ export function DateTimePicker({
         <View style={styles.weekRow}>
           {DAYS_OF_WEEK.map((day) => (
             <View key={day} style={styles.weekDayCell}>
-              <Text style={styles.weekDayText}>{day}</Text>
+              <Text style={[styles.weekDayText, { color: colors.textTertiary }]}>
+                {day}
+              </Text>
             </View>
           ))}
         </View>
@@ -167,17 +186,20 @@ export function DateTimePicker({
                     disabled={isDisabled}
                     activeOpacity={0.6}
                   >
-                    <View style={[
-                      styles.dayInner,
-                      isSelected && styles.dayInnerSelected,
-                      isToday && !isSelected && styles.dayInnerToday,
-                    ]}>
+                    <View
+                      style={[
+                        styles.dayInner,
+                        isSelected && { backgroundColor: colors.primary },
+                        isToday && !isSelected && { backgroundColor: isDark ? colors.backgroundTertiary : Colors.gray[100] },
+                      ]}
+                    >
                       <Text
                         style={[
                           styles.dayText,
-                          isToday && !isSelected && styles.dayTextToday,
+                          { color: colors.text },
+                          isToday && !isSelected && { color: colors.primary },
                           isSelected && styles.dayTextSelected,
-                          isDisabled && styles.dayTextDisabled,
+                          isDisabled && { color: colors.border },
                         ]}
                       >
                         {day}
@@ -185,7 +207,7 @@ export function DateTimePicker({
                     </View>
                     {/* Availability indicator dot */}
                     {hasSlots && !isDisabled && !isSelected && (
-                      <View style={styles.availableDot} />
+                      <View style={[styles.availableDot, { backgroundColor: colors.primary }]} />
                     )}
                   </TouchableOpacity>
                 );
@@ -197,8 +219,8 @@ export function DateTimePicker({
 
       {/* Time slots removed - Day based only */}
       {selectedDate && !availabilityMap.get(selectedDate)?.isAvailable && (
-        <View style={styles.noSlotsContainer}>
-          <Text style={styles.noSlotsText}>
+        <View style={[styles.noSlotsContainer, { backgroundColor: colors.backgroundTertiary }]}>
+          <Text style={[styles.noSlotsText, { color: colors.textTertiary }]}>
             Ce jour n'est pas disponible
           </Text>
         </View>
@@ -212,16 +234,13 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   calendarCard: {
-    backgroundColor: Colors.white,
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingTop: 16,
     paddingBottom: 12,
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06,
         shadowRadius: 8,
       },
       android: {
@@ -246,7 +265,6 @@ const styles = StyleSheet.create({
   monthTitle: {
     fontSize: 17,
     fontWeight: '600',
-    color: Colors.text.primary,
     letterSpacing: -0.3,
     fontFamily: Platform.OS === 'ios' ? 'SF Pro Display' : undefined,
   },
@@ -263,7 +281,6 @@ const styles = StyleSheet.create({
   weekDayText: {
     fontSize: 11,
     fontWeight: '600',
-    color: Colors.gray[400],
     letterSpacing: 0.5,
     fontFamily: Platform.OS === 'ios' ? 'SF Pro Text' : undefined,
   },
@@ -288,40 +305,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 18,
   },
-  dayInnerSelected: {
-    backgroundColor: Colors.primary.DEFAULT,
-  },
-  dayInnerToday: {
-    backgroundColor: Colors.gray[100],
-  },
   dayText: {
     fontSize: 17,
     fontWeight: '400',
-    color: Colors.text.primary,
     fontFamily: Platform.OS === 'ios' ? 'SF Pro Display' : undefined,
-  },
-  dayTextToday: {
-    fontWeight: '600',
-    color: Colors.primary.DEFAULT,
   },
   dayTextSelected: {
     color: Colors.white,
     fontWeight: '600',
   },
-  dayTextDisabled: {
-    color: Colors.gray[300],
-  },
   availableDot: {
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: Colors.primary.light,
     position: 'absolute',
     bottom: 4,
   },
   noSlotsContainer: {
     marginTop: 20,
-    backgroundColor: Colors.gray[50],
     borderRadius: 12,
     paddingVertical: 20,
     paddingHorizontal: 16,
@@ -329,7 +330,6 @@ const styles = StyleSheet.create({
   },
   noSlotsText: {
     fontSize: 14,
-    color: Colors.text.tertiary,
     fontFamily: Platform.OS === 'ios' ? 'SF Pro Text' : undefined,
   },
 });

@@ -1,13 +1,18 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Calendar, Clock, ChevronRight } from 'lucide-react-native';
-import { BookingStatusBadge } from './BookingStatusBadge';
+/**
+ * Booking Card Component
+ * Dark Mode Support
+ */
+
 import { Avatar } from '@/components/ui/Avatar';
-import { BookingWithDetails } from '@/types';
-import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { formatDate, formatPrice } from '@/lib/utils';
+import { BookingWithDetails } from '@/types';
+import { useRouter } from 'expo-router';
+import { Calendar, ChevronRight, Clock } from 'lucide-react-native';
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { BookingStatusBadge } from './BookingStatusBadge';
 
 interface BookingCardProps {
   booking: BookingWithDetails;
@@ -17,10 +22,19 @@ export const BookingCard = React.memo(function BookingCard({
   booking,
 }: BookingCardProps) {
   const router = useRouter();
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
 
   return (
     <TouchableOpacity
-      style={styles.container}
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.card,
+          shadowColor: isDark ? colors.primary : '#000000',
+          shadowOpacity: isDark ? 0.3 : 0.05,
+        },
+      ]}
       onPress={() => router.push(`/booking/${booking.id}/details` as any)}
       activeOpacity={0.7}
     >
@@ -31,27 +45,27 @@ export const BookingCard = React.memo(function BookingCard({
           size="md"
         />
         <View style={styles.info}>
-          <Text style={styles.providerName} numberOfLines={1}>
+          <Text style={[styles.providerName, { color: colors.text }]} numberOfLines={1}>
             {booking.providers?.business_name}
           </Text>
-          <Text style={styles.serviceName} numberOfLines={1}>
+          <Text style={[styles.serviceName, { color: colors.textSecondary }]} numberOfLines={1}>
             {booking.services?.name}
           </Text>
         </View>
         <BookingStatusBadge status={booking.status} />
       </View>
 
-      <View style={styles.details}>
+      <View style={[styles.details, { backgroundColor: colors.backgroundTertiary }]}>
         <View style={styles.detailRow}>
-          <Calendar size={16} color={Colors.text.secondary} />
-          <Text style={styles.detailText}>
+          <Calendar size={16} color={colors.textSecondary} />
+          <Text style={[styles.detailText, { color: colors.textSecondary }]}>
             {formatDate(booking.booking_date)}
           </Text>
         </View>
         {booking.start_time && (
           <View style={styles.detailRow}>
-            <Clock size={16} color={Colors.text.secondary} />
-            <Text style={styles.detailText}>
+            <Clock size={16} color={colors.textSecondary} />
+            <Text style={[styles.detailText, { color: colors.textSecondary }]}>
               {booking.start_time.slice(0, 5)}
               {booking.end_time ? ` - ${booking.end_time.slice(0, 5)}` : ''}
             </Text>
@@ -59,9 +73,9 @@ export const BookingCard = React.memo(function BookingCard({
         )}
       </View>
 
-      <View style={styles.footer}>
-        <Text style={styles.price}>{formatPrice(booking.total_price)}</Text>
-        <ChevronRight size={20} color={Colors.gray[400]} />
+      <View style={[styles.footer, { borderTopColor: colors.border }]}>
+        <Text style={[styles.price, { color: colors.text }]}>{formatPrice(booking.total_price)}</Text>
+        <ChevronRight size={20} color={colors.textTertiary} />
       </View>
     </TouchableOpacity>
   );
@@ -69,13 +83,10 @@ export const BookingCard = React.memo(function BookingCard({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.white,
     borderRadius: Layout.radius.lg,
     padding: Layout.spacing.md,
     marginBottom: Layout.spacing.md,
-    shadowColor: Colors.black,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
   },
@@ -91,14 +102,11 @@ const styles = StyleSheet.create({
   providerName: {
     fontSize: Layout.fontSize.md,
     fontWeight: '600',
-    color: Colors.text.primary,
   },
   serviceName: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
   },
   details: {
-    backgroundColor: Colors.gray[50],
     borderRadius: Layout.radius.md,
     padding: Layout.spacing.md,
     gap: Layout.spacing.sm,
@@ -110,7 +118,6 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
     flex: 1,
   },
   footer: {
@@ -120,11 +127,9 @@ const styles = StyleSheet.create({
     marginTop: Layout.spacing.md,
     paddingTop: Layout.spacing.md,
     borderTopWidth: 1,
-    borderTopColor: Colors.gray[100],
   },
   price: {
     fontSize: Layout.fontSize.lg,
     fontWeight: '700',
-    color: Colors.text.primary,
   },
 });

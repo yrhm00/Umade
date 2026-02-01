@@ -1,4 +1,5 @@
 import { Colors } from '@/constants/Colors';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -9,6 +10,8 @@ interface CustomCalendarProps {
 }
 
 export function CustomCalendar({ selectedDate, onSelectDate }: CustomCalendarProps) {
+    const colors = useColors();
+    const isDark = useIsDarkTheme();
     const [currentMonth, setCurrentMonth] = useState(new Date());
 
     const daysOfWeek = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
@@ -72,15 +75,16 @@ export function CustomCalendar({ selectedDate, onSelectDate }: CustomCalendarPro
                     key={i}
                     style={[
                         styles.dayCell,
-                        isSelected && styles.dayCellSelected,
-                        !isSelected && isToday && styles.dayCellToday
+                        isSelected && { backgroundColor: colors.primary },
+                        !isSelected && isToday && { backgroundColor: isDark ? colors.backgroundTertiary : Colors.primary['50'] }
                     ]}
                     onPress={() => handleDateSelect(i)}
                 >
                     <Text style={[
                         styles.dayText,
-                        isSelected && styles.dayTextSelected,
-                        !isSelected && isToday && styles.dayTextToday
+                        { color: colors.text },
+                        isSelected && { color: Colors.white, fontWeight: 'bold' },
+                        !isSelected && isToday && { color: colors.primary, fontWeight: '600' }
                     ]}>
                         {i}
                     </Text>
@@ -92,24 +96,24 @@ export function CustomCalendar({ selectedDate, onSelectDate }: CustomCalendarPro
     };
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.card, shadowColor: isDark ? '#000' : '#000' }]}>
             {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={handlePrevMonth} style={styles.navButton}>
-                    <ChevronLeft size={24} color={Colors.text.primary} />
+                    <ChevronLeft size={24} color={colors.text} />
                 </TouchableOpacity>
-                <Text style={styles.monthTitle}>
+                <Text style={[styles.monthTitle, { color: colors.text }]}>
                     {months[currentMonth.getMonth()]} {currentMonth.getFullYear()}
                 </Text>
                 <TouchableOpacity onPress={handleNextMonth} style={styles.navButton}>
-                    <ChevronRight size={24} color={Colors.text.primary} />
+                    <ChevronRight size={24} color={colors.text} />
                 </TouchableOpacity>
             </View>
 
             {/* Days of week */}
             <View style={styles.weekDays}>
                 {daysOfWeek.map((day) => (
-                    <Text key={day} style={styles.weekDayText}>{day}</Text>
+                    <Text key={day} style={[styles.weekDayText, { color: colors.textTertiary }]}>{day}</Text>
                 ))}
             </View>
 
@@ -123,10 +127,8 @@ export function CustomCalendar({ selectedDate, onSelectDate }: CustomCalendarPro
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: Colors.white,
         borderRadius: 16,
         padding: 16,
-        shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.05,
         shadowRadius: 10,
@@ -141,7 +143,6 @@ const styles = StyleSheet.create({
     monthTitle: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: Colors.text.primary,
     },
     navButton: {
         padding: 4,
@@ -154,7 +155,6 @@ const styles = StyleSheet.create({
         flex: 1,
         textAlign: 'center',
         fontSize: 13,
-        color: Colors.text.tertiary,
         fontWeight: '500',
     },
     grid: {
@@ -169,22 +169,7 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         marginBottom: 4,
     },
-    dayCellSelected: {
-        backgroundColor: Colors.primary.DEFAULT,
-    },
-    dayCellToday: {
-        backgroundColor: Colors.primary['50'],
-    },
     dayText: {
         fontSize: 14,
-        color: Colors.text.primary,
-    },
-    dayTextSelected: {
-        color: Colors.white,
-        fontWeight: 'bold',
-    },
-    dayTextToday: {
-        color: Colors.primary.DEFAULT,
-        fontWeight: '600',
     },
 });

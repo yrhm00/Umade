@@ -1,4 +1,4 @@
-import { Colors } from '@/constants/Colors';
+import { useColors } from '@/hooks/useColors';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSegments } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 export function TopEdgeGradient() {
     const segments = useSegments();
     const insets = useSafeAreaInsets();
+    const colors = useColors();
 
     // Hide on auth screens and onboarding
     // segments is an array of route segments, e.g. ['(auth)', 'welcome']
@@ -22,8 +23,8 @@ export function TopEdgeGradient() {
             <LinearGradient
                 colors={[
                     // @ts-ignore
-                    Colors.primary.DEFAULT,
-                    'rgba(95, 74, 139, 0)', // Transparent mauve
+                    colors.background,
+                    'rgba(0,0,0,0)', // Transparent
                 ]}
                 style={styles.gradient}
                 start={{ x: 0, y: 0 }}

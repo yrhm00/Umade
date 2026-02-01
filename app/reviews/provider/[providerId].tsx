@@ -1,25 +1,31 @@
-import React, { useCallback, useMemo } from 'react';
-import {
-  View,
-  FlatList,
-  StyleSheet,
-  ActivityIndicator,
-  RefreshControl,
-} from 'react-native';
-import { useLocalSearchParams, Stack } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { ReviewCard, ProviderReviewStats } from '@/components/reviews';
+/**
+ * Provider Reviews Screen
+ * Dark Mode Support
+ */
+
+import { ProviderReviewStats, ReviewCard } from '@/components/reviews';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { Layout } from '@/constants/Layout';
+import { useColors } from '@/hooks/useColors';
 import {
   useProviderReviews,
   useProviderReviewStats,
 } from '@/hooks/useReviews';
 import { ReviewWithDetails } from '@/types';
-import { Colors } from '@/constants/Colors';
-import { Layout } from '@/constants/Layout';
+import { Stack, useLocalSearchParams } from 'expo-router';
+import React, { useCallback, useMemo } from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  StyleSheet,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ProviderReviewsScreen() {
   const { providerId } = useLocalSearchParams<{ providerId: string }>();
+  const colors = useColors();
 
   const {
     data,
@@ -35,7 +41,6 @@ export default function ProviderReviewsScreen() {
     providerId ?? ''
   );
 
-  // Flatten infinite query pages
   const reviews = useMemo(() => {
     return data?.pages.flat() ?? [];
   }, [data]);
@@ -65,10 +70,10 @@ export default function ProviderReviewsScreen() {
     if (!isFetchingNextPage) return null;
     return (
       <View style={styles.loadingMore}>
-        <ActivityIndicator size="small" color={Colors.primary.DEFAULT} />
+        <ActivityIndicator size="small" color={colors.primary} />
       </View>
     );
-  }, [isFetchingNextPage]);
+  }, [isFetchingNextPage, colors.primary]);
 
   const ListEmpty = useMemo(() => {
     if (isLoading) return null;
@@ -81,7 +86,7 @@ export default function ProviderReviewsScreen() {
 
   if (isLoading || isLoadingStats) {
     return (
-      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundTertiary }]} edges={['top', 'bottom']}>
         <Stack.Screen
           options={{
             headerShown: true,
@@ -95,7 +100,7 @@ export default function ProviderReviewsScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundTertiary }]} edges={['bottom']}>
       <Stack.Screen
         options={{
           headerShown: true,
@@ -118,7 +123,7 @@ export default function ProviderReviewsScreen() {
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={refetch}
-            tintColor={Colors.primary.DEFAULT}
+            tintColor={colors.primary}
           />
         }
       />
@@ -129,7 +134,6 @@ export default function ProviderReviewsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background.tertiary,
   },
   listContent: {
     padding: Layout.spacing.md,

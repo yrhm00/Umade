@@ -1,12 +1,12 @@
+import { Layout } from '@/constants/Layout';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import React from 'react';
 import {
-  View,
   StyleSheet,
-  ViewStyle,
   TouchableOpacity,
+  View,
+  ViewStyle,
 } from 'react-native';
-import { Colors } from '@/constants/Colors';
-import { Layout } from '@/constants/Layout';
 
 interface CardProps {
   children: React.ReactNode;
@@ -23,12 +23,42 @@ export function Card({
   variant = 'default',
   padding = 'md',
 }: CardProps) {
-  const cardStyles = [
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
+
+  // Dynamic background and border based on theme
+  const variantStyles: ViewStyle = {
+    default: {
+      backgroundColor: colors.card,
+    },
+    elevated: {
+      backgroundColor: colors.card,
+      shadowColor: isDark ? colors.primary : '#000000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: isDark ? 0.3 : 0.1,
+      shadowRadius: 12,
+      elevation: 5,
+    },
+    outlined: {
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.cardBorder,
+    },
+  }[variant];
+
+  const paddingStyles: ViewStyle = {
+    none: {},
+    sm: { padding: Layout.spacing.sm },
+    md: { padding: Layout.spacing.md },
+    lg: { padding: Layout.spacing.lg },
+  }[padding];
+
+  const cardStyles: ViewStyle[] = [
     styles.base,
-    styles[variant],
-    padding !== 'none' && styles[`padding_${padding}`],
-    style,
-  ];
+    variantStyles,
+    paddingStyles,
+    style as ViewStyle,
+  ].filter(Boolean);
 
   if (onPress) {
     return (
@@ -47,37 +77,7 @@ export function Card({
 
 const styles = StyleSheet.create({
   base: {
-    backgroundColor: Colors.white,
     borderRadius: Layout.radius.lg,
     overflow: 'hidden',
-  },
-
-  // Variants
-  default: {
-    backgroundColor: Colors.white,
-  },
-  elevated: {
-    backgroundColor: Colors.white,
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 5,
-  },
-  outlined: {
-    backgroundColor: Colors.white,
-    borderWidth: 1,
-    borderColor: Colors.gray[200],
-  },
-
-  // Padding
-  padding_sm: {
-    padding: Layout.spacing.sm,
-  },
-  padding_md: {
-    padding: Layout.spacing.md,
-  },
-  padding_lg: {
-    padding: Layout.spacing.lg,
   },
 });

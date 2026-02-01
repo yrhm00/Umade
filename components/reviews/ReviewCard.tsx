@@ -1,22 +1,27 @@
+/**
+ * Review Card Component
+ * Dark Mode Support
+ */
+
+import { RatingStars } from '@/components/common/RatingStars';
+import { Avatar } from '@/components/ui/Avatar';
+import { Button } from '@/components/ui/Button';
+import { Layout } from '@/constants/Layout';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
+import { useAddProviderResponse, useDeleteReview } from '@/hooks/useReviews';
+import { formatRelativeTime } from '@/lib/utils';
+import { useAuthStore } from '@/stores/authStore';
+import { ReviewWithDetails } from '@/types';
+import { MessageSquare, Trash2 } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  TextInput,
   Alert,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { MessageSquare, Trash2 } from 'lucide-react-native';
-import { Avatar } from '@/components/ui/Avatar';
-import { RatingStars } from '@/components/common/RatingStars';
-import { Button } from '@/components/ui/Button';
-import { ReviewWithDetails } from '@/types';
-import { useAuthStore } from '@/stores/authStore';
-import { useAddProviderResponse, useDeleteReview } from '@/hooks/useReviews';
-import { Colors } from '@/constants/Colors';
-import { Layout } from '@/constants/Layout';
-import { formatRelativeTime } from '@/lib/utils';
 
 interface ReviewCardProps {
   review: ReviewWithDetails;
@@ -28,6 +33,8 @@ export const ReviewCard = React.memo(function ReviewCard({
   showProviderActions = false,
 }: ReviewCardProps) {
   const user = useAuthStore((state) => state.user);
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
   const isOwn = review.client_id === user?.id;
 
   const [showReplyForm, setShowReplyForm] = useState(false);
@@ -65,8 +72,20 @@ export const ReviewCard = React.memo(function ReviewCard({
     );
   };
 
+  const responseBg = isDark ? colors.backgroundTertiary : `${colors.primary}10`;
+  const replyFormBg = isDark ? colors.backgroundTertiary : '#F9FAFB';
+
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.card,
+          shadowColor: isDark ? colors.primary : '#000000',
+          shadowOpacity: isDark ? 0.3 : 0.05,
+        },
+      ]}
+    >
       {/* Header */}
       <View style={styles.header}>
         <Avatar
@@ -75,12 +94,12 @@ export const ReviewCard = React.memo(function ReviewCard({
           size="lg"
         />
         <View style={styles.headerInfo}>
-          <Text style={styles.clientName}>
+          <Text style={[styles.clientName, { color: colors.text }]}>
             {review.client?.full_name || 'Client anonyme'}
           </Text>
           <View style={styles.ratingRow}>
             <RatingStars rating={review.rating} size={14} showValue={false} />
-            <Text style={styles.date}>
+            <Text style={[styles.date, { color: colors.textTertiary }]}>
               {review.created_at ? formatRelativeTime(review.created_at) : ''}
             </Text>
           </View>
@@ -92,29 +111,31 @@ export const ReviewCard = React.memo(function ReviewCard({
             onPress={handleDelete}
             disabled={isDeleting}
           >
-            <Trash2 size={18} color={Colors.error.DEFAULT} />
+            <Trash2 size={18} color={colors.error} />
           </TouchableOpacity>
         )}
       </View>
 
       {/* Comment */}
-      {review.comment && <Text style={styles.comment}>{review.comment}</Text>}
+      {review.comment && (
+        <Text style={[styles.comment, { color: colors.textSecondary }]}>{review.comment}</Text>
+      )}
 
       {/* Service info */}
       {review.booking?.service && (
-        <Text style={styles.serviceInfo}>
+        <Text style={[styles.serviceInfo, { color: colors.textTertiary }]}>
           Service : {review.booking.service.name}
         </Text>
       )}
 
       {/* Provider Response */}
       {review.provider_response && (
-        <View style={styles.responseContainer}>
+        <View style={[styles.responseContainer, { backgroundColor: responseBg, borderLeftColor: colors.primary }]}>
           <View style={styles.responseHeader}>
-            <MessageSquare size={14} color={Colors.primary.DEFAULT} />
-            <Text style={styles.responseLabel}>Réponse du prestataire</Text>
+            <MessageSquare size={14} color={colors.primary} />
+            <Text style={[styles.responseLabel, { color: colors.primary }]}>Réponse du prestataire</Text>
           </View>
-          <Text style={styles.responseText}>{review.provider_response}</Text>
+          <Text style={[styles.responseText, { color: colors.textSecondary }]}>{review.provider_response}</Text>
         </View>
       )}
 
@@ -122,13 +143,13 @@ export const ReviewCard = React.memo(function ReviewCard({
       {showProviderActions && !review.provider_response && (
         <>
           {showReplyForm ? (
-            <View style={styles.replyForm}>
+            <View style={[styles.replyForm, { backgroundColor: replyFormBg }]}>
               <TextInput
-                style={styles.replyInput}
+                style={[styles.replyInput, { color: colors.text }]}
                 value={replyText}
                 onChangeText={setReplyText}
                 placeholder="Votre réponse..."
-                placeholderTextColor={Colors.text.tertiary}
+                placeholderTextColor={colors.textTertiary}
                 multiline
                 maxLength={500}
               />
@@ -153,8 +174,8 @@ export const ReviewCard = React.memo(function ReviewCard({
               style={styles.replyButton}
               onPress={() => setShowReplyForm(true)}
             >
-              <MessageSquare size={16} color={Colors.primary.DEFAULT} />
-              <Text style={styles.replyButtonText}>Répondre</Text>
+              <MessageSquare size={16} color={colors.primary} />
+              <Text style={[styles.replyButtonText, { color: colors.primary }]}>Répondre</Text>
             </TouchableOpacity>
           )}
         </>
@@ -165,13 +186,10 @@ export const ReviewCard = React.memo(function ReviewCard({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.white,
     borderRadius: Layout.radius.lg,
     padding: Layout.spacing.md,
     marginBottom: Layout.spacing.md,
-    shadowColor: Colors.black,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
   },
@@ -187,7 +205,6 @@ const styles = StyleSheet.create({
   clientName: {
     fontSize: Layout.fontSize.md,
     fontWeight: '600',
-    color: Colors.text.primary,
   },
   ratingRow: {
     flexDirection: 'row',
@@ -197,29 +214,24 @@ const styles = StyleSheet.create({
   },
   date: {
     fontSize: Layout.fontSize.xs,
-    color: Colors.text.tertiary,
   },
   menuButton: {
     padding: Layout.spacing.xs,
   },
   comment: {
     fontSize: Layout.fontSize.md,
-    color: Colors.text.secondary,
     lineHeight: 22,
     marginBottom: Layout.spacing.sm,
   },
   serviceInfo: {
     fontSize: Layout.fontSize.xs,
-    color: Colors.text.tertiary,
     fontStyle: 'italic',
   },
   responseContainer: {
     marginTop: Layout.spacing.md,
     padding: Layout.spacing.md,
-    backgroundColor: Colors.primary[50],
     borderRadius: Layout.radius.md,
     borderLeftWidth: 3,
-    borderLeftColor: Colors.primary.DEFAULT,
   },
   responseHeader: {
     flexDirection: 'row',
@@ -230,11 +242,9 @@ const styles = StyleSheet.create({
   responseLabel: {
     fontSize: Layout.fontSize.xs,
     fontWeight: '600',
-    color: Colors.primary.DEFAULT,
   },
   responseText: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
     lineHeight: 20,
   },
   replyButton: {
@@ -246,18 +256,15 @@ const styles = StyleSheet.create({
   },
   replyButtonText: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.primary.DEFAULT,
     fontWeight: '500',
   },
   replyForm: {
     marginTop: Layout.spacing.md,
     padding: Layout.spacing.md,
-    backgroundColor: Colors.gray[50],
     borderRadius: Layout.radius.md,
   },
   replyInput: {
     fontSize: Layout.fontSize.md,
-    color: Colors.text.primary,
     minHeight: 80,
     textAlignVertical: 'top',
   },

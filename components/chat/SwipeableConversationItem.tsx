@@ -1,4 +1,4 @@
-import { Colors } from '@/constants/Colors';
+import { useColors } from '@/hooks/useColors';
 import { ConversationWithDetails } from '@/types';
 import { Pin, Trash2 } from 'lucide-react-native';
 import React, { useRef } from 'react';
@@ -21,6 +21,7 @@ export const SwipeableConversationItem = ({
     onHide,
 }: SwipeableConversationItemProps) => {
     const swipeableRef = useRef<Swipeable>(null);
+    const colors = useColors();
 
     const close = () => {
         swipeableRef.current?.close();
@@ -46,7 +47,7 @@ export const SwipeableConversationItem = ({
                             close();
                         }}
                     >
-                        <Pin size={24} color={Colors.white} fill={isPinned ? Colors.white : 'none'} />
+                        <Pin size={24} color="#FFFFFF" fill={isPinned ? '#FFFFFF' : 'none'} />
                         <Text style={styles.actionText}>{isPinned ? 'Détacher' : 'Épingler'}</Text>
                     </RectButton>
                 </Animated.View>
@@ -68,13 +69,13 @@ export const SwipeableConversationItem = ({
             <View style={{ width: 80 }}>
                 <Animated.View style={[styles.actionContainer, { transform: [{ translateX: trans }] }]}>
                     <RectButton
-                        style={[styles.actionButton, { backgroundColor: Colors.error.DEFAULT }]}
+                        style={[styles.actionButton, { backgroundColor: colors.error }]}
                         onPress={() => {
                             onHide(conversation.id);
                             close();
                         }}
                     >
-                        <Trash2 size={24} color={Colors.white} />
+                        <Trash2 size={24} color="#FFFFFF" />
                         <Text style={styles.actionText}>Supprimer</Text>
                     </RectButton>
                 </Animated.View>
@@ -91,11 +92,11 @@ export const SwipeableConversationItem = ({
             overshootRight={false}
             overshootLeft={false}
         >
-            <View style={styles.cardContainer}>
+            <View style={[styles.cardContainer, { backgroundColor: colors.card }]}>
                 <ConversationCard conversation={conversation} />
                 {isPinned && (
                     <View style={styles.pinnedMarker}>
-                        <Pin size={12} color={Colors.white} fill={Colors.white} />
+                        <Pin size={12} color="#FFFFFF" fill="#FFFFFF" />
                     </View>
                 )}
             </View>
@@ -116,13 +117,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     actionText: {
-        color: Colors.white,
+        color: '#FFFFFF',
         fontSize: 10,
         fontWeight: '600',
         marginTop: 4,
     },
     cardContainer: {
-        backgroundColor: Colors.white,
     },
     pinnedMarker: {
         position: 'absolute',

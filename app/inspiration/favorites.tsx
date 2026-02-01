@@ -1,21 +1,24 @@
 /**
- * Ecran des inspirations favorites (Phase 9)
+ * Ecran des inspirations favorites
+ * Dark Mode Support
  */
 
-import React, { useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import { ChevronLeft } from 'lucide-react-native';
-import { Colors } from '@/constants/Colors';
-import { Layout } from '@/constants/Layout';
-import { PressableScale } from '@/components/ui/PressableScale';
 import { EmptyState } from '@/components/common/EmptyState';
 import { MasonryGrid } from '@/components/inspirations';
+import { PressableScale } from '@/components/ui/PressableScale';
+import { Layout } from '@/constants/Layout';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { useUserFavoriteInspirations } from '@/hooks/useInspirationFavorites';
 import { InspirationWithProvider } from '@/types/inspiration';
+import { router } from 'expo-router';
+import { ChevronLeft } from 'lucide-react-native';
+import React, { useCallback, useMemo } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function InspirationFavoritesScreen() {
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
   const { data: favorites, isLoading, refetch, isRefetching } =
     useUserFavoriteInspirations();
 
@@ -37,16 +40,18 @@ export default function InspirationFavoritesScreen() {
     router.replace('/(tabs)' as any);
   }, []);
 
+  const backButtonBg = isDark ? colors.backgroundTertiary : `${colors.primary}10`;
+
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
         <PressableScale onPress={handleBack} haptic="light">
-          <View style={styles.backButton}>
-            <ChevronLeft size={24} color={Colors.text.primary} />
+          <View style={[styles.backButton, { backgroundColor: backButtonBg }]}>
+            <ChevronLeft size={24} color={colors.text} />
           </View>
         </PressableScale>
-        <Text style={styles.title}>Mes favoris</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Mes favoris</Text>
         <View style={styles.placeholder} />
       </View>
 
@@ -74,7 +79,6 @@ export default function InspirationFavoritesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background.primary,
   },
   header: {
     flexDirection: 'row',
@@ -87,14 +91,12 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: Colors.gray[100],
     alignItems: 'center',
     justifyContent: 'center',
   },
   title: {
     fontSize: Layout.fontSize.xl,
     fontWeight: '700',
-    color: Colors.text.primary,
   },
   placeholder: {
     width: 44,

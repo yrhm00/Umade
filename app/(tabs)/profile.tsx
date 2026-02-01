@@ -1,10 +1,11 @@
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
-import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
 import { useAuth } from '@/hooks/useAuth';
 import { useClientStats } from '@/hooks/useClientStats';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
+import { ThemeMode, useThemeStore } from '@/stores/themeStore';
 import { useRouter } from 'expo-router';
 import {
   Bell,
@@ -13,6 +14,7 @@ import {
   Heart,
   HelpCircle,
   LogOut,
+  Moon,
   Settings,
   Star,
   User,
@@ -29,15 +31,22 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+const THEME_LABELS: Record<ThemeMode, string> = {
+  light: 'Clair',
+  dark: 'Sombre',
+  system: 'Système',
+};
+
 interface MenuItemProps {
   icon: React.ReactNode;
   label: string;
   onPress: () => void;
   badge?: string;
   destructive?: boolean;
+  colors: ReturnType<typeof useColors>;
 }
 
-function MenuItem({ icon, label, onPress, badge, destructive }: MenuItemProps) {
+function MenuItem({ icon, label, onPress, badge, destructive, colors }: MenuItemProps) {
   return (
     <TouchableOpacity
       style={styles.menuItem}
@@ -46,13 +55,13 @@ function MenuItem({ icon, label, onPress, badge, destructive }: MenuItemProps) {
     >
       <View style={[
         styles.menuIcon,
-        destructive && styles.menuIconDestructive
+        { backgroundColor: destructive ? 'rgba(239, 68, 68, 0.1)' : `${colors.primary}15` }
       ]}>
         {icon}
       </View>
       <Text style={[
         styles.menuLabel,
-        destructive && styles.menuLabelDestructive
+        { color: destructive ? colors.error : colors.text }
       ]}>
         {label}
       </Text>
@@ -61,7 +70,7 @@ function MenuItem({ icon, label, onPress, badge, destructive }: MenuItemProps) {
       )}
       <ChevronRight
         size={20}
-        color={destructive ? Colors.error.DEFAULT : Colors.gray[400]}
+        color={destructive ? colors.error : colors.textTertiary}
       />
     </TouchableOpacity>
   );
@@ -69,8 +78,11 @@ function MenuItem({ icon, label, onPress, badge, destructive }: MenuItemProps) {
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
   const { profile, signOut, isLoading: authLoading } = useAuth();
   const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useClientStats();
+  const themeMode = useThemeStore((state) => state.mode);
 
   const handleSignOut = () => {
     Alert.alert(
@@ -90,7 +102,7 @@ export default function ProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundSecondary }]} edges={['top']}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
@@ -98,13 +110,13 @@ export default function ProfileScreen() {
           <RefreshControl
             refreshing={statsLoading}
             onRefresh={refetchStats}
-            tintColor={Colors.primary.DEFAULT}
+            tintColor={colors.primary}
           />
         }
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Profil</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Profil</Text>
         </View>
 
         {/* Profile Card */}
@@ -116,10 +128,10 @@ export default function ProfileScreen() {
               size="xl"
             />
             <View style={styles.profileInfo}>
-              <Text style={styles.profileName}>
+              <Text style={[styles.profileName, { color: colors.text }]}>
                 {profile?.full_name || 'Utilisateur'}
               </Text>
-              <Text style={styles.profileEmail}>
+              <Text style={[styles.profileEmail, { color: colors.textSecondary }]}>
                 {profile?.email}
               </Text>
               <Badge
@@ -130,82 +142,97 @@ export default function ProfileScreen() {
             </View>
           </View>
           <TouchableOpacity
-            style={styles.editButton}
+            style={[styles.editButton, { backgroundColor: `${colors.primary}15` }]}
             onPress={() => router.push('/profile/edit')}
           >
-            <Text style={styles.editButtonText}>Modifier le profil</Text>
+            <Text style={[styles.editButtonText, { color: colors.primary }]}>Modifier le profil</Text>
           </TouchableOpacity>
         </Card>
 
         {/* Stats (for clients) */}
         {profile?.role === 'client' && (
-          <View style={styles.statsContainer}>
+          <View style={[styles.statsContainer, { backgroundColor: colors.card }]}>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{stats?.bookingsCount || 0}</Text>
-              <Text style={styles.statLabel}>Réservations</Text>
+              <Text style={[styles.statValue, { color: colors.primary }]}>{stats?.bookingsCount || 0}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Réservations</Text>
             </View>
-            <View style={styles.statDivider} />
+            <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{stats?.favoritesCount || 0}</Text>
-              <Text style={styles.statLabel}>Favoris</Text>
+              <Text style={[styles.statValue, { color: colors.primary }]}>{stats?.favoritesCount || 0}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Favoris</Text>
             </View>
-            <View style={styles.statDivider} />
+            <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{stats?.reviewsCount || 0}</Text>
-              <Text style={styles.statLabel}>Avis</Text>
+              <Text style={[styles.statValue, { color: colors.primary }]}>{stats?.reviewsCount || 0}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Avis</Text>
             </View>
           </View>
         )}
 
         {/* Menu Sections */}
         <View style={styles.menuSection}>
-          <Text style={styles.menuSectionTitle}>Mon compte</Text>
+          <Text style={[styles.menuSectionTitle, { color: colors.textSecondary }]}>Mon compte</Text>
           <Card variant="outlined" padding="none">
             <MenuItem
-              icon={<User size={20} color={Colors.primary.DEFAULT} />}
+              icon={<User size={20} color={colors.primary} />}
               label="Informations personnelles"
               onPress={() => router.push('/profile/edit')}
+              colors={colors}
             />
-            <View style={styles.menuDivider} />
+            <View style={[styles.menuDivider, { backgroundColor: colors.border }]} />
             <MenuItem
-              icon={<Heart size={20} color={Colors.primary.DEFAULT} />}
+              icon={<Heart size={20} color={colors.primary} />}
               label="Mes favoris"
               onPress={() => router.push('/favorites')}
+              colors={colors}
             />
-            <View style={styles.menuDivider} />
+            <View style={[styles.menuDivider, { backgroundColor: colors.border }]} />
             <MenuItem
-              icon={<Star size={20} color={Colors.primary.DEFAULT} />}
+              icon={<Star size={20} color={colors.primary} />}
               label="Mes avis"
               onPress={() => router.push('/reviews/user' as any)}
+              colors={colors}
             />
           </Card>
         </View>
 
         <View style={styles.menuSection}>
-          <Text style={styles.menuSectionTitle}>Paramètres</Text>
+          <Text style={[styles.menuSectionTitle, { color: colors.textSecondary }]}>Paramètres</Text>
           <Card variant="outlined" padding="none">
             <MenuItem
-              icon={<Bell size={20} color={Colors.primary.DEFAULT} />}
+              icon={<Bell size={20} color={colors.primary} />}
               label="Notifications"
               onPress={() => router.push('/notifications')}
+              colors={colors}
             />
-            <View style={styles.menuDivider} />
+            <View style={[styles.menuDivider, { backgroundColor: colors.border }]} />
             <MenuItem
-              icon={<Settings size={20} color={Colors.primary.DEFAULT} />}
+              icon={<Moon size={20} color={colors.primary} />}
+              label="Apparence"
+              badge={THEME_LABELS[themeMode]}
+              onPress={() => router.push('/settings/appearance' as any)}
+              colors={colors}
+            />
+            <View style={[styles.menuDivider, { backgroundColor: colors.border }]} />
+            <MenuItem
+              icon={<Settings size={20} color={colors.primary} />}
               label="Préférences notifications"
               onPress={() => router.push('/settings/notifications' as any)}
+              colors={colors}
             />
-            <View style={styles.menuDivider} />
+            <View style={[styles.menuDivider, { backgroundColor: colors.border }]} />
             <MenuItem
-              icon={<HelpCircle size={20} color={Colors.primary.DEFAULT} />}
+              icon={<HelpCircle size={20} color={colors.primary} />}
               label="Aide & Support"
               onPress={() => router.push('/help')}
+              colors={colors}
             />
-            <View style={styles.menuDivider} />
+            <View style={[styles.menuDivider, { backgroundColor: colors.border }]} />
             <MenuItem
-              icon={<FileText size={20} color={Colors.primary.DEFAULT} />}
+              icon={<FileText size={20} color={colors.primary} />}
               label="Conditions d'utilisation"
               onPress={() => router.push('/legal/terms')}
+              colors={colors}
             />
           </Card>
         </View>
@@ -213,16 +240,17 @@ export default function ProfileScreen() {
         <View style={styles.menuSection}>
           <Card variant="outlined" padding="none">
             <MenuItem
-              icon={<LogOut size={20} color={Colors.error.DEFAULT} />}
+              icon={<LogOut size={20} color={colors.error} />}
               label="Déconnexion"
               onPress={handleSignOut}
               destructive
+              colors={colors}
             />
           </Card>
         </View>
 
         {/* Version */}
-        <Text style={styles.version}>Version 1.0.0</Text>
+        <Text style={[styles.version, { color: colors.textTertiary }]}>Version 1.0.0</Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -231,10 +259,9 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background.secondary,
   },
   scrollContent: {
-    paddingBottom: 120, // Increased to account for Floating Tab Bar
+    paddingBottom: 120,
   },
   header: {
     paddingHorizontal: Layout.spacing.lg,
@@ -243,7 +270,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: Layout.fontSize['2xl'],
     fontWeight: '700',
-    color: Colors.text.primary,
   },
   profileCard: {
     marginHorizontal: Layout.spacing.lg,
@@ -261,27 +287,22 @@ const styles = StyleSheet.create({
   profileName: {
     fontSize: Layout.fontSize.xl,
     fontWeight: '700',
-    color: Colors.text.primary,
   },
   profileEmail: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
   },
   editButton: {
     marginTop: Layout.spacing.md,
     paddingVertical: Layout.spacing.sm,
     alignItems: 'center',
-    backgroundColor: Colors.primary[50],
     borderRadius: Layout.radius.md,
   },
   editButtonText: {
     fontSize: Layout.fontSize.sm,
     fontWeight: '600',
-    color: Colors.primary.DEFAULT,
   },
   statsContainer: {
     flexDirection: 'row',
-    backgroundColor: Colors.white,
     marginHorizontal: Layout.spacing.lg,
     marginBottom: Layout.spacing.lg,
     padding: Layout.spacing.md,
@@ -294,16 +315,13 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: Layout.fontSize['2xl'],
     fontWeight: '700',
-    color: Colors.primary.DEFAULT,
   },
   statLabel: {
     fontSize: Layout.fontSize.xs,
-    color: Colors.text.secondary,
     marginTop: 2,
   },
   statDivider: {
     width: 1,
-    backgroundColor: Colors.gray[200],
   },
   menuSection: {
     marginHorizontal: Layout.spacing.lg,
@@ -312,7 +330,6 @@ const styles = StyleSheet.create({
   menuSectionTitle: {
     fontSize: Layout.fontSize.sm,
     fontWeight: '600',
-    color: Colors.text.secondary,
     marginBottom: Layout.spacing.sm,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -327,30 +344,20 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: Colors.primary[50],
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  menuIconDestructive: {
-    backgroundColor: Colors.error.light,
   },
   menuLabel: {
     flex: 1,
     fontSize: Layout.fontSize.md,
-    color: Colors.text.primary,
-  },
-  menuLabelDestructive: {
-    color: Colors.error.DEFAULT,
   },
   menuDivider: {
     height: 1,
-    backgroundColor: Colors.gray[100],
     marginLeft: Layout.spacing.md + 36 + Layout.spacing.md,
   },
   version: {
     textAlign: 'center',
     fontSize: Layout.fontSize.xs,
-    color: Colors.text.tertiary,
     marginTop: Layout.spacing.md,
   },
 });

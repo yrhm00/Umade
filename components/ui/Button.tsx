@@ -1,13 +1,14 @@
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import React from 'react';
 import {
-    ActivityIndicator,
-    StyleSheet,
-    Text,
-    TextStyle,
-    TouchableOpacity,
-    ViewStyle,
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TextStyle,
+  TouchableOpacity,
+  ViewStyle,
 } from 'react-native';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost';
@@ -40,11 +41,45 @@ export function Button({
   style,
   textStyle,
 }: ButtonProps) {
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
   const isDisabled = disabled || loading;
+
+  const variantStyles = {
+    primary: {
+      backgroundColor: colors.primary,
+    },
+    secondary: {
+      backgroundColor: Colors.secondary.DEFAULT, // Assuming secondary is constant for now
+    },
+    outline: {
+      backgroundColor: 'transparent',
+      borderWidth: 1.5,
+      borderColor: colors.primary,
+    },
+    ghost: {
+      backgroundColor: 'transparent',
+    }
+  };
+
+  const textVariantStyles = {
+    primary: {
+      color: Colors.white,
+    },
+    secondary: {
+      color: colors.primary,
+    },
+    outline: {
+      color: colors.primary,
+    },
+    ghost: {
+      color: colors.primary,
+    }
+  };
 
   const buttonStyles = [
     styles.base,
-    styles[variant],
+    variantStyles[variant],
     styles[`size_${size}`],
     fullWidth && styles.fullWidth,
     isDisabled && styles.disabled,
@@ -53,7 +88,7 @@ export function Button({
 
   const textStyles = [
     styles.text,
-    styles[`text_${variant}`],
+    textVariantStyles[variant],
     styles[`text_${size}`],
     isDisabled && styles.textDisabled,
     textStyle,
@@ -68,7 +103,7 @@ export function Button({
     >
       {loading ? (
         <ActivityIndicator
-          color={variant === 'primary' ? Colors.white : Colors.primary.DEFAULT}
+          color={variant === 'primary' ? Colors.white : colors.primary}
           size="small"
         />
       ) : (
@@ -89,22 +124,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: Layout.radius.md,
     gap: Layout.spacing.sm,
-  },
-
-  // Variants
-  primary: {
-    backgroundColor: Colors.primary.DEFAULT,
-  },
-  secondary: {
-    backgroundColor: Colors.secondary.DEFAULT,
-  },
-  outline: {
-    backgroundColor: 'transparent',
-    borderWidth: 1.5,
-    borderColor: Colors.primary.DEFAULT,
-  },
-  ghost: {
-    backgroundColor: 'transparent',
   },
 
   // Sizes
@@ -132,18 +151,6 @@ const styles = StyleSheet.create({
   // Text
   text: {
     fontWeight: '600',
-  },
-  text_primary: {
-    color: Colors.white,
-  },
-  text_secondary: {
-    color: Colors.primary.DEFAULT,
-  },
-  text_outline: {
-    color: Colors.primary.DEFAULT,
-  },
-  text_ghost: {
-    color: Colors.primary.DEFAULT,
   },
   text_sm: {
     fontSize: Layout.fontSize.sm,

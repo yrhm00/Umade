@@ -1,16 +1,17 @@
+import { Animations } from '@/constants/Animations';
+import { Colors } from '@/constants/Colors';
+import { Layout } from '@/constants/Layout';
+import { Shadows } from '@/constants/Shadows';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import React from 'react';
 import {
+  ActivityIndicator,
   StyleSheet,
   Text,
   TextStyle,
   ViewStyle,
-  ActivityIndicator,
 } from 'react-native';
 import { PressableScale } from './PressableScale';
-import { Colors } from '@/constants/Colors';
-import { Layout } from '@/constants/Layout';
-import { Shadows } from '@/constants/Shadows';
-import { Animations } from '@/constants/Animations';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost';
 type ButtonSize = 'sm' | 'md' | 'lg';
@@ -45,11 +46,48 @@ export function AnimatedButton({
   textStyle,
   haptic = 'light',
 }: AnimatedButtonProps) {
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
   const isDisabled = disabled || loading;
+
+  const getVariantStyle = (variant: ButtonVariant): ViewStyle => {
+    switch (variant) {
+      case 'primary':
+        return { backgroundColor: colors.primary };
+      case 'secondary':
+        return { backgroundColor: Colors.secondary.DEFAULT };
+      case 'outline':
+        return {
+          backgroundColor: 'transparent',
+          borderWidth: 1.5,
+          borderColor: colors.primary
+        };
+      case 'ghost':
+        return { backgroundColor: 'transparent' };
+      default:
+        return {};
+    }
+  };
+
+  const getTextStyle = (variant: ButtonVariant): TextStyle => {
+    switch (variant) {
+      case 'primary':
+        return { color: Colors.white };
+      case 'secondary':
+        return { color: colors.primary };
+      case 'outline':
+        return { color: colors.primary };
+      case 'ghost':
+        return { color: colors.primary };
+      default:
+        return {};
+    }
+  };
+
 
   const buttonStyles: ViewStyle[] = [
     styles.base,
-    styles[variant],
+    getVariantStyle(variant),
     styles[`size_${size}` as keyof typeof styles] as ViewStyle,
     variant === 'primary' && Shadows.primarySoft,
     fullWidth && styles.fullWidth,
@@ -59,7 +97,7 @@ export function AnimatedButton({
 
   const textStyles: TextStyle[] = [
     styles.text,
-    styles[`text_${variant}` as keyof typeof styles] as TextStyle,
+    getTextStyle(variant),
     styles[`text_${size}` as keyof typeof styles] as TextStyle,
     isDisabled && styles.textDisabled,
     textStyle,
@@ -75,7 +113,7 @@ export function AnimatedButton({
     >
       {loading ? (
         <ActivityIndicator
-          color={variant === 'primary' ? Colors.white : Colors.primary.DEFAULT}
+          color={variant === 'primary' ? Colors.white : colors.primary}
           size="small"
         />
       ) : (
@@ -96,22 +134,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: Layout.radius.md,
     gap: Layout.spacing.sm,
-  },
-
-  // Variants
-  primary: {
-    backgroundColor: Colors.primary.DEFAULT,
-  },
-  secondary: {
-    backgroundColor: Colors.secondary.DEFAULT,
-  },
-  outline: {
-    backgroundColor: 'transparent',
-    borderWidth: 1.5,
-    borderColor: Colors.primary.DEFAULT,
-  },
-  ghost: {
-    backgroundColor: 'transparent',
   },
 
   // Sizes
@@ -139,18 +161,6 @@ const styles = StyleSheet.create({
   // Text
   text: {
     fontWeight: '600',
-  },
-  text_primary: {
-    color: Colors.white,
-  },
-  text_secondary: {
-    color: Colors.primary.DEFAULT,
-  },
-  text_outline: {
-    color: Colors.primary.DEFAULT,
-  },
-  text_ghost: {
-    color: Colors.primary.DEFAULT,
   },
   text_sm: {
     fontSize: Layout.fontSize.sm,

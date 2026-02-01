@@ -1,3 +1,9 @@
+import { SpringConfigs } from '@/constants/Animations';
+import { Colors } from '@/constants/Colors';
+import { Layout } from '@/constants/Layout';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
+import { useHaptics } from '@/hooks/useHaptics';
+import { Eye, EyeOff } from 'lucide-react-native';
 import React, { useCallback, useRef, useState } from 'react';
 import {
   StyleSheet,
@@ -9,18 +15,13 @@ import {
   ViewStyle,
 } from 'react-native';
 import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  withSequence,
-  withTiming,
   interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming,
 } from 'react-native-reanimated';
-import { Eye, EyeOff } from 'lucide-react-native';
-import { Colors } from '@/constants/Colors';
-import { Layout } from '@/constants/Layout';
-import { SpringConfigs, AnimationDurations } from '@/constants/Animations';
-import { useHaptics } from '@/hooks/useHaptics';
 
 const AnimatedView = Animated.createAnimatedComponent(View);
 
@@ -51,6 +52,8 @@ export const AnimatedInput = React.memo(function AnimatedInput({
   shakeOnError = true,
   ...props
 }: AnimatedInputProps) {
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const focusTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -121,10 +124,10 @@ export const AnimatedInput = React.memo(function AnimatedInput({
     const borderColor = error
       ? Colors.error.DEFAULT
       : interpolateColor(
-          focusProgress.value,
-          [0, 1],
-          [Colors.gray[200], Colors.primary.DEFAULT]
-        );
+        focusProgress.value,
+        [0, 1],
+        [isDark ? colors.border : Colors.gray[200], colors.primary]
+      );
 
     return {
       borderColor,
@@ -140,7 +143,7 @@ export const AnimatedInput = React.memo(function AnimatedInput({
     const color = interpolateColor(
       labelPosition.value,
       [0, 1],
-      [Colors.gray[400], Colors.primary.DEFAULT]
+      [colors.textTertiary, colors.primary]
     );
 
     return {
@@ -153,13 +156,17 @@ export const AnimatedInput = React.memo(function AnimatedInput({
     <AnimatedView
       style={[styles.container, containerAnimatedStyle, containerStyle]}
     >
-      {label && !floatingLabel && <Text style={styles.label}>{label}</Text>}
+      {label && !floatingLabel && <Text style={[styles.label, { color: colors.text }]}>{label}</Text>}
 
       <AnimatedView
-        style={[styles.inputContainer, inputContainerAnimatedStyle]}
+        style={[
+          styles.inputContainer,
+          { backgroundColor: colors.card, shadowColor: colors.primary },
+          inputContainerAnimatedStyle
+        ]}
       >
         {floatingLabel && label && (
-          <Animated.Text style={[styles.floatingLabel, floatingLabelStyle]}>
+          <Animated.Text style={[styles.floatingLabel, { backgroundColor: colors.card }, floatingLabelStyle]}>
             {label}
           </Animated.Text>
         )}
@@ -169,12 +176,13 @@ export const AnimatedInput = React.memo(function AnimatedInput({
         <TextInput
           style={[
             styles.input,
+            { color: colors.text },
             leftIcon ? styles.inputWithLeftIcon : null,
             rightIcon || isPassword ? styles.inputWithRightIcon : null,
             floatingLabel ? styles.inputWithFloatingLabel : null,
             style,
           ].filter(Boolean)}
-          placeholderTextColor={Colors.gray[400]}
+          placeholderTextColor={colors.textTertiary}
           secureTextEntry={isPassword && !showPassword}
           onFocus={handleFocus}
           onBlur={handleBlur}
@@ -188,9 +196,9 @@ export const AnimatedInput = React.memo(function AnimatedInput({
             onPress={() => setIsPasswordVisible(!isPasswordVisible)}
           >
             {showPassword ? (
-              <EyeOff size={20} color={Colors.gray[500]} />
+              <EyeOff size={20} color={colors.textTertiary} />
             ) : (
-              <Eye size={20} color={Colors.gray[500]} />
+              <Eye size={20} color={colors.textTertiary} />
             )}
           </TouchableOpacity>
         )}
@@ -200,8 +208,8 @@ export const AnimatedInput = React.memo(function AnimatedInput({
         )}
       </AnimatedView>
 
-      {error && <Text style={styles.error}>{error}</Text>}
-      {hint && !error && <Text style={styles.hint}>{hint}</Text>}
+      {error && <Text style={[styles.error, { color: colors.error }]}>{error}</Text>}
+      {hint && !error && <Text style={[styles.hint, { color: colors.textTertiary }]}>{hint}</Text>}
     </AnimatedView>
   );
 });
@@ -213,7 +221,6 @@ const styles = StyleSheet.create({
   label: {
     fontSize: Layout.fontSize.sm,
     fontWeight: '500',
-    color: Colors.text.primary,
     marginBottom: Layout.spacing.xs,
   },
   floatingLabel: {
@@ -221,19 +228,15 @@ const styles = StyleSheet.create({
     left: Layout.spacing.md,
     top: 14,
     fontSize: Layout.fontSize.md,
-    backgroundColor: Colors.white,
     paddingHorizontal: 4,
     zIndex: 1,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.white,
     borderRadius: Layout.radius.md,
     borderWidth: 1.5,
-    borderColor: Colors.gray[200],
     height: Layout.inputHeight,
-    shadowColor: Colors.primary.DEFAULT,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0,
     shadowRadius: 4,
@@ -244,7 +247,6 @@ const styles = StyleSheet.create({
     height: '100%',
     paddingHorizontal: Layout.spacing.md,
     fontSize: Layout.fontSize.md,
-    color: Colors.text.primary,
   },
   inputWithLeftIcon: {
     paddingLeft: 0,
@@ -263,12 +265,10 @@ const styles = StyleSheet.create({
   },
   error: {
     fontSize: Layout.fontSize.xs,
-    color: Colors.error.DEFAULT,
     marginTop: Layout.spacing.xs,
   },
   hint: {
     fontSize: Layout.fontSize.xs,
-    color: Colors.text.tertiary,
     marginTop: Layout.spacing.xs,
   },
 });

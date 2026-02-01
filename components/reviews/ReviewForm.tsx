@@ -1,20 +1,25 @@
+/**
+ * Review Form Component
+ * Dark Mode Support
+ */
+
+import { Avatar } from '@/components/ui/Avatar';
+import { Button } from '@/components/ui/Button';
+import { Layout } from '@/constants/Layout';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
+import { formatDate } from '@/lib/utils';
+import { Calendar } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from 'react-native';
-import { Calendar, Clock } from 'lucide-react-native';
-import { Avatar } from '@/components/ui/Avatar';
-import { Button } from '@/components/ui/Button';
 import { StarRatingInput } from './StarRatingInput';
-import { Colors } from '@/constants/Colors';
-import { Layout } from '@/constants/Layout';
-import { formatDate } from '@/lib/utils';
 
 interface BookingInfo {
   id: string;
@@ -45,6 +50,8 @@ export function ReviewForm({
   onSubmit,
   isSubmitting = false,
 }: ReviewFormProps) {
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
 
@@ -61,27 +68,38 @@ export function ReviewForm({
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.background }]}
     >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
         {/* Booking Info */}
-        <View style={styles.bookingCard}>
+        <View
+          style={[
+            styles.bookingCard,
+            {
+              backgroundColor: colors.card,
+              shadowColor: isDark ? colors.primary : '#000000',
+              shadowOpacity: isDark ? 0.3 : 0.05,
+            },
+          ]}
+        >
           <Avatar
             source={booking.provider?.profiles?.avatar_url ?? undefined}
             name={booking.provider?.business_name}
             size="lg"
           />
           <View style={styles.bookingInfo}>
-            <Text style={styles.providerName}>
+            <Text style={[styles.providerName, { color: colors.text }]}>
               {booking.provider?.business_name}
             </Text>
-            <Text style={styles.serviceName}>{booking.service?.name}</Text>
+            <Text style={[styles.serviceName, { color: colors.textSecondary }]}>
+              {booking.service?.name}
+            </Text>
             <View style={styles.dateRow}>
-              <Calendar size={14} color={Colors.text.tertiary} />
-              <Text style={styles.dateText}>
+              <Calendar size={14} color={colors.textTertiary} />
+              <Text style={[styles.dateText, { color: colors.textTertiary }]}>
                 {formatDate(booking.booking_date)}
               </Text>
             </View>
@@ -90,8 +108,8 @@ export function ReviewForm({
 
         {/* Rating Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Votre note</Text>
-          <Text style={styles.sectionSubtitle}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Votre note</Text>
+          <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
             Touchez les étoiles pour noter
           </Text>
           <View style={styles.starsContainer}>
@@ -103,7 +121,7 @@ export function ReviewForm({
             />
           </View>
           {rating > 0 && (
-            <Text style={styles.ratingLabel}>
+            <Text style={[styles.ratingLabel, { color: colors.warning }]}>
               {rating === 1 && 'Très insatisfait'}
               {rating === 2 && 'Insatisfait'}
               {rating === 3 && 'Correct'}
@@ -115,23 +133,34 @@ export function ReviewForm({
 
         {/* Comment Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Votre commentaire (optionnel)</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            Votre commentaire (optionnel)
+          </Text>
           <TextInput
-            style={styles.commentInput}
+            style={[
+              styles.commentInput,
+              {
+                backgroundColor: colors.card,
+                color: colors.text,
+                borderColor: colors.border,
+              },
+            ]}
             value={comment}
             onChangeText={setComment}
             placeholder="Partagez votre expérience avec ce prestataire..."
-            placeholderTextColor={Colors.text.tertiary}
+            placeholderTextColor={colors.textTertiary}
             multiline
             maxLength={1000}
             editable={!isSubmitting}
           />
-          <Text style={styles.charCount}>{comment.length}/1000</Text>
+          <Text style={[styles.charCount, { color: colors.textTertiary }]}>
+            {comment.length}/1000
+          </Text>
         </View>
       </ScrollView>
 
       {/* Submit Button */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
         <Button
           title="Publier mon avis"
           onPress={handleSubmit}
@@ -147,7 +176,6 @@ export function ReviewForm({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background.primary,
   },
   scrollContent: {
     padding: Layout.spacing.lg,
@@ -155,13 +183,10 @@ const styles = StyleSheet.create({
   bookingCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.white,
     borderRadius: Layout.radius.lg,
     padding: Layout.spacing.md,
     marginBottom: Layout.spacing.xl,
-    shadowColor: Colors.black,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
   },
@@ -172,11 +197,9 @@ const styles = StyleSheet.create({
   providerName: {
     fontSize: Layout.fontSize.lg,
     fontWeight: '600',
-    color: Colors.text.primary,
   },
   serviceName: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
     marginTop: 2,
   },
   dateRow: {
@@ -187,7 +210,6 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: Layout.fontSize.xs,
-    color: Colors.text.tertiary,
   },
   section: {
     marginBottom: Layout.spacing.xl,
@@ -195,12 +217,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: Layout.fontSize.lg,
     fontWeight: '600',
-    color: Colors.text.primary,
     marginBottom: Layout.spacing.xs,
   },
   sectionSubtitle: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
     marginBottom: Layout.spacing.md,
   },
   starsContainer: {
@@ -209,25 +229,20 @@ const styles = StyleSheet.create({
   },
   ratingLabel: {
     fontSize: Layout.fontSize.md,
-    color: Colors.warning.DEFAULT,
     fontWeight: '500',
     textAlign: 'center',
     marginTop: Layout.spacing.sm,
   },
   commentInput: {
-    backgroundColor: Colors.white,
     borderRadius: Layout.radius.md,
     padding: Layout.spacing.md,
     fontSize: Layout.fontSize.md,
-    color: Colors.text.primary,
     minHeight: 120,
     textAlignVertical: 'top',
     borderWidth: 1,
-    borderColor: Colors.gray[200],
   },
   charCount: {
     fontSize: Layout.fontSize.xs,
-    color: Colors.text.tertiary,
     textAlign: 'right',
     marginTop: Layout.spacing.xs,
   },
@@ -235,7 +250,5 @@ const styles = StyleSheet.create({
     padding: Layout.spacing.lg,
     paddingTop: Layout.spacing.md,
     borderTopWidth: 1,
-    borderTopColor: Colors.gray[200],
-    backgroundColor: Colors.background.primary,
   },
 });

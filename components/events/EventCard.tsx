@@ -1,11 +1,11 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Calendar, MapPin, Users, ChevronRight } from 'lucide-react-native';
-import { EventStatusBadge } from './EventStatusBadge';
-import { EventWithBookings } from '@/types';
-import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
+import { EventWithBookings } from '@/types';
+import { useRouter } from 'expo-router';
+import { Calendar, ChevronRight, MapPin, Users } from 'lucide-react-native';
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { EventStatusBadge } from './EventStatusBadge';
 
 interface EventCardProps {
   event: EventWithBookings;
@@ -13,6 +13,8 @@ interface EventCardProps {
 
 export const EventCard = React.memo(function EventCard({ event }: EventCardProps) {
   const router = useRouter();
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
 
   const formattedDate = new Date(event.event_date).toLocaleDateString('fr-BE', {
     weekday: 'short',
@@ -25,12 +27,12 @@ export const EventCard = React.memo(function EventCard({ event }: EventCardProps
 
   return (
     <TouchableOpacity
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.card }]}
       onPress={() => router.push(`/event/${event.id}` as any)}
       activeOpacity={0.7}
     >
       <View style={styles.header}>
-        <Text style={styles.title} numberOfLines={1}>
+        <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
           {event.title}
         </Text>
         <EventStatusBadge eventType={event.event_type} />
@@ -38,14 +40,14 @@ export const EventCard = React.memo(function EventCard({ event }: EventCardProps
 
       <View style={styles.details}>
         <View style={styles.detailRow}>
-          <Calendar size={16} color={Colors.text.secondary} />
-          <Text style={styles.detailText}>{formattedDate}</Text>
+          <Calendar size={16} color={colors.textSecondary} />
+          <Text style={[styles.detailText, { color: colors.textSecondary }]}>{formattedDate}</Text>
         </View>
 
         {event.location && (
           <View style={styles.detailRow}>
-            <MapPin size={16} color={Colors.text.secondary} />
-            <Text style={styles.detailText} numberOfLines={1}>
+            <MapPin size={16} color={colors.textSecondary} />
+            <Text style={[styles.detailText, { color: colors.textSecondary }]} numberOfLines={1}>
               {event.location}
             </Text>
           </View>
@@ -53,19 +55,19 @@ export const EventCard = React.memo(function EventCard({ event }: EventCardProps
 
         {event.guest_count != null && (
           <View style={styles.detailRow}>
-            <Users size={16} color={Colors.text.secondary} />
-            <Text style={styles.detailText}>
+            <Users size={16} color={colors.textSecondary} />
+            <Text style={[styles.detailText, { color: colors.textSecondary }]}>
               {event.guest_count} invité{event.guest_count > 1 ? 's' : ''}
             </Text>
           </View>
         )}
       </View>
 
-      <View style={styles.footer}>
-        <Text style={styles.bookingsCount}>
+      <View style={[styles.footer, { borderTopColor: colors.border }]}>
+        <Text style={[styles.bookingsCount, { color: colors.primary }]}>
           {bookingsCount} réservation{bookingsCount !== 1 ? 's' : ''}
         </Text>
-        <ChevronRight size={20} color={Colors.gray[400]} />
+        <ChevronRight size={20} color={colors.textTertiary} />
       </View>
     </TouchableOpacity>
   );
@@ -73,11 +75,10 @@ export const EventCard = React.memo(function EventCard({ event }: EventCardProps
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.white,
     borderRadius: Layout.radius.lg,
     padding: Layout.spacing.md,
     marginBottom: Layout.spacing.md,
-    shadowColor: Colors.black,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -93,7 +94,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: Layout.fontSize.lg,
     fontWeight: '600',
-    color: Colors.text.primary,
     marginRight: Layout.spacing.sm,
   },
   details: {
@@ -106,7 +106,6 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
   },
   footer: {
     flexDirection: 'row',
@@ -115,11 +114,9 @@ const styles = StyleSheet.create({
     marginTop: Layout.spacing.md,
     paddingTop: Layout.spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: Colors.gray[100],
   },
   bookingsCount: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.primary.DEFAULT,
     fontWeight: '500',
   },
 });

@@ -1,31 +1,33 @@
 /**
- * Ecran de detail d'une inspiration (Phase 9)
+ * Ecran de detail d'une inspiration
+ * Dark Mode Support
  */
 
-import React from 'react';
-import { View, StyleSheet, ActivityIndicator } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
-import { Colors } from '@/constants/Colors';
-import { InspirationDetail } from '@/components/inspirations';
-import { useInspiration } from '@/hooks/useInspirations';
 import { EmptyState } from '@/components/common/EmptyState';
+import { InspirationDetail } from '@/components/inspirations';
+import { useColors } from '@/hooks/useColors';
+import { useInspiration } from '@/hooks/useInspirations';
+import { useLocalSearchParams } from 'expo-router';
+import React from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 export default function InspirationDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const colors = useColors();
 
   const { data: inspiration, isLoading, error } = useInspiration(id);
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.primary.DEFAULT} />
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   if (error || !inspiration) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         <EmptyState
           icon="😕"
           title="Inspiration introuvable"
@@ -41,12 +43,10 @@ export default function InspirationDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
   },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.white,
   },
 });

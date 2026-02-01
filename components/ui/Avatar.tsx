@@ -1,13 +1,13 @@
+import { Colors } from '@/constants/Colors';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import React from 'react';
 import {
-  View,
   Image,
-  Text,
   StyleSheet,
+  Text,
+  View,
   ViewStyle,
 } from 'react-native';
-import { Colors } from '@/constants/Colors';
-import { Layout } from '@/constants/Layout';
 
 type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
@@ -50,6 +50,8 @@ export function Avatar({
   style,
   showBorder = false,
 }: AvatarProps) {
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
   const dimension = sizeMap[size];
   const fontSize = fontSizeMap[size];
 
@@ -59,7 +61,7 @@ export function Avatar({
     borderRadius: dimension / 2,
     ...(showBorder && {
       borderWidth: 2,
-      borderColor: Colors.white,
+      borderColor: isDark ? colors.background : Colors.white,
     }),
   };
 
@@ -75,8 +77,13 @@ export function Avatar({
   }
 
   return (
-    <View style={[styles.container, styles.placeholder, containerStyle, style]}>
-      <Text style={[styles.initials, { fontSize }]}>
+    <View style={[
+      styles.container,
+      containerStyle,
+      { backgroundColor: isDark ? colors.backgroundTertiary : Colors.primary[100] },
+      style
+    ]}>
+      <Text style={[styles.initials, { fontSize, color: colors.primary }]}>
         {name ? getInitials(name) : '?'}
       </Text>
     </View>
@@ -93,11 +100,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  placeholder: {
-    backgroundColor: Colors.primary[100],
-  },
   initials: {
-    color: Colors.primary.DEFAULT,
     fontWeight: '600',
   },
 });

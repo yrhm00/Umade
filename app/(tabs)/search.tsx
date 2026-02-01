@@ -1,5 +1,6 @@
 /**
  * Ecran Recherche - Combine l'accueil et la recherche de prestataires
+ * Dark Mode Support
  */
 
 import { CategoryPill } from '@/components/common/CategoryPill';
@@ -8,11 +9,11 @@ import { FiltersBottomSheet } from '@/components/providers/FiltersBottomSheet';
 import { ProviderCard } from '@/components/providers/ProviderCard';
 import { Avatar } from '@/components/ui/Avatar';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { Colors } from '@/constants/Colors';
 import { Config } from '@/constants/Config';
 import { Layout } from '@/constants/Layout';
 import { useAuth } from '@/hooks/useAuth';
 import { useCategories } from '@/hooks/useCategories';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { useSearchProviders, useTopProviders } from '@/hooks/useProviders';
 import { debounce } from '@/lib/utils';
 import { useSearchStore } from '@/stores/searchStore';
@@ -48,6 +49,8 @@ export default function SearchScreen() {
   const params = useLocalSearchParams<{ category?: string }>();
   const filtersSheetRef = useRef<BottomSheet>(null);
   const { profile } = useAuth();
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
 
   const [isSearchMode, setIsSearchMode] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -67,7 +70,6 @@ export default function SearchScreen() {
 
   const [searchText, setSearchText] = useState(filters.searchQuery || '');
 
-  // Initialiser la catégorie depuis les params URL
   useEffect(() => {
     if (params.category && params.category !== filters.categorySlug) {
       setCategory(params.category);
@@ -75,14 +77,12 @@ export default function SearchScreen() {
     }
   }, [params.category]);
 
-  // Activer le mode recherche si des filtres sont actifs
   useEffect(() => {
     if (filters.categorySlug || filters.searchQuery) {
       setIsSearchMode(true);
     }
   }, [filters]);
 
-  // Recherche avec les filtres actuels
   const {
     data,
     isLoading: searchLoading,
@@ -91,7 +91,6 @@ export default function SearchScreen() {
     fetchNextPage,
   } = useSearchProviders(filters);
 
-  // Debounce la recherche texte
   const debouncedSearch = useCallback(
     debounce((query: string) => {
       setSearchQuery(query);
@@ -163,17 +162,18 @@ export default function SearchScreen() {
   };
 
   const firstName = profile?.full_name?.split(' ')[0] || 'vous';
-
-  // Flatten des pages pour FlatList
   const providers = data?.pages.flatMap((page) => page) || [];
 
-  // Nombre de filtres actifs (hors recherche texte)
   const activeFiltersCount = [
     filters.categorySlug,
     filters.city,
     filters.minRating,
     filters.maxPrice,
   ].filter(Boolean).length;
+
+  // Theme-aware colors
+  const cardBg = isDark ? colors.card : '#FFFFFF';
+  const backButtonBg = isDark ? colors.backgroundTertiary : `${colors.primary}10`;
 
   const renderProvider = ({ item }: { item: ProviderListItem }) => (
     <View style={viewMode === 'grid' ? styles.gridItem : styles.listItem}>
@@ -185,7 +185,7 @@ export default function SearchScreen() {
     if (!isFetchingNextPage) return null;
     return (
       <View style={styles.loadingMore}>
-        <ActivityIndicator size="small" color={Colors.primary.DEFAULT} />
+        <ActivityIndicator size="small" color={colors.primary} />
       </View>
     );
   };
@@ -203,28 +203,31 @@ export default function SearchScreen() {
     );
   };
 
-  // Mode recherche - affiche les résultats
+  // Search mode UI
   if (isSearchMode) {
     return (
       <GestureHandlerRootView style={styles.container}>
-        <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.backgroundSecondary }]} edges={['top']}>
           {/* Header */}
           <View style={styles.header}>
-            <TouchableOpacity onPress={handleBackToHome} style={styles.backButton}>
-              <X size={20} color={Colors.text.secondary} />
+            <TouchableOpacity
+              onPress={handleBackToHome}
+              style={[styles.backButton, { backgroundColor: backButtonBg }]}
+            >
+              <X size={20} color={colors.textSecondary} />
             </TouchableOpacity>
-            <Text style={styles.title}>Recherche</Text>
+            <Text style={[styles.title, { color: colors.text }]}>Recherche</Text>
             <View style={styles.placeholder} />
           </View>
 
           {/* Search Bar */}
           <View style={styles.searchContainer}>
-            <View style={styles.searchBar}>
-              <SearchIcon size={20} color={Colors.gray[400]} />
+            <View style={[styles.searchBar, { backgroundColor: cardBg }]}>
+              <SearchIcon size={20} color={colors.textTertiary} />
               <TextInput
-                style={styles.searchInput}
+                style={[styles.searchInput, { color: colors.text }]}
                 placeholder="Rechercher un prestataire..."
-                placeholderTextColor={Colors.gray[400]}
+                placeholderTextColor={colors.textTertiary}
                 value={searchText}
                 onChangeText={handleSearchChange}
                 autoCapitalize="none"
@@ -232,24 +235,21 @@ export default function SearchScreen() {
               />
               {searchText.length > 0 && (
                 <TouchableOpacity onPress={handleClearSearch}>
-                  <X size={20} color={Colors.gray[400]} />
+                  <X size={20} color={colors.textTertiary} />
                 </TouchableOpacity>
               )}
             </View>
 
-            {/* Filters button */}
             <TouchableOpacity
               style={[
                 styles.filterButton,
-                activeFiltersCount > 0 && styles.filterButtonActive,
+                { backgroundColor: activeFiltersCount > 0 ? colors.primary : cardBg },
               ]}
               onPress={handleOpenFilters}
             >
               <SlidersHorizontal
                 size={20}
-                color={
-                  activeFiltersCount > 0 ? Colors.white : Colors.primary.DEFAULT
-                }
+                color={activeFiltersCount > 0 ? '#FFFFFF' : colors.primary}
               />
               {activeFiltersCount > 0 && (
                 <View style={styles.filterBadge}>
@@ -284,40 +284,32 @@ export default function SearchScreen() {
 
           {/* View mode toggle + Results count */}
           <View style={styles.resultsHeader}>
-            <Text style={styles.resultsCount}>
+            <Text style={[styles.resultsCount, { color: colors.textSecondary }]}>
               {providers.length} résultat{providers.length > 1 ? 's' : ''}
             </Text>
-            <View style={styles.viewToggle}>
+            <View style={[styles.viewToggle, { backgroundColor: cardBg }]}>
               <TouchableOpacity
                 style={[
                   styles.viewToggleButton,
-                  viewMode === 'grid' && styles.viewToggleButtonActive,
+                  viewMode === 'grid' && { backgroundColor: `${colors.primary}15` },
                 ]}
                 onPress={() => setViewMode('grid')}
               >
                 <Grid
                   size={18}
-                  color={
-                    viewMode === 'grid'
-                      ? Colors.primary.DEFAULT
-                      : Colors.gray[400]
-                  }
+                  color={viewMode === 'grid' ? colors.primary : colors.textTertiary}
                 />
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
                   styles.viewToggleButton,
-                  viewMode === 'list' && styles.viewToggleButtonActive,
+                  viewMode === 'list' && { backgroundColor: `${colors.primary}15` },
                 ]}
                 onPress={() => setViewMode('list')}
               >
                 <List
                   size={18}
-                  color={
-                    viewMode === 'list'
-                      ? Colors.primary.DEFAULT
-                      : Colors.gray[400]
-                  }
+                  color={viewMode === 'list' ? colors.primary : colors.textTertiary}
                 />
               </TouchableOpacity>
             </View>
@@ -343,7 +335,6 @@ export default function SearchScreen() {
             />
           )}
 
-          {/* Filters Bottom Sheet */}
           <FiltersBottomSheet
             ref={filtersSheetRef}
             filters={filters}
@@ -355,10 +346,10 @@ export default function SearchScreen() {
     );
   }
 
-  // Mode accueil - affiche les catégories et top prestataires
+  // Home mode UI
   return (
     <GestureHandlerRootView style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.backgroundSecondary }]} edges={['top']}>
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
@@ -367,22 +358,22 @@ export default function SearchScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={handleRefresh}
-              tintColor={Colors.primary.DEFAULT}
+              tintColor={colors.primary}
             />
           }
         >
           {/* Header */}
           <View style={styles.homeHeader}>
             <View style={styles.headerLeft}>
-              <Text style={styles.greeting}>{greeting()}</Text>
-              <Text style={styles.userName}>{firstName}</Text>
+              <Text style={[styles.greeting, { color: colors.textSecondary }]}>{greeting()}</Text>
+              <Text style={[styles.userName, { color: colors.text }]}>{firstName}</Text>
             </View>
             <View style={styles.headerRight}>
               <TouchableOpacity
-                style={styles.iconButton}
+                style={[styles.iconButton, { backgroundColor: cardBg }]}
                 onPress={() => router.push('/notifications/index')}
               >
-                <Bell size={24} color={Colors.text.primary} />
+                <Bell size={24} color={colors.text} />
               </TouchableOpacity>
               <TouchableOpacity onPress={() => router.push('/(tabs)/profile')}>
                 <Avatar
@@ -396,20 +387,19 @@ export default function SearchScreen() {
 
           {/* Search Bar */}
           <TouchableOpacity
-            style={styles.searchBarHome}
+            style={[styles.searchBarHome, { backgroundColor: cardBg }]}
             onPress={handleSearchFocus}
             activeOpacity={0.7}
           >
-            <SearchIcon size={20} color={Colors.gray[400]} />
-            <Text style={styles.searchPlaceholder}>
+            <SearchIcon size={20} color={colors.textTertiary} />
+            <Text style={[styles.searchPlaceholder, { color: colors.textTertiary }]}>
               Rechercher un prestataire...
             </Text>
           </TouchableOpacity>
 
           {/* Categories Section */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Catégories</Text>
-
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Catégories</Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -429,13 +419,13 @@ export default function SearchScreen() {
           {/* Top Providers Section */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitleNoMargin}>Top prestataires</Text>
+              <Text style={[styles.sectionTitleNoMargin, { color: colors.text }]}>Top prestataires</Text>
               <TouchableOpacity
                 style={styles.seeAllButton}
                 onPress={() => setIsSearchMode(true)}
               >
-                <Text style={styles.seeAllText}>Voir tout</Text>
-                <ChevronRight size={16} color={Colors.primary.DEFAULT} />
+                <Text style={[styles.seeAllText, { color: colors.primary }]}>Voir tout</Text>
+                <ChevronRight size={16} color={colors.primary} />
               </TouchableOpacity>
             </View>
 
@@ -455,7 +445,7 @@ export default function SearchScreen() {
               />
             ) : (
               <View style={styles.emptyProviders}>
-                <Text style={styles.emptyText}>
+                <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
                   Aucun prestataire disponible pour le moment
                 </Text>
               </View>
@@ -464,20 +454,19 @@ export default function SearchScreen() {
 
           {/* Categories Grid */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Explorer par catégorie</Text>
-
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Explorer par catégorie</Text>
             <View style={styles.categoryGrid}>
               {categories?.slice(0, 6).map((category) => (
                 <TouchableOpacity
                   key={category.id}
-                  style={styles.categoryGridItem}
+                  style={[styles.categoryGridItem, { backgroundColor: cardBg }]}
                   onPress={() => handleCategoryPress(category.slug)}
                   activeOpacity={0.7}
                 >
                   <Text style={styles.categoryGridIcon}>
                     {category.icon || '📌'}
                   </Text>
-                  <Text style={styles.categoryGridName} numberOfLines={2}>
+                  <Text style={[styles.categoryGridName, { color: colors.text }]} numberOfLines={2}>
                     {category.name}
                   </Text>
                 </TouchableOpacity>
@@ -486,7 +475,6 @@ export default function SearchScreen() {
           </View>
         </ScrollView>
 
-        {/* Filters Bottom Sheet */}
         <FiltersBottomSheet
           ref={filtersSheetRef}
           filters={filters}
@@ -504,7 +492,6 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.background.secondary,
   },
   scrollView: {
     flex: 1,
@@ -523,7 +510,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: Colors.gray[100],
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -533,10 +519,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: Layout.fontSize['2xl'],
     fontWeight: '700',
-    color: Colors.text.primary,
   },
-
-  // Home header
   homeHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -549,12 +532,10 @@ const styles = StyleSheet.create({
   },
   greeting: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
   },
   userName: {
     fontSize: Layout.fontSize['2xl'],
     fontWeight: '700',
-    color: Colors.text.primary,
   },
   headerRight: {
     flexDirection: 'row',
@@ -565,12 +546,9 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: Colors.white,
     justifyContent: 'center',
     alignItems: 'center',
   },
-
-  // Search
   searchContainer: {
     flexDirection: 'row',
     paddingHorizontal: Layout.spacing.lg,
@@ -580,12 +558,11 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.white,
     paddingHorizontal: Layout.spacing.md,
     borderRadius: Layout.radius.lg,
     height: 48,
     gap: Layout.spacing.sm,
-    shadowColor: Colors.black,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -594,14 +571,13 @@ const styles = StyleSheet.create({
   searchBarHome: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.white,
     marginHorizontal: Layout.spacing.lg,
     marginVertical: Layout.spacing.md,
     paddingHorizontal: Layout.spacing.md,
     paddingVertical: Layout.spacing.md,
     borderRadius: Layout.radius.lg,
     gap: Layout.spacing.sm,
-    shadowColor: Colors.black,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -610,28 +586,22 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: Layout.fontSize.md,
-    color: Colors.text.primary,
   },
   searchPlaceholder: {
     flex: 1,
     fontSize: Layout.fontSize.md,
-    color: Colors.gray[400],
   },
   filterButton: {
     width: 48,
     height: 48,
     borderRadius: Layout.radius.lg,
-    backgroundColor: Colors.white,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: Colors.black,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
-  },
-  filterButtonActive: {
-    backgroundColor: Colors.primary.DEFAULT,
   },
   filterBadge: {
     position: 'absolute',
@@ -640,17 +610,15 @@ const styles = StyleSheet.create({
     width: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: Colors.error.DEFAULT,
+    backgroundColor: '#EF4444',
     justifyContent: 'center',
     alignItems: 'center',
   },
   filterBadgeText: {
     fontSize: 10,
     fontWeight: '600',
-    color: Colors.white,
+    color: '#FFFFFF',
   },
-
-  // Sections
   section: {
     marginTop: Layout.spacing.xl,
   },
@@ -664,14 +632,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: Layout.fontSize.lg,
     fontWeight: '600',
-    color: Colors.text.primary,
     paddingHorizontal: Layout.spacing.lg,
     marginBottom: Layout.spacing.md,
   },
   sectionTitleNoMargin: {
     fontSize: Layout.fontSize.lg,
     fontWeight: '600',
-    color: Colors.text.primary,
   },
   seeAllButton: {
     flexDirection: 'row',
@@ -680,11 +646,8 @@ const styles = StyleSheet.create({
   },
   seeAllText: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.primary.DEFAULT,
     fontWeight: '500',
   },
-
-  // Categories
   categoriesContainer: {
     paddingHorizontal: Layout.spacing.lg,
     gap: Layout.spacing.sm,
@@ -698,8 +661,6 @@ const styles = StyleSheet.create({
   categoryGap: {
     width: Layout.spacing.sm,
   },
-
-  // Providers
   providersContainer: {
     paddingHorizontal: Layout.spacing.lg,
   },
@@ -713,10 +674,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
   },
-
-  // Category Grid
   categoryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -726,12 +684,11 @@ const styles = StyleSheet.create({
   categoryGridItem: {
     width: '30%',
     aspectRatio: 1,
-    backgroundColor: Colors.white,
     borderRadius: Layout.radius.lg,
     justifyContent: 'center',
     alignItems: 'center',
     padding: Layout.spacing.sm,
-    shadowColor: Colors.black,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -744,11 +701,8 @@ const styles = StyleSheet.create({
   categoryGridName: {
     fontSize: Layout.fontSize.xs,
     fontWeight: '500',
-    color: Colors.text.primary,
     textAlign: 'center',
   },
-
-  // Results
   resultsHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -758,20 +712,15 @@ const styles = StyleSheet.create({
   },
   resultsCount: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
   },
   viewToggle: {
     flexDirection: 'row',
-    backgroundColor: Colors.white,
     borderRadius: Layout.radius.md,
     padding: 2,
   },
   viewToggleButton: {
     padding: Layout.spacing.sm,
     borderRadius: Layout.radius.sm,
-  },
-  viewToggleButtonActive: {
-    backgroundColor: Colors.primary[50],
   },
   listContent: {
     paddingHorizontal: Layout.spacing.lg,

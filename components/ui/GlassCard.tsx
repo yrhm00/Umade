@@ -1,12 +1,13 @@
-import React from 'react';
-import { StyleSheet, View, ViewStyle, Platform } from 'react-native';
-import { BlurView } from 'expo-blur';
-import Animated, { FadeIn } from 'react-native-reanimated';
-import { PressableScale } from './PressableScale';
+import { Animations } from '@/constants/Animations';
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
 import { Shadows } from '@/constants/Shadows';
-import { Animations } from '@/constants/Animations';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
+import { BlurView } from 'expo-blur';
+import React from 'react';
+import { Platform, StyleSheet, View, ViewStyle } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
+import { PressableScale } from './PressableScale';
 
 type GlassVariant = 'light' | 'dark';
 type GlassPadding = 'none' | 'sm' | 'md' | 'lg';
@@ -32,17 +33,21 @@ export function GlassCard({
   animated = true,
   delay = 0,
 }: GlassCardProps) {
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
   const isLight = variant === 'light';
   const isBlurSupported = Platform.OS === 'ios';
 
   const containerStyle: ViewStyle = {
     backgroundColor: isBlurSupported
       ? 'transparent'
-      : isLight
-      ? Colors.glass.light
-      : Colors.glass.dark,
+      : isDark
+        ? 'rgba(30, 30, 35, 0.8)' // Fallback for Android Dark
+        : isLight
+          ? Colors.glass.light
+          : Colors.glass.dark,
     borderWidth: 1,
-    borderColor: isLight ? Colors.glass.border : Colors.glass.borderLight,
+    borderColor: isDark ? 'rgba(255,255,255,0.1)' : (isLight ? Colors.glass.border : Colors.glass.borderLight),
     borderRadius: Layout.radius.xl,
     overflow: 'hidden',
     ...Shadows.lg,
@@ -53,12 +58,14 @@ export function GlassCard({
     padding !== 'none' && (styles[`padding_${padding}` as keyof typeof styles] as ViewStyle),
   ].filter(Boolean);
 
+  const blurTint = isDark ? 'dark' : (isLight ? 'light' : 'dark');
+
   const content = (
     <>
       {isBlurSupported && (
         <BlurView
           intensity={blur}
-          tint={isLight ? 'light' : 'dark'}
+          tint={blurTint}
           style={StyleSheet.absoluteFill}
         />
       )}

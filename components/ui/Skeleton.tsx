@@ -1,15 +1,16 @@
+import { Colors } from '@/constants/Colors';
+import { Layout } from '@/constants/Layout';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect } from 'react';
 import { StyleSheet, View, ViewStyle } from 'react-native';
 import Animated, {
+  interpolate,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
   withTiming,
-  interpolate,
 } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Colors } from '@/constants/Colors';
-import { Layout } from '@/constants/Layout';
 
 type SkeletonVariant = 'text' | 'circle' | 'rect' | 'card' | 'avatar';
 
@@ -29,6 +30,8 @@ function SkeletonBase({
   borderRadius = Layout.radius.md,
   style,
 }: Omit<SkeletonProps, 'variant' | 'lines' | 'lineHeight'>) {
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
   const translateX = useSharedValue(-1);
 
   useEffect(() => {
@@ -47,6 +50,10 @@ function SkeletonBase({
     ],
   }));
 
+  const gradientColors = isDark
+    ? [colors.backgroundTertiary, colors.card, colors.backgroundTertiary]
+    : [...Colors.gradients.shimmer];
+
   return (
     <View
       style={[
@@ -55,13 +62,14 @@ function SkeletonBase({
           width: width as any,
           height,
           borderRadius,
+          backgroundColor: isDark ? colors.backgroundTertiary : Colors.gray[200],
         },
         style,
       ]}
     >
       <Animated.View style={[styles.shimmer, animatedStyle]}>
         <LinearGradient
-          colors={[...Colors.gradients.shimmer] as [string, string, ...string[]]}
+          colors={gradientColors as [string, string, ...string[]]}
           start={{ x: 0, y: 0.5 }}
           end={{ x: 1, y: 0.5 }}
           style={styles.gradient}
@@ -200,8 +208,10 @@ Skeleton.Card = function SkeletonCard({
 
 // Complex skeleton for provider cards
 Skeleton.ProviderCard = function SkeletonProviderCard() {
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
   return (
-    <View style={styles.providerCard}>
+    <View style={[styles.providerCard, { backgroundColor: isDark ? colors.card : Colors.background.secondary }]}>
       <Skeleton variant="card" height={160} />
       <View style={styles.providerCardContent}>
         <Skeleton height={18} width="70%" />
@@ -231,7 +241,6 @@ Skeleton.AvatarWithText = function SkeletonAvatarWithText({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.gray[200],
     overflow: 'hidden',
   },
   shimmer: {
@@ -249,7 +258,6 @@ const styles = StyleSheet.create({
     marginTop: Layout.spacing.xs,
   },
   providerCard: {
-    backgroundColor: Colors.background.secondary,
     borderRadius: Layout.radius.xl,
     overflow: 'hidden',
   },

@@ -189,15 +189,12 @@ export function useToggleInspirationFavorite() {
       }
     },
     onSettled: () => {
-      // Refetch after mutation
+      // Refetch favorite data only (not feed to prevent reordering)
       queryClient.invalidateQueries({
         queryKey: [Config.cacheKeys.inspirations, 'favoriteIds'],
       });
       queryClient.invalidateQueries({
         queryKey: [Config.cacheKeys.inspirations, 'favorites'],
-      });
-      queryClient.invalidateQueries({
-        queryKey: [Config.cacheKeys.inspirations, 'feed'],
       });
     },
   });

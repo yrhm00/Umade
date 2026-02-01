@@ -1,31 +1,36 @@
-import React, { useCallback, useMemo } from 'react';
+/**
+ * Notifications Screen
+ * Dark Mode Support
+ */
+
 import {
-  View,
-  Text,
-  FlatList,
-  StyleSheet,
-  ActivityIndicator,
-  RefreshControl,
-  TouchableOpacity,
-} from 'react-native';
-import { Stack } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { CheckCheck } from 'lucide-react-native';
-import {
-  NotificationCard,
   EmptyNotifications,
+  NotificationCard,
 } from '@/components/notifications';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { Layout } from '@/constants/Layout';
+import { useColors } from '@/hooks/useColors';
 import {
-  useNotifications,
   useMarkAllNotificationsAsRead,
+  useNotifications,
 } from '@/hooks/useNotifications';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { AppNotification } from '@/types';
-import { Colors } from '@/constants/Colors';
-import { Layout } from '@/constants/Layout';
+import { Stack } from 'expo-router';
+import { CheckCheck } from 'lucide-react-native';
+import React, { useCallback, useMemo } from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function NotificationsScreen() {
+  const colors = useColors();
   const {
     data,
     fetchNextPage,
@@ -40,7 +45,6 @@ export default function NotificationsScreen() {
     useMarkAllNotificationsAsRead();
   const unreadCount = useNotificationStore((state) => state.unreadCount);
 
-  // Flatten infinite query pages
   const notifications = useMemo(() => {
     return data?.pages.flat() ?? [];
   }, [data]);
@@ -71,10 +75,10 @@ export default function NotificationsScreen() {
     if (!isFetchingNextPage) return null;
     return (
       <View style={styles.loadingMore}>
-        <ActivityIndicator size="small" color={Colors.primary.DEFAULT} />
+        <ActivityIndicator size="small" color={colors.primary} />
       </View>
     );
-  }, [isFetchingNextPage]);
+  }, [isFetchingNextPage, colors.primary]);
 
   const HeaderRight = useCallback(() => {
     if (unreadCount === 0) return null;
@@ -84,14 +88,14 @@ export default function NotificationsScreen() {
         disabled={isMarkingAll}
         style={styles.markAllButton}
       >
-        <CheckCheck size={20} color={Colors.primary.DEFAULT} />
+        <CheckCheck size={20} color={colors.primary} />
       </TouchableOpacity>
     );
-  }, [unreadCount, isMarkingAll]);
+  }, [unreadCount, isMarkingAll, colors.primary]);
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
         <Stack.Screen
           options={{
             headerShown: true,
@@ -105,7 +109,7 @@ export default function NotificationsScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom']}>
       <Stack.Screen
         options={{
           headerShown: true,
@@ -130,7 +134,7 @@ export default function NotificationsScreen() {
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={refetch}
-            tintColor={Colors.primary.DEFAULT}
+            tintColor={colors.primary}
           />
         }
       />
@@ -141,7 +145,6 @@ export default function NotificationsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background.primary,
   },
   emptyList: {
     flexGrow: 1,

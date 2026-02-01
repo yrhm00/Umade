@@ -1,18 +1,19 @@
-import React, { useEffect } from 'react';
-import { StyleSheet, Text, View, Pressable } from 'react-native';
-import Animated, { SlideInUp, SlideOutUp } from 'react-native-reanimated';
-import {
-  X,
-  CheckCircle,
-  AlertCircle,
-  Info,
-  AlertTriangle,
-} from 'lucide-react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
 import { Shadows } from '@/constants/Shadows';
+import { useIsDarkTheme } from '@/hooks/useColors';
 import { useHaptics } from '@/hooks/useHaptics';
+import {
+  AlertCircle,
+  AlertTriangle,
+  CheckCircle,
+  Info,
+  X,
+} from 'lucide-react-native';
+import React, { useEffect } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import Animated, { SlideInUp, SlideOutUp } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type ToastType = 'success' | 'error' | 'warning' | 'info';
 
@@ -29,32 +30,6 @@ interface ToastProps {
   };
 }
 
-const toastConfig: Record<
-  ToastType,
-  { icon: React.ComponentType<any>; color: string; bg: string }
-> = {
-  success: {
-    icon: CheckCircle,
-    color: Colors.success.DEFAULT,
-    bg: Colors.success.light,
-  },
-  error: {
-    icon: AlertCircle,
-    color: Colors.error.DEFAULT,
-    bg: Colors.error.light,
-  },
-  warning: {
-    icon: AlertTriangle,
-    color: Colors.warning.DEFAULT,
-    bg: Colors.warning.light,
-  },
-  info: {
-    icon: Info,
-    color: Colors.primary.DEFAULT,
-    bg: Colors.primary[50],
-  },
-};
-
 export function Toast({
   visible,
   type = 'info',
@@ -66,6 +41,37 @@ export function Toast({
 }: ToastProps) {
   const insets = useSafeAreaInsets();
   const haptics = useHaptics();
+  const isDark = useIsDarkTheme();
+
+  // Dynamic config based on theme
+  const toastConfig = {
+    success: {
+      icon: CheckCircle,
+      color: isDark ? '#4ade80' : Colors.success.DEFAULT,
+      bg: isDark ? 'rgba(22, 101, 52, 0.95)' : Colors.success.light,
+      border: isDark ? 'rgba(34, 197, 94, 0.3)' : 'transparent',
+    },
+    error: {
+      icon: AlertCircle,
+      color: isDark ? '#f87171' : Colors.error.DEFAULT,
+      bg: isDark ? 'rgba(153, 27, 27, 0.95)' : Colors.error.light,
+      border: isDark ? 'rgba(239, 68, 68, 0.3)' : 'transparent',
+    },
+    warning: {
+      icon: AlertTriangle,
+      color: isDark ? '#facc15' : Colors.warning.DEFAULT,
+      bg: isDark ? 'rgba(161, 98, 7, 0.95)' : Colors.warning.light,
+      border: isDark ? 'rgba(234, 179, 8, 0.3)' : 'transparent',
+
+    },
+    info: {
+      icon: Info,
+      color: isDark ? '#38bdf8' : Colors.primary.DEFAULT,
+      bg: isDark ? 'rgba(12, 74, 110, 0.95)' : Colors.primary[50],
+      border: isDark ? 'rgba(56, 189, 248, 0.3)' : 'transparent',
+    },
+  };
+
   const config = toastConfig[type];
   const IconComponent = config.icon;
 
@@ -94,7 +100,7 @@ export function Toast({
       style={[
         styles.container,
         { marginTop: insets.top + Layout.spacing.sm },
-        { backgroundColor: config.bg },
+        { backgroundColor: config.bg, borderColor: config.border, borderWidth: isDark ? 1 : 0 },
         Shadows.lg,
       ]}
     >
@@ -104,7 +110,7 @@ export function Toast({
 
       <View style={styles.content}>
         <Text style={[styles.title, { color: config.color }]}>{title}</Text>
-        {message && <Text style={styles.message}>{message}</Text>}
+        {message && <Text style={[styles.message, { color: config.color, opacity: 0.9 }]}>{message}</Text>}
       </View>
 
       {action && (
@@ -116,7 +122,7 @@ export function Toast({
       )}
 
       <Pressable style={styles.closeButton} onPress={onDismiss}>
-        <X size={20} color={Colors.gray[500]} />
+        <X size={20} color={config.color} style={{ opacity: 0.6 }} />
       </Pressable>
     </Animated.View>
   );
@@ -229,7 +235,6 @@ const styles = StyleSheet.create({
   },
   message: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
     marginTop: 2,
   },
   actionButton: {

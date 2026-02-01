@@ -2,21 +2,22 @@
  * Carte d'inspiration pour le feed Pinterest-style (Phase 9)
  */
 
-import React, { memo } from 'react';
-import { View, Text, StyleSheet, ViewStyle, Pressable } from 'react-native';
-import { Image } from 'expo-image';
-import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
-import { Heart } from 'lucide-react-native';
+import { PressableScale } from '@/components/ui/PressableScale';
+import { Animations } from '@/constants/Animations';
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
-import { Animations } from '@/constants/Animations';
-import { PressableScale } from '@/components/ui/PressableScale';
-import {
-  InspirationWithProvider,
-} from '@/types/inspiration';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import {
   useInspirationFavoriteActions,
 } from '@/hooks/useInspirationFavorites';
+import {
+  InspirationWithProvider,
+} from '@/types/inspiration';
+import { Image } from 'expo-image';
+import { Heart } from 'lucide-react-native';
+import React, { memo } from 'react';
+import { Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 interface InspirationCardProps {
   inspiration: InspirationWithProvider;
@@ -36,6 +37,7 @@ export const InspirationCard = memo(function InspirationCard({
 }: InspirationCardProps) {
   const { isFavorite, toggleFavorite, isLoading } = useInspirationFavoriteActions();
   const isInspFavorite = isFavorite(inspiration.id);
+  const colors = useColors();
 
   // Premiere image
   const mainImage = inspiration.inspiration_images?.[0];
@@ -65,7 +67,7 @@ export const InspirationCard = memo(function InspirationCard({
         onPress={onPress}
         scale={Animations.scale.pressedSubtle}
         haptic="light"
-        style={styles.card}
+        style={[styles.card, { backgroundColor: colors.card }]}
       >
         {/* Image principale avec titre en overlay */}
         <View style={[styles.imageContainer, { height: clampedHeight }]}>
@@ -74,7 +76,7 @@ export const InspirationCard = memo(function InspirationCard({
             style={styles.image}
             contentFit="cover"
             transition={200}
-            placeholder={Colors.gray[200]}
+            placeholder={colors.backgroundTertiary}
           />
 
           {/* Bouton favori */}
@@ -112,14 +114,16 @@ export const InspirationCard = memo(function InspirationCard({
 export function InspirationCardSkeleton({ index = 0 }: { index?: number }) {
   const height = 160 + (index % 3) * 40;
   const delay = (index % 10) * Animations.stagger.normal;
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
 
   return (
     <Animated.View
       entering={FadeInDown.delay(delay).springify().damping(15)}
       style={[styles.container, { width: CARD_WIDTH }]}
     >
-      <View style={[styles.card, styles.skeleton]}>
-        <View style={[styles.skeletonImage, { height }]} />
+      <View style={[styles.card, styles.skeleton, { backgroundColor: isDark ? colors.backgroundTertiary : Colors.gray[100] }]}>
+        <View style={[styles.skeletonImage, { height, backgroundColor: isDark ? colors.card : Colors.gray[200] }]} />
       </View>
     </Animated.View>
   );
@@ -169,12 +173,12 @@ const styles = StyleSheet.create({
   },
   // Skeleton styles
   skeleton: {
-    backgroundColor: Colors.gray[100],
+    // handled dynamically
   },
   skeletonImage: {
-    backgroundColor: Colors.gray[200],
     borderRadius: Layout.radius.md,
   },
 });
 
-export { CARD_WIDTH, CARD_GAP };
+export { CARD_GAP, CARD_WIDTH };
+

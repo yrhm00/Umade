@@ -1,26 +1,33 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Alert,
-  RefreshControl,
-} from 'react-native';
-import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Calendar, Clock, FileText, User } from 'lucide-react-native';
-import { Colors } from '@/constants/Colors';
-import { Layout } from '@/constants/Layout';
-import { useBooking, useUpdateBookingStatus } from '@/hooks/useBookings';
+/**
+ * Booking Details Screen
+ * Dark Mode Support
+ */
+
 import { BookingStatusBadge } from '@/components/booking/BookingStatusBadge';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { Layout } from '@/constants/Layout';
+import { useBooking, useUpdateBookingStatus } from '@/hooks/useBookings';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { formatDate, formatPrice } from '@/lib/utils';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { Calendar, Clock, FileText } from 'lucide-react-native';
+import React from 'react';
+import {
+  Alert,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function BookingDetailsScreen() {
   const router = useRouter();
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: booking, isLoading, refetch } = useBooking(id);
   const { mutate: updateStatus, isPending } = useUpdateBookingStatus();
@@ -54,9 +61,9 @@ export default function BookingDetailsScreen() {
 
   if (!booking) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Réservation non trouvée</Text>
+          <Text style={[styles.errorText, { color: colors.textSecondary }]}>Réservation non trouvée</Text>
           <Button title="Retour" onPress={() => router.back()} variant="outline" />
         </View>
       </SafeAreaView>
@@ -66,22 +73,29 @@ export default function BookingDetailsScreen() {
   const canCancel =
     booking.status === 'pending' || booking.status === 'confirmed';
 
+  const responseBoxBg = isDark ? colors.backgroundTertiary : `${colors.primary}10`;
+  const cancelBoxBg = isDark ? `${colors.error}20` : `${colors.error}10`;
+
   return (
     <>
       <Stack.Screen
         options={{
           headerShown: true,
           headerTitle: 'Détail réservation',
-          headerTintColor: Colors.text.primary,
-          headerStyle: { backgroundColor: Colors.background.secondary },
+          headerTintColor: colors.text,
+          headerStyle: { backgroundColor: colors.backgroundSecondary },
         }}
       />
       <ScrollView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: colors.backgroundSecondary }]}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={false} onRefresh={() => refetch()} />
+          <RefreshControl
+            refreshing={false}
+            onRefresh={() => refetch()}
+            tintColor={colors.primary}
+          />
         }
       >
         {/* Status */}
@@ -90,7 +104,7 @@ export default function BookingDetailsScreen() {
         </View>
 
         {/* Provider info */}
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: colors.card }]}>
           <View style={styles.providerRow}>
             <Avatar
               source={(booking as any).providers?.profiles?.avatar_url ?? undefined}
@@ -98,10 +112,10 @@ export default function BookingDetailsScreen() {
               size="lg"
             />
             <View style={styles.providerInfo}>
-              <Text style={styles.providerName}>
+              <Text style={[styles.providerName, { color: colors.text }]}>
                 {(booking as any).providers?.business_name}
               </Text>
-              <Text style={styles.serviceName}>
+              <Text style={[styles.serviceName, { color: colors.textSecondary }]}>
                 {(booking as any).services?.name}
               </Text>
             </View>
@@ -109,20 +123,20 @@ export default function BookingDetailsScreen() {
         </View>
 
         {/* Details */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Détails</Text>
+        <View style={[styles.card, { backgroundColor: colors.card }]}>
+          <Text style={[styles.cardTitle, { color: colors.text }]}>Détails</Text>
 
           <View style={styles.detailRow}>
-            <Calendar size={18} color={Colors.primary.DEFAULT} />
-            <Text style={styles.detailText}>
+            <Calendar size={18} color={colors.primary} />
+            <Text style={[styles.detailText, { color: colors.text }]}>
               {formatDate(booking.booking_date)}
             </Text>
           </View>
 
           {booking.start_time && (
             <View style={styles.detailRow}>
-              <Clock size={18} color={Colors.primary.DEFAULT} />
-              <Text style={styles.detailText}>
+              <Clock size={18} color={colors.primary} />
+              <Text style={[styles.detailText, { color: colors.text }]}>
                 {booking.start_time.slice(0, 5)}
                 {booking.end_time ? ` - ${booking.end_time.slice(0, 5)}` : ''}
               </Text>
@@ -131,24 +145,24 @@ export default function BookingDetailsScreen() {
 
           {booking.client_message && (
             <View style={styles.detailRow}>
-              <FileText size={18} color={Colors.primary.DEFAULT} />
-              <Text style={styles.detailText}>{booking.client_message}</Text>
+              <FileText size={18} color={colors.primary} />
+              <Text style={[styles.detailText, { color: colors.text }]}>{booking.client_message}</Text>
             </View>
           )}
 
           {booking.provider_response && (
-            <View style={styles.responseBox}>
-              <Text style={styles.responseLabel}>Réponse du prestataire</Text>
-              <Text style={styles.responseText}>
+            <View style={[styles.responseBox, { backgroundColor: responseBoxBg }]}>
+              <Text style={[styles.responseLabel, { color: colors.primary }]}>Réponse du prestataire</Text>
+              <Text style={[styles.responseText, { color: colors.text }]}>
                 {booking.provider_response}
               </Text>
             </View>
           )}
 
           {booking.cancellation_reason && (
-            <View style={styles.cancelBox}>
-              <Text style={styles.cancelLabel}>Raison d'annulation</Text>
-              <Text style={styles.cancelText}>
+            <View style={[styles.cancelBox, { backgroundColor: cancelBoxBg }]}>
+              <Text style={[styles.cancelLabel, { color: colors.error }]}>Raison d'annulation</Text>
+              <Text style={[styles.cancelText, { color: colors.text }]}>
                 {booking.cancellation_reason}
               </Text>
             </View>
@@ -156,10 +170,10 @@ export default function BookingDetailsScreen() {
         </View>
 
         {/* Price */}
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: colors.card }]}>
           <View style={styles.priceRow}>
-            <Text style={styles.priceLabel}>Prix total</Text>
-            <Text style={styles.priceValue}>
+            <Text style={[styles.priceLabel, { color: colors.text }]}>Prix total</Text>
+            <Text style={[styles.priceValue, { color: colors.primary }]}>
               {formatPrice(booking.total_price)}
             </Text>
           </View>
@@ -174,8 +188,8 @@ export default function BookingDetailsScreen() {
             loading={isPending}
             disabled={isPending}
             fullWidth
-            style={styles.cancelButton}
-            textStyle={styles.cancelButtonText}
+            style={[styles.cancelButton, { borderColor: colors.error }]}
+            textStyle={{ color: colors.error }}
           />
         )}
       </ScrollView>
@@ -186,7 +200,6 @@ export default function BookingDetailsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background.secondary,
   },
   content: {
     padding: Layout.spacing.lg,
@@ -201,18 +214,16 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: Layout.fontSize.lg,
-    color: Colors.text.secondary,
   },
   statusRow: {
     alignItems: 'flex-start',
     marginBottom: Layout.spacing.lg,
   },
   card: {
-    backgroundColor: Colors.white,
     borderRadius: Layout.radius.lg,
     padding: Layout.spacing.lg,
     marginBottom: Layout.spacing.md,
-    shadowColor: Colors.black,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -222,7 +233,6 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: Layout.fontSize.md,
     fontWeight: '600',
-    color: Colors.text.primary,
   },
   providerRow: {
     flexDirection: 'row',
@@ -235,11 +245,9 @@ const styles = StyleSheet.create({
   providerName: {
     fontSize: Layout.fontSize.lg,
     fontWeight: '600',
-    color: Colors.text.primary,
   },
   serviceName: {
     fontSize: Layout.fontSize.md,
-    color: Colors.text.secondary,
   },
   detailRow: {
     flexDirection: 'row',
@@ -249,39 +257,32 @@ const styles = StyleSheet.create({
   detailText: {
     flex: 1,
     fontSize: Layout.fontSize.md,
-    color: Colors.text.primary,
     lineHeight: 22,
   },
   responseBox: {
-    backgroundColor: Colors.primary[50],
     borderRadius: Layout.radius.md,
     padding: Layout.spacing.md,
   },
   responseLabel: {
     fontSize: Layout.fontSize.xs,
     fontWeight: '600',
-    color: Colors.primary.DEFAULT,
     marginBottom: Layout.spacing.xs,
   },
   responseText: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.primary,
     fontStyle: 'italic',
   },
   cancelBox: {
-    backgroundColor: Colors.error.light,
     borderRadius: Layout.radius.md,
     padding: Layout.spacing.md,
   },
   cancelLabel: {
     fontSize: Layout.fontSize.xs,
     fontWeight: '600',
-    color: Colors.error.DEFAULT,
     marginBottom: Layout.spacing.xs,
   },
   cancelText: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.primary,
   },
   priceRow: {
     flexDirection: 'row',
@@ -291,18 +292,12 @@ const styles = StyleSheet.create({
   priceLabel: {
     fontSize: Layout.fontSize.md,
     fontWeight: '600',
-    color: Colors.text.primary,
   },
   priceValue: {
     fontSize: Layout.fontSize['2xl'],
     fontWeight: '700',
-    color: Colors.primary.DEFAULT,
   },
   cancelButton: {
     marginTop: Layout.spacing.md,
-    borderColor: Colors.error.DEFAULT,
-  },
-  cancelButtonText: {
-    color: Colors.error.DEFAULT,
   },
 });
