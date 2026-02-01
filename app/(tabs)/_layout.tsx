@@ -3,7 +3,7 @@ import { Colors } from '@/constants/Colors';
 import { useTotalUnreadCount } from '@/hooks/useConversations';
 import { useAuthStore } from '@/stores/authStore';
 import { Redirect, Tabs } from 'expo-router';
-import { Calendar, Home, MessageCircle, Search, User } from 'lucide-react-native';
+import { Calendar, MessageCircle, Search, User, Sparkles } from 'lucide-react-native';
 import React from 'react';
 
 
@@ -41,9 +41,9 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Accueil',
+          title: 'Inspirations',
           tabBarIcon: ({ color, size }) => (
-            <Home size={size} color={color} />
+            <Sparkles size={size} color={color} />
           ),
         }}
       />
@@ -73,9 +73,6 @@ export default function TabLayout() {
             <MessageCircle size={size} color={color} />
           ),
           tabBarBadge: unreadCount > 0 ? (unreadCount > 9 ? '9+' : unreadCount) : undefined,
-          // Badge needs to be handled in custom tab bar if not supported automatically
-          // Note: custom tabBar prop usually overrides default badge rendering of standard tabs. 
-          // We might need to pass badge count to LiquidTabBar.
         }}
       />
       <Tabs.Screen

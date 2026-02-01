@@ -39,5 +39,6 @@ export const Config = {
     messages: 'messages',
     notifications: 'notifications',
     favorites: 'favorites',
+    inspirations: 'inspirations',
   },
 } as const;

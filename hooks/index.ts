@@ -13,6 +13,11 @@ export * from './useMessages';
 export * from './useFavorites';
 export * from './useNotifications';
 
+// Inspirations (Phase 9)
+export * from './useInspirations';
+export * from './useInspirationFavorites';
+export * from './useCreateInspiration';
+
 // Animation hooks
 export * from './useHaptics';
 export * from './useScrollAnimation';
