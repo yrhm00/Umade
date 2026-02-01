@@ -25,14 +25,17 @@ import {
   Globe,
 } from 'lucide-react-native';
 import { useProviderDetail } from '@/hooks/useProviders';
+import { useProviderInspirations } from '@/hooks/useInspirations';
 import { useFavoriteIds, useToggleFavorite } from '@/hooks/useFavorites';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Button } from '@/components/ui/Button';
 import { RatingStars } from '@/components/common/RatingStars';
 import { Avatar } from '@/components/ui/Avatar';
+import { InspirationCard } from '@/components/inspirations/InspirationCard';
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
 import { formatPrice } from '@/lib/utils';
+import { Sparkles } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
 const GALLERY_IMAGE_HEIGHT = 300;
@@ -42,8 +45,12 @@ export default function ProviderDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const { data: provider, isLoading, error } = useProviderDetail(id);
+  const { data: inspirationsData } = useProviderInspirations(id);
   const { data: favoriteIds = [] } = useFavoriteIds();
   const { mutate: toggleFavorite, isPending: isFavoriteLoading } = useToggleFavorite();
+
+  // Flatten inspirations pages
+  const inspirations = inspirationsData?.pages.flatMap((page) => page) ?? [];
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
@@ -344,6 +351,41 @@ export default function ProviderDetailScreen() {
                 <Text style={styles.emptyReviewsText}>
                   Aucun avis pour le moment
                 </Text>
+              </View>
+            </View>
+          )}
+
+          {/* Inspirations */}
+          {inspirations.length > 0 && (
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <View style={styles.sectionTitleRow}>
+                  <Sparkles size={20} color={Colors.primary.DEFAULT} />
+                  <Text style={[styles.sectionTitle, { marginBottom: 0, marginLeft: 8 }]}>
+                    Inspirations
+                  </Text>
+                </View>
+                {inspirations.length > 4 && (
+                  <TouchableOpacity
+                    style={styles.seeAllButton}
+                    onPress={() => router.push(`/(tabs)` as any)}
+                  >
+                    <Text style={styles.seeAllText}>Voir tous</Text>
+                    <ChevronRight size={16} color={Colors.primary.DEFAULT} />
+                  </TouchableOpacity>
+                )}
+              </View>
+              <View style={styles.inspirationsGrid}>
+                {inspirations.slice(0, 4).map((inspiration, index) => (
+                  <View key={inspiration.id} style={styles.inspirationItem}>
+                    <InspirationCard
+                      inspiration={inspiration}
+                      index={index}
+                      showProvider={false}
+                      onPress={() => router.push(`/inspiration/${inspiration.id}` as any)}
+                    />
+                  </View>
+                ))}
               </View>
             </View>
           )}
@@ -686,5 +728,20 @@ const styles = StyleSheet.create({
   },
   bookButton: {
     minWidth: 140,
+  },
+
+  // Inspirations
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  inspirationsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: -Layout.spacing.xs,
+  },
+  inspirationItem: {
+    width: '50%',
+    paddingHorizontal: Layout.spacing.xs,
   },
 });

@@ -349,6 +349,13 @@ export default function ProviderDashboardScreen() {
               size="md"
               fullWidth
             />
+            <Button
+              title="Mes inspirations"
+              onPress={() => router.push('/(provider)/inspirations' as any)}
+              variant="outline"
+              size="md"
+              fullWidth
+            />
           </View>
         </View>
 

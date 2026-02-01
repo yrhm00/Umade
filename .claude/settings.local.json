@@ -14,7 +14,11 @@
       "Bash(node -e:*)",
       "WebSearch",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:docs.expo.dev)"
+      "WebFetch(domain:docs.expo.dev)",
+      "Bash(npx expo export:*)",
+      "Bash(ls:*)",
+      "Bash(npx supabase:*)",
+      "Bash(curl:*)"
     ]
   }
 }
