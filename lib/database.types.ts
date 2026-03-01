@@ -343,6 +343,9 @@ export type Database = {
           content: string
           conversation_id: string
           created_at: string | null
+          deleted_for_all: boolean
+          deleted_for_all_at: string | null
+          deleted_for_all_by: string | null
           id: string
           read_at: string | null
           sender_id: string
@@ -351,6 +354,9 @@ export type Database = {
           content: string
           conversation_id: string
           created_at?: string | null
+          deleted_for_all?: boolean
+          deleted_for_all_at?: string | null
+          deleted_for_all_by?: string | null
           id?: string
           read_at?: string | null
           sender_id: string
@@ -359,6 +365,9 @@ export type Database = {
           content?: string
           conversation_id?: string
           created_at?: string | null
+          deleted_for_all?: boolean
+          deleted_for_all_at?: string | null
+          deleted_for_all_by?: string | null
           id?: string
           read_at?: string | null
           sender_id?: string
@@ -374,6 +383,42 @@ export type Database = {
           {
             foreignKeyName: "messages_sender_id_fkey"
             columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message_deletions: {
+        Row: {
+          created_at: string
+          id: string
+          message_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_deletions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_deletions_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]

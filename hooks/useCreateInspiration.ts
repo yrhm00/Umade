@@ -10,11 +10,11 @@ import {
   InspirationWithProvider,
 } from '@/types/inspiration';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import * as FileSystem from 'expo-file-system';
-import { useAuth } from './useAuth';
+import * as FileSystem from 'expo-file-system/legacy';
+import { useMyProviderId } from './useMyProviderId';
 
-// Helper pour accéder aux tables non encore dans les types auto-générés
-const fromTable = (table: string) => supabase.from(table as any);
+// Helper: on force "any" pour eviter les SelectQueryError (selects imbriques/relations).
+const fromTable = (table: string) => (supabase as any).from(table);
 
 // Helper to convert base64 to ArrayBuffer
 function base64ToArrayBuffer(base64: string): ArrayBuffer {
@@ -28,41 +28,16 @@ function base64ToArrayBuffer(base64: string): ArrayBuffer {
 }
 
 // ============================================
-// Hook pour obtenir le provider ID de l'utilisateur
-// ============================================
-
-export function useCurrentProvider() {
-  const { userId } = useAuth();
-
-  return useQuery({
-    queryKey: ['currentProvider', userId],
-    queryFn: async () => {
-      if (!userId) return null;
-
-      const { data, error } = await supabase
-        .from('providers')
-        .select('id, business_name')
-        .eq('user_id', userId)
-        .single();
-
-      if (error && error.code !== 'PGRST116') throw error;
-      return data;
-    },
-    enabled: !!userId,
-  });
-}
-
-// ============================================
 // Hook pour les inspirations du prestataire connecte
 // ============================================
 
 export function useMyInspirations() {
-  const { data: provider } = useCurrentProvider();
+  const providerId = useMyProviderId();
 
   return useQuery({
-    queryKey: [Config.cacheKeys.inspirations, 'my', provider?.id],
+    queryKey: [Config.cacheKeys.inspirations, 'my', providerId],
     queryFn: async (): Promise<InspirationWithProvider[]> => {
-      if (!provider?.id) return [];
+      if (!providerId) return [];
 
       const { data, error } = await fromTable('inspirations')
         .select(`
@@ -88,7 +63,7 @@ export function useMyInspirations() {
             )
           )
         `)
-        .eq('provider_id', provider.id)
+        .eq('provider_id', providerId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -101,7 +76,7 @@ export function useMyInspirations() {
         ),
       })) as InspirationWithProvider[];
     },
-    enabled: !!provider?.id,
+    enabled: !!providerId,
   });
 }
 
@@ -116,16 +91,16 @@ interface CreateInspirationParams {
 
 export function useCreateInspiration() {
   const queryClient = useQueryClient();
-  const { data: provider } = useCurrentProvider();
+  const providerId = useMyProviderId();
 
   return useMutation({
     mutationFn: async ({ inspiration, images }: CreateInspirationParams) => {
-      if (!provider?.id) throw new Error('Provider not found');
+      if (!providerId) throw new Error('Provider not found');
 
       // 1. Creer l'inspiration
       const { data: newInspiration, error: inspirationError } = await fromTable('inspirations')
         .insert({
-          provider_id: provider.id,
+          provider_id: providerId,
           title: inspiration.title,
           description: inspiration.description || null,
           event_type: inspiration.event_type,
@@ -139,18 +114,26 @@ export function useCreateInspiration() {
 
       const inspirationId = (newInspiration as any).id;
 
-      // 2. Upload des images et creation des entries
-      const uploadedImages = await Promise.all(
-        images.map(async (image, index) => {
-          // Generer un nom de fichier unique
-          const fileName = `${inspirationId}/${Date.now()}_${index}.jpg`;
+      // 2. Upload des images avec rollback en cas d'echec
+      const uploadedPaths: string[] = [];
+      const uploadedImages: Array<{
+        inspiration_id: string;
+        image_url: string;
+        thumbnail_url: string;
+        width: number | null;
+        height: number | null;
+        display_order: number;
+      }> = [];
 
-          // Lire le fichier en base64
+      try {
+        for (const [index, image] of images.entries()) {
+          const uniqueId = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+          const fileName = `${inspirationId}/${uniqueId}_${index}.jpg`;
+
           const base64 = await FileSystem.readAsStringAsync(image.uri, {
             encoding: 'base64' as const,
           });
 
-          // Upload vers Supabase Storage
           const { error: uploadError } = await supabase.storage
             .from('inspirations')
             .upload(fileName, base64ToArrayBuffer(base64), {
@@ -158,29 +141,41 @@ export function useCreateInspiration() {
             });
 
           if (uploadError) throw uploadError;
+          uploadedPaths.push(fileName);
 
-          // Obtenir l'URL publique
           const { data: urlData } = supabase.storage
             .from('inspirations')
             .getPublicUrl(fileName);
 
-          return {
+          uploadedImages.push({
             inspiration_id: inspirationId,
             image_url: urlData.publicUrl,
             thumbnail_url: urlData.publicUrl,
             width: image.width || null,
             height: image.height || null,
             display_order: index,
-          };
-        })
-      );
+          });
+        }
+      } catch (err) {
+        // Cleanup: supprimer les images deja uploadees + l'inspiration creee
+        if (uploadedPaths.length > 0) {
+          await supabase.storage.from('inspirations').remove(uploadedPaths);
+        }
+        await fromTable('inspirations').delete().eq('id', inspirationId);
+        throw err;
+      }
 
       // 3. Inserer les images dans la table
       if (uploadedImages.length > 0) {
         const { error: imagesError } = await fromTable('inspiration_images')
           .insert(uploadedImages);
 
-        if (imagesError) throw imagesError;
+        if (imagesError) {
+          // Cleanup storage si l'insert DB echoue
+          await supabase.storage.from('inspirations').remove(uploadedPaths);
+          await fromTable('inspirations').delete().eq('id', inspirationId);
+          throw imagesError;
+        }
       }
 
       return newInspiration;

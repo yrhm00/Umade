@@ -15,8 +15,8 @@ import { useAuth } from './useAuth';
 
 const PAGE_SIZE = 20;
 
-// Helper pour accéder aux tables non encore dans les types auto-générés
-const fromTable = (table: string) => supabase.from(table as any);
+// Helper: on force "any" pour eviter les SelectQueryError (selects imbriques/relations).
+const fromTable = (table: string) => (supabase as any).from(table);
 
 // ============================================
 // Hook pour le feed d'inspirations avec infinite scroll

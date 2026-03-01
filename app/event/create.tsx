@@ -11,6 +11,7 @@ import { Stack, useRouter } from 'expo-router';
 import React from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { goBackOrFallback } from '@/lib/navigation';
 
 export default function CreateEventScreen() {
   const router = useRouter();
@@ -20,7 +21,7 @@ export default function CreateEventScreen() {
   const handleSubmit = (input: CreateEventInput) => {
     createEvent(input, {
       onSuccess: () => {
-        router.back();
+        goBackOrFallback(router);
       },
       onError: (error) => {
         Alert.alert(

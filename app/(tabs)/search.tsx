@@ -5,10 +5,15 @@
 
 import { CategoryPill } from '@/components/common/CategoryPill';
 import { EmptyState } from '@/components/common/EmptyState';
+import { SectionHeader } from '@/components/common/SectionHeader';
 import { FiltersBottomSheet } from '@/components/providers/FiltersBottomSheet';
-import { ProviderCard } from '@/components/providers/ProviderCard';
+import { CompareBar } from '@/components/providers/CompareBar';
+import { CARD_WIDTH, ProviderCard } from '@/components/providers/ProviderCard';
 import { Avatar } from '@/components/ui/Avatar';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { PressableScale } from '@/components/ui/PressableScale';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { VoiceSearchButton } from '@/components/ui/VoiceSearchButton';
+import { Colors } from '@/constants/Colors';
 import { Config } from '@/constants/Config';
 import { Layout } from '@/constants/Layout';
 import { useAuth } from '@/hooks/useAuth';
@@ -18,7 +23,7 @@ import { useSearchProviders, useTopProviders } from '@/hooks/useProviders';
 import { debounce } from '@/lib/utils';
 import { useSearchStore } from '@/stores/searchStore';
 import { ProviderFilters, ProviderListItem } from '@/types';
-import BottomSheet from '@gorhom/bottom-sheet';
+import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   Bell,
@@ -29,9 +34,11 @@ import {
   SlidersHorizontal,
   X,
 } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Dimensions,
   FlatList,
   RefreshControl,
   ScrollView,
@@ -42,12 +49,13 @@ import {
   View,
 } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SearchScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ category?: string }>();
-  const filtersSheetRef = useRef<BottomSheet>(null);
+  const filtersSheetRef = useRef<BottomSheetModal>(null);
   const { profile } = useAuth();
   const colors = useColors();
   const isDark = useIsDarkTheme();
@@ -109,6 +117,12 @@ export default function SearchScreen() {
     setSearchQuery('');
   };
 
+  const handleVoiceResult = (text: string) => {
+    setSearchText(text);
+    setSearchQuery(text);
+    setIsSearchMode(true);
+  };
+
   const handleSearchFocus = () => {
     setIsSearchMode(true);
   };
@@ -120,7 +134,7 @@ export default function SearchScreen() {
   };
 
   const handleOpenFilters = () => {
-    filtersSheetRef.current?.expand();
+    filtersSheetRef.current?.present();
   };
 
   const handleApplyFilters = (newFilters: ProviderFilters) => {
@@ -175,9 +189,9 @@ export default function SearchScreen() {
   const cardBg = isDark ? colors.card : '#FFFFFF';
   const backButtonBg = isDark ? colors.backgroundTertiary : `${colors.primary}10`;
 
-  const renderProvider = ({ item }: { item: ProviderListItem }) => (
+  const renderProvider = ({ item, index }: { item: ProviderListItem; index: number }) => (
     <View style={viewMode === 'grid' ? styles.gridItem : styles.listItem}>
-      <ProviderCard provider={item} variant={viewMode} />
+      <ProviderCard provider={item} variant={viewMode} index={index} />
     </View>
   );
 
@@ -194,7 +208,7 @@ export default function SearchScreen() {
     if (searchLoading) return null;
     return (
       <EmptyState
-        icon="🔍"
+        icon={<SearchIcon size={32} color={colors.primary} />}
         title="Aucun résultat"
         description="Essayez de modifier vos critères de recherche"
         actionLabel="Réinitialiser les filtres"
@@ -207,18 +221,19 @@ export default function SearchScreen() {
   if (isSearchMode) {
     return (
       <GestureHandlerRootView style={styles.container}>
-        <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.backgroundSecondary }]} edges={['top']}>
-          {/* Header */}
-          <View style={styles.header}>
-            <TouchableOpacity
-              onPress={handleBackToHome}
-              style={[styles.backButton, { backgroundColor: backButtonBg }]}
-            >
-              <X size={20} color={colors.textSecondary} />
-            </TouchableOpacity>
-            <Text style={[styles.title, { color: colors.text }]}>Recherche</Text>
-            <View style={styles.placeholder} />
-          </View>
+        <>
+          <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.backgroundSecondary }]} edges={['top']}>
+            {/* Header */}
+            <View style={styles.header}>
+              <TouchableOpacity
+                onPress={handleBackToHome}
+                style={[styles.backButton, { backgroundColor: backButtonBg }]}
+              >
+                <X size={20} color={colors.textSecondary} />
+              </TouchableOpacity>
+              <Text style={[styles.title, { color: colors.text }]}>Recherche</Text>
+              <View style={styles.placeholder} />
+            </View>
 
           {/* Search Bar */}
           <View style={styles.searchContainer}>
@@ -238,6 +253,10 @@ export default function SearchScreen() {
                   <X size={20} color={colors.textTertiary} />
                 </TouchableOpacity>
               )}
+              <VoiceSearchButton
+                onResult={handleVoiceResult}
+                size={32}
+              />
             </View>
 
             <TouchableOpacity
@@ -317,7 +336,21 @@ export default function SearchScreen() {
 
           {/* Results */}
           {searchLoading ? (
-            <LoadingSpinner fullScreen message="Recherche en cours..." />
+            <View style={styles.skeletonContainer}>
+              {viewMode === 'grid' ? (
+                <View style={styles.skeletonGrid}>
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <Skeleton.ProviderCard key={`skel-${i}`} />
+                  ))}
+                </View>
+              ) : (
+                Array.from({ length: 4 }).map((_, i) => (
+                  <View key={`skel-${i}`} style={styles.skeletonListItem}>
+                    <Skeleton.ProviderCard />
+                  </View>
+                ))
+              )}
+            </View>
           ) : (
             <FlatList
               data={providers}
@@ -335,13 +368,15 @@ export default function SearchScreen() {
             />
           )}
 
-          <FiltersBottomSheet
-            ref={filtersSheetRef}
-            filters={filters}
-            onApply={handleApplyFilters}
-            onReset={handleResetFilters}
-          />
-        </SafeAreaView>
+            <FiltersBottomSheet
+              ref={filtersSheetRef}
+              filters={filters}
+              onApply={handleApplyFilters}
+              onReset={handleResetFilters}
+            />
+          </SafeAreaView>
+          <CompareBar />
+        </>
       </GestureHandlerRootView>
     );
   }
@@ -349,19 +384,20 @@ export default function SearchScreen() {
   // Home mode UI
   return (
     <GestureHandlerRootView style={styles.container}>
-      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.backgroundSecondary }]} edges={['top']}>
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={handleRefresh}
-              tintColor={colors.primary}
-            />
-          }
-        >
+      <>
+        <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.backgroundSecondary }]} edges={['top']}>
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                tintColor={colors.primary}
+              />
+            }
+          >
           {/* Header */}
           <View style={styles.homeHeader}>
             <View style={styles.headerLeft}>
@@ -369,12 +405,12 @@ export default function SearchScreen() {
               <Text style={[styles.userName, { color: colors.text }]}>{firstName}</Text>
             </View>
             <View style={styles.headerRight}>
-              <TouchableOpacity
-                style={[styles.iconButton, { backgroundColor: cardBg }]}
-                onPress={() => router.push('/notifications/index')}
-              >
-                <Bell size={24} color={colors.text} />
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.iconButton, { backgroundColor: cardBg }]}
+                  onPress={() => router.push('/notifications' as any)}
+                >
+                  <Bell size={24} color={colors.text} />
+                </TouchableOpacity>
               <TouchableOpacity onPress={() => router.push('/(tabs)/profile')}>
                 <Avatar
                   source={profile?.avatar_url}
@@ -399,7 +435,7 @@ export default function SearchScreen() {
 
           {/* Categories Section */}
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Catégories</Text>
+            <SectionHeader title="Catégories" delay={0} />
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -418,27 +454,25 @@ export default function SearchScreen() {
 
           {/* Top Providers Section */}
           <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitleNoMargin, { color: colors.text }]}>Top prestataires</Text>
-              <TouchableOpacity
-                style={styles.seeAllButton}
-                onPress={() => setIsSearchMode(true)}
-              >
-                <Text style={[styles.seeAllText, { color: colors.primary }]}>Voir tout</Text>
-                <ChevronRight size={16} color={colors.primary} />
-              </TouchableOpacity>
-            </View>
+            <SectionHeader
+              title="Top prestataires"
+              actionLabel="Voir tout"
+              onAction={() => setIsSearchMode(true)}
+              delay={100}
+            />
 
             {topProviders && topProviders.length > 0 ? (
               <FlatList
                 data={topProviders}
                 keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                  <ProviderCard provider={item} variant="grid" />
+                renderItem={({ item, index }) => (
+                  <ProviderCard provider={item} variant="grid" index={index} />
                 )}
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.providersContainer}
+                snapToInterval={CARD_WIDTH + Layout.spacing.md}
+                decelerationRate="fast"
                 ItemSeparatorComponent={() => (
                   <View style={styles.providerSeparator} />
                 )}
@@ -454,34 +488,47 @@ export default function SearchScreen() {
 
           {/* Categories Grid */}
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Explorer par catégorie</Text>
+            <SectionHeader title="Explorer par catégorie" delay={200} />
             <View style={styles.categoryGrid}>
-              {categories?.slice(0, 6).map((category) => (
-                <TouchableOpacity
+              {categories?.slice(0, 6).map((category, index) => (
+                <Animated.View
                   key={category.id}
-                  style={[styles.categoryGridItem, { backgroundColor: cardBg }]}
-                  onPress={() => handleCategoryPress(category.slug)}
-                  activeOpacity={0.7}
+                  entering={FadeInUp.delay(200 + index * 60).duration(260)}
                 >
-                  <Text style={styles.categoryGridIcon}>
-                    {category.icon || '📌'}
-                  </Text>
-                  <Text style={[styles.categoryGridName, { color: colors.text }]} numberOfLines={2}>
-                    {category.name}
-                  </Text>
-                </TouchableOpacity>
+                  <PressableScale
+                    scale={0.95}
+                    haptic="light"
+                    onPress={() => handleCategoryPress(category.slug)}
+                  >
+                    <LinearGradient
+                      colors={isDark ? [colors.card, colors.backgroundTertiary] : [Colors.white, Colors.primary[50]]}
+                      style={styles.categoryGridItem}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                    >
+                      <Text style={styles.categoryGridIcon}>
+                        {category.icon || '📌'}
+                      </Text>
+                      <Text style={[styles.categoryGridName, { color: colors.text }]} numberOfLines={2}>
+                        {category.name}
+                      </Text>
+                    </LinearGradient>
+                  </PressableScale>
+                </Animated.View>
               ))}
             </View>
           </View>
         </ScrollView>
 
-        <FiltersBottomSheet
-          ref={filtersSheetRef}
-          filters={filters}
-          onApply={handleApplyFilters}
-          onReset={handleResetFilters}
-        />
-      </SafeAreaView>
+          <FiltersBottomSheet
+            ref={filtersSheetRef}
+            filters={filters}
+            onApply={handleApplyFilters}
+            onReset={handleResetFilters}
+          />
+        </SafeAreaView>
+        <CompareBar />
+      </>
     </GestureHandlerRootView>
   );
 }
@@ -682,7 +729,7 @@ const styles = StyleSheet.create({
     gap: Layout.spacing.md,
   },
   categoryGridItem: {
-    width: '30%',
+    width: (Dimensions.get('window').width - Layout.spacing.lg * 2 - Layout.spacing.md * 2) / 3,
     aspectRatio: 1,
     borderRadius: Layout.radius.lg,
     justifyContent: 'center',
@@ -739,5 +786,19 @@ const styles = StyleSheet.create({
   loadingMore: {
     paddingVertical: Layout.spacing.lg,
     alignItems: 'center',
+  },
+  skeletonContainer: {
+    flex: 1,
+    paddingHorizontal: Layout.spacing.lg,
+    paddingTop: Layout.spacing.md,
+  },
+  skeletonGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: Layout.spacing.md,
+  },
+  skeletonListItem: {
+    marginBottom: Layout.spacing.md,
   },
 });

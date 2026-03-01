@@ -9,10 +9,11 @@ import Animated, {
     useAnimatedStyle,
     useDerivedValue,
     useSharedValue,
-    withSpring,
     withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+const INDICATOR_HORIZONTAL_INSET = 6;
 
 export function LiquidTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
     const insets = useSafeAreaInsets();
@@ -39,26 +40,27 @@ export function LiquidTabBar({ state, descriptors, navigation }: BottomTabBarPro
 
     const onLayout = (e: LayoutChangeEvent) => {
         const width = e.nativeEvent.layout.width;
+        const availableWidth = Math.max(width - INDICATOR_HORIZONTAL_INSET * 2, 0);
+        const nextTabWidth = availableWidth / state.routes.length;
         // Update measuring state
         setMeasuredWidth(width);
         // Update shared value
-        tabWidth.value = width / state.routes.length;
+        tabWidth.value = nextTabWidth;
 
         // Immediate update ensures no lag on initial load
-        indicatorPosition.value = withSpring(activeIndex * (width / state.routes.length), {
-            damping: 25,
-            stiffness: 200,
-            mass: 0.8,
-        });
+        indicatorPosition.value = withTiming(
+            INDICATOR_HORIZONTAL_INSET + activeIndex * nextTabWidth,
+            {
+            duration: 240,
+            }
+        );
     };
 
     useEffect(() => {
         // Only run if we have a valid width
         if (measuredWidth > 0 && tabWidth.value > 0) {
-            indicatorPosition.value = withSpring(activeIndex * tabWidth.value, {
-                damping: 25,
-                stiffness: 200,
-                mass: 0.8,
+            indicatorPosition.value = withTiming(INDICATOR_HORIZONTAL_INSET + activeIndex * tabWidth.value, {
+                duration: 240,
             });
             // Haptic feedback on tab change
             if (Platform.OS === 'ios') {
@@ -232,7 +234,7 @@ export function LiquidTabBar({ state, descriptors, navigation }: BottomTabBarPro
                             accessibilityRole="button"
                             accessibilityState={isFocused ? { selected: true } : {}}
                             accessibilityLabel={options.tabBarAccessibilityLabel}
-                            testID={options.tabBarTestID}
+                            testID={(options as any).tabBarTestID}
                             onPress={onPress}
                             onLongPress={onLongPress}
                             style={styles.tabItem}
@@ -291,6 +293,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         height: '100%',
         alignItems: 'center',
+        paddingHorizontal: INDICATOR_HORIZONTAL_INSET,
     },
     tabItem: {
         flex: 1,

@@ -30,6 +30,7 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { goBackOrFallback } from '@/lib/navigation';
 
 interface Service {
     id: string;
@@ -119,15 +120,19 @@ export default function ServicesScreen() {
         },
     });
 
-    const updateService = useMutation({
-        mutationFn: async (updatedService: any) => {
-            const { error } = await supabase
-                .from('services')
-                .update(updatedService)
-                .eq('id', currentService.id);
-
-            if (error) throw error;
-        },
+	    const updateService = useMutation({
+	        mutationFn: async (updatedService: any) => {
+	            const serviceId = currentService.id;
+	            if (!serviceId) {
+	                throw new Error('Service id manquant');
+	            }
+	            const { error } = await supabase
+	                .from('services')
+	                .update(updatedService)
+	                .eq('id', serviceId);
+	
+	            if (error) throw error;
+	        },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['provider', 'services'] });
             closeModal();
@@ -240,7 +245,7 @@ export default function ServicesScreen() {
             <View style={styles.header}>
                 <TouchableOpacity
                     style={styles.backButton}
-                    onPress={() => router.back()}
+                    onPress={() => goBackOrFallback(router)}
                 >
                     <ArrowLeft size={24} color={Colors.text.primary} />
                 </TouchableOpacity>

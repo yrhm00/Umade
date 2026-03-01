@@ -1,19 +1,22 @@
 import { SwipeableConversationItem } from '@/components/chat/SwipeableConversationItem';
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
 import { useHideConversation, usePinConversation } from '@/hooks/useConversations';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { useProviderConversations } from '@/hooks/useProviderStats';
 import { useRealtimeConversations } from '@/hooks/useRealtimeMessages';
 import { useRouter } from 'expo-router';
-import { ArrowLeft } from 'lucide-react-native';
+import { ArrowLeft, MessageCircle } from 'lucide-react-native';
 import React, { useCallback } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { goBackOrFallback } from '@/lib/navigation';
 
 export default function ProviderMessagesScreen() {
     const router = useRouter();
+    const colors = useColors();
+    const isDark = useIsDarkTheme();
     const { data: conversations, isLoading, refetch, isRefetching } =
         useProviderConversations();
 
@@ -49,20 +52,23 @@ export default function ProviderMessagesScreen() {
     );
 
     const ItemSeparator = useCallback(
-        () => <View style={styles.separator} />,
-        []
+        () => <View style={[styles.separator, { backgroundColor: colors.border }]} />,
+        [colors.border]
     );
 
     return (
-        <SafeAreaView style={styles.container} edges={['top']}>
-            <View style={styles.header}>
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+            <View style={[styles.header, { borderBottomColor: colors.border, backgroundColor: colors.background }]}>
                 <TouchableOpacity
-                    style={styles.backButton}
-                    onPress={() => router.back()}
+                    style={[
+                        styles.backButton,
+                        { backgroundColor: isDark ? colors.backgroundTertiary : colors.backgroundSecondary },
+                    ]}
+                    onPress={() => goBackOrFallback(router)}
                 >
-                    <ArrowLeft size={24} color={Colors.text.primary} />
+                    <ArrowLeft size={24} color={colors.text} />
                 </TouchableOpacity>
-                <Text style={styles.title}>Messages</Text>
+                <Text style={[styles.title, { color: colors.text }]}>Messages</Text>
                 <View style={styles.placeholder} />
             </View>
 
@@ -81,7 +87,7 @@ export default function ProviderMessagesScreen() {
                 />
             ) : (
                 <EmptyState
-                    icon="💬"
+                    icon={<MessageCircle size={32} color={colors.primary} />}
                     title="Aucune conversation"
                     description="Vos conversations avec les clients apparaîtront ici."
                 />
@@ -93,7 +99,6 @@ export default function ProviderMessagesScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: Colors.background.primary,
     },
     header: {
         flexDirection: 'row',
@@ -102,7 +107,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: Layout.spacing.lg,
         paddingVertical: Layout.spacing.md,
         borderBottomWidth: 1,
-        borderBottomColor: Colors.gray[100],
     },
     backButton: {
         width: 40,
@@ -114,7 +118,6 @@ const styles = StyleSheet.create({
     title: {
         fontSize: Layout.fontSize['xl'],
         fontWeight: '700',
-        color: Colors.text.primary,
     },
     placeholder: {
         width: 40,
@@ -124,7 +127,6 @@ const styles = StyleSheet.create({
     },
     separator: {
         height: 1,
-        backgroundColor: Colors.gray[100],
         marginLeft: Layout.spacing.lg + 56 + Layout.spacing.md,
     },
 });

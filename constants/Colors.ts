@@ -157,6 +157,7 @@ export interface ThemeColors {
   // Primary access
   primary: string;
   primaryLight: string;
+  primaryDark: string;
   // Glass
   glassBackground: string;
   glassBorder: string;
@@ -184,6 +185,7 @@ export const LightColors: ThemeColors = {
   error: Colors.error.DEFAULT,
   primary: Colors.primary.DEFAULT,
   primaryLight: Colors.primary.light,
+  primaryDark: Colors.primary.dark,
   glassBackground: Colors.glass.background,
   glassBorder: Colors.glass.border,
 };
@@ -210,13 +212,42 @@ export const DarkColors: ThemeColors = {
   error: Colors.error.DEFAULT,
   primary: Colors.primary.light,
   primaryLight: Colors.primary[200],
+  primaryDark: Colors.primary.DEFAULT,
   glassBackground: 'rgba(26, 22, 37, 0.85)',
   glassBorder: 'rgba(95, 74, 139, 0.3)',
+};
+
+// ============================================
+// OLED Dark Theme (Pure Black - économie batterie)
+// ============================================
+
+export const OLEDColors: ThemeColors = {
+  text: '#FFFFFF',
+  textSecondary: '#B0B0B0',
+  textTertiary: '#808080',
+  background: '#000000', // Noir pur
+  backgroundSecondary: '#0A0A0A',
+  backgroundTertiary: '#141414',
+  tint: Colors.primary.light,
+  tabIconDefault: '#606060',
+  tabIconSelected: Colors.primary.light,
+  border: '#1A1A1A',
+  card: '#0A0A0A',
+  cardBorder: '#1A1A1A',
+  success: Colors.success.DEFAULT,
+  warning: Colors.warning.DEFAULT,
+  error: Colors.error.DEFAULT,
+  primary: Colors.primary.light,
+  primaryLight: Colors.primary[200],
+  primaryDark: Colors.primary.DEFAULT,
+  glassBackground: 'rgba(0, 0, 0, 0.9)',
+  glassBorder: 'rgba(95, 74, 139, 0.4)',
 };
 
 // Export pour usage avec useColorScheme (legacy)
 export default {
   light: LightColors,
   dark: DarkColors,
+  oled: OLEDColors,
 };
 

@@ -1,12 +1,13 @@
 import React from 'react';
 import {
-  TouchableOpacity,
   Text,
   StyleSheet,
   ViewStyle,
 } from 'react-native';
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
+import { PressableScale } from '@/components/ui/PressableScale';
 
 interface CategoryPillProps {
   label: string;
@@ -23,21 +24,42 @@ export function CategoryPill({
   onPress,
   style,
 }: CategoryPillProps) {
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
+
+  const containerBg = isSelected
+    ? colors.primary
+    : isDark
+    ? colors.backgroundTertiary
+    : Colors.gray[100];
+
+  const borderColor = isSelected
+    ? colors.primary
+    : isDark
+    ? colors.border
+    : 'transparent';
+
+  const textColor = isSelected ? '#FFFFFF' : colors.text;
+
   return (
-    <TouchableOpacity
+    <PressableScale
+      scale={0.95}
+      haptic="selection"
+      onPress={onPress}
       style={[
         styles.container,
-        isSelected && styles.containerSelected,
+        {
+          backgroundColor: containerBg,
+          borderColor,
+        },
         style,
       ]}
-      onPress={onPress}
-      activeOpacity={0.7}
     >
       {icon && <Text style={styles.icon}>{icon}</Text>}
-      <Text style={[styles.label, isSelected && styles.labelSelected]}>
+      <Text style={[styles.label, { color: textColor }]}>
         {label}
       </Text>
-    </TouchableOpacity>
+    </PressableScale>
   );
 }
 
@@ -48,11 +70,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: Layout.spacing.md,
     paddingVertical: Layout.spacing.sm,
     borderRadius: Layout.radius.full,
-    backgroundColor: Colors.gray[100],
+    borderWidth: 1,
     gap: Layout.spacing.xs,
-  },
-  containerSelected: {
-    backgroundColor: Colors.primary.DEFAULT,
   },
   icon: {
     fontSize: 16,
@@ -60,9 +79,5 @@ const styles = StyleSheet.create({
   label: {
     fontSize: Layout.fontSize.sm,
     fontWeight: '500',
-    color: Colors.text.primary,
-  },
-  labelSelected: {
-    color: Colors.white,
   },
 });

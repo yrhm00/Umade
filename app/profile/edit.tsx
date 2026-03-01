@@ -31,6 +31,7 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { goBackOrFallback } from '@/lib/navigation';
 
 interface FormData {
     full_name: string;
@@ -82,7 +83,7 @@ export default function ClientProfileEditScreen() {
         onSuccess: () => {
             refreshProfile();
             Alert.alert('Succès', 'Votre profil a été mis à jour', [
-                { text: 'OK', onPress: () => router.back() },
+                { text: 'OK', onPress: () => goBackOrFallback(router) },
             ]);
         },
         onError: (error) => {
@@ -200,7 +201,7 @@ export default function ClientProfileEditScreen() {
             >
                 {/* Header */}
                 <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-                    <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                    <TouchableOpacity style={styles.backButton} onPress={() => goBackOrFallback(router)}>
                         <ArrowLeft size={24} color={colors.text} />
                     </TouchableOpacity>
                     <Text style={[styles.title, { color: colors.text }]}>Modifier mon profil</Text>

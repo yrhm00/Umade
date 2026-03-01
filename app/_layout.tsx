@@ -1,44 +1,106 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import React, { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { VideoView, useVideoPlayer } from 'expo-video';
+import { ChevronLeft } from 'lucide-react-native';
 
 import { RealtimeProvider } from '@/components/providers/RealtimeProvider';
-import { TopEdgeGradient } from '@/components/ui/TopEdgeGradient';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { OfflineIndicator } from '@/components/ui/OfflineIndicator';
+import { goBackOrFallback } from '@/lib/navigation';
 import { queryClient } from '@/lib/queryClient';
 import { useAuthStore } from '@/stores/authStore';
 
 SplashScreen.preventAutoHideAsync();
 
-// Options de navigation stables (hors composant = référence fixe)
-const stackScreenOptions = { headerShown: false } as const;
+// Options de navigation stables avec animations fluides
+const stackScreenOptions = {
+  headerShown: false,
+  animation: 'slide_from_right',
+  animationDuration: 250,
+} as const;
 
 const providerScreenOptions = {
   headerShown: true,
   headerTitle: '',
   headerTransparent: true,
+  animation: 'slide_from_right',
 } as const;
 
 const chatScreenOptions = {
   headerShown: false,
+  animation: 'slide_from_right',
 } as const;
 
 const modalScreenOptions = {
   presentation: 'modal',
   headerShown: true,
+  animation: 'slide_from_bottom',
+} as const;
+
+// Options pour les écrans qui s'ouvrent en fade
+const fadeScreenOptions = {
+  headerShown: false,
+  animation: 'fade',
 } as const;
 
 export default function RootLayout() {
+  const router = useRouter();
   const isInitialized = useAuthStore((state) => state.isInitialized);
+  const [showOpeningVideo, setShowOpeningVideo] = useState(true);
+  const [isOpeningClosing, setIsOpeningClosing] = useState(false);
+  const openingOpacity = useRef(new Animated.Value(1)).current;
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [fontsLoaded, fontError] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
+  const openingPlayer = useVideoPlayer(require('../assets/videos/opening.mp4'), (player) => {
+    player.loop = false;
+    player.play();
+  });
+
+  const closeOpeningVideo = useCallback(
+    (delayMs = 0) => {
+      if (!showOpeningVideo || isOpeningClosing) {
+        return;
+      }
+
+      setIsOpeningClosing(true);
+
+      const startFade = () => {
+        Animated.timing(openingOpacity, {
+          toValue: 0,
+          duration: 520,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }).start(() => {
+          openingPlayer.pause();
+          setShowOpeningVideo(false);
+          setIsOpeningClosing(false);
+          openingOpacity.setValue(1);
+        });
+      };
+
+      if (delayMs > 0) {
+        if (closeTimerRef.current) {
+          clearTimeout(closeTimerRef.current);
+        }
+        closeTimerRef.current = setTimeout(startFade, delayMs);
+        return;
+      }
+
+      startFade();
+    },
+    [showOpeningVideo, isOpeningClosing, openingOpacity, openingPlayer]
+  );
 
   useEffect(() => {
     useAuthStore.getState().initialize();
@@ -49,6 +111,36 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded, isInitialized]);
+
+  useEffect(() => {
+    if (!showOpeningVideo) {
+      return;
+    }
+
+    const endSubscription = openingPlayer.addListener('playToEnd', () => {
+      // On garde un très court "hold" du dernier frame avant le fade.
+      closeOpeningVideo(120);
+    });
+
+    const errorSubscription = openingPlayer.addListener('statusChange', ({ status }) => {
+      if (status === 'error') {
+        closeOpeningVideo();
+      }
+    });
+
+    return () => {
+      endSubscription.remove();
+      errorSubscription.remove();
+    };
+  }, [showOpeningVideo, openingPlayer, closeOpeningVideo]);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) {
+        clearTimeout(closeTimerRef.current);
+      }
+    };
+  }, []);
 
   // Tant que les fonts ou l'auth ne sont pas prêts, le splash screen reste visible
   if (!fontsLoaded && !fontError) {
@@ -66,29 +158,70 @@ export default function RootLayout() {
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
-          <RealtimeProvider>
-            <StatusBar style="auto" />
-            <View style={{ flex: 1 }}>
-              <Stack screenOptions={stackScreenOptions}>
-                <Stack.Screen name="(auth)" />
-                <Stack.Screen name="(tabs)" />
-                <Stack.Screen name="onboarding" />
-                <Stack.Screen name="provider/[id]" options={providerScreenOptions} />
-                <Stack.Screen name="event/create" />
-                <Stack.Screen name="event/[id]" />
-                <Stack.Screen name="booking/[providerId]" />
-                <Stack.Screen name="booking/[id]/details" />
-                <Stack.Screen name="chat/[conversationId]" options={chatScreenOptions} />
-                <Stack.Screen name="chat/new" options={{ headerShown: false }} />
-                <Stack.Screen name="reviews/write/[bookingId]" />
-                <Stack.Screen name="reviews/provider/[providerId]" />
-                <Stack.Screen name="reviews/user" />
-                <Stack.Screen name="notifications/index" />
-                <Stack.Screen name="settings/notifications" />
-              </Stack>
-              <TopEdgeGradient />
-            </View>
-          </RealtimeProvider>
+          <BottomSheetModalProvider>
+            <RealtimeProvider>
+              <StatusBar style="auto" />
+              <View style={{ flex: 1 }}>
+                <ErrorBoundary>
+                <Stack
+                  screenOptions={({ navigation }) => ({
+                    ...stackScreenOptions,
+                    headerBackVisible: false,
+                    headerLeft: ({ tintColor }) =>
+                      navigation.canGoBack() ? (
+                        <Pressable
+                          onPress={() => goBackOrFallback(router)}
+                          hitSlop={12}
+                          style={styles.headerBackButton}
+                        >
+                          <ChevronLeft size={22} color={tintColor ?? '#1F1B2D'} />
+                        </Pressable>
+                      ) : undefined,
+                  })}
+                >
+                  <Stack.Screen name="(auth)" options={fadeScreenOptions} />
+                  <Stack.Screen name="(tabs)" options={fadeScreenOptions} />
+                  <Stack.Screen name="provider/[id]" options={providerScreenOptions} />
+                  <Stack.Screen name="event/create" options={modalScreenOptions} />
+                  <Stack.Screen name="event/[id]" />
+                  <Stack.Screen name="booking/[providerId]" options={modalScreenOptions} />
+                  <Stack.Screen name="booking/[id]/details" />
+                  <Stack.Screen name="booking/[id]/quote" />
+                  <Stack.Screen name="compare" />
+                  <Stack.Screen name="chat/[conversationId]" options={chatScreenOptions} />
+                  <Stack.Screen name="chat/new" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
+                  <Stack.Screen name="reviews/write/[bookingId]" options={modalScreenOptions} />
+                  <Stack.Screen name="reviews/provider/[providerId]" />
+                  <Stack.Screen name="reviews/user" />
+                  <Stack.Screen name="notifications/index" options={{ animation: 'slide_from_right' }} />
+                  <Stack.Screen name="settings/appearance" />
+                  <Stack.Screen name="settings/notifications" />
+                </Stack>
+                </ErrorBoundary>
+                <OfflineIndicator floating />
+
+                {showOpeningVideo && (
+                  <Animated.View
+                    pointerEvents={isOpeningClosing ? 'none' : 'auto'}
+                    style={[styles.openingOverlay, { opacity: openingOpacity }]}
+                  >
+                    <VideoView
+                      style={styles.openingVideo}
+                      player={openingPlayer}
+                      nativeControls={false}
+                      contentFit="cover"
+                    />
+                    <Pressable
+                      style={styles.skipButton}
+                      onPress={() => closeOpeningVideo()}
+                    >
+                      <Text style={styles.skipButtonText}>Passer</Text>
+                    </Pressable>
+                  </Animated.View>
+                )}
+              </View>
+            </RealtimeProvider>
+          </BottomSheetModalProvider>
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
@@ -98,5 +231,35 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+  },
+  openingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#000',
+    zIndex: 999,
+  },
+  openingVideo: {
+    flex: 1,
+  },
+  headerBackButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 2,
+  },
+  skipButton: {
+    position: 'absolute',
+    top: 56,
+    right: 20,
+    backgroundColor: '#00000066',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
+  },
+  skipButtonText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '600',
   },
 });

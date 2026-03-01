@@ -101,49 +101,45 @@ async function fetchProviderDetail(providerId: string): Promise<ProviderWithDeta
     throw providerError;
   }
 
-  // 2. Récupérer les services
-  const { data: services, error: servicesError } = await supabase
-    .from('services')
-    .select('*')
-    .eq('provider_id', providerId)
-    .eq('is_active', true)
-    .order('display_order', { ascending: true });
+  // 2. Récupérer services, portfolio et avis en parallèle
+  const [servicesResult, portfolioResult, reviewsResult] = await Promise.all([
+    supabase
+      .from('services')
+      .select('*')
+      .eq('provider_id', providerId)
+      .eq('is_active', true)
+      .order('display_order', { ascending: true }),
+    supabase
+      .from('portfolio_images')
+      .select('*')
+      .eq('provider_id', providerId)
+      .order('display_order', { ascending: true }),
+    supabase
+      .from('reviews')
+      .select(`
+        *,
+        client:profiles!reviews_client_id_fkey (
+          id,
+          full_name,
+          avatar_url
+        )
+      `)
+      .eq('provider_id', providerId)
+      .eq('is_visible', true)
+      .order('created_at', { ascending: false })
+      .limit(10),
+  ]);
 
-  if (servicesError) throw servicesError;
-
-  // 3. Récupérer les images portfolio
-  const { data: portfolioImages, error: portfolioError } = await supabase
-    .from('portfolio_images')
-    .select('*')
-    .eq('provider_id', providerId)
-    .order('display_order', { ascending: true });
-
-  if (portfolioError) throw portfolioError;
-
-  // 4. Récupérer les avis avec infos client
-  const { data: reviews, error: reviewsError } = await supabase
-    .from('reviews')
-    .select(`
-      *,
-      client:profiles!reviews_client_id_fkey (
-        id,
-        full_name,
-        avatar_url
-      )
-    `)
-    .eq('provider_id', providerId)
-    .eq('is_visible', true)
-    .order('created_at', { ascending: false })
-    .limit(10);
-
-  if (reviewsError) throw reviewsError;
+  if (servicesResult.error) throw servicesResult.error;
+  if (portfolioResult.error) throw portfolioResult.error;
+  if (reviewsResult.error) throw reviewsResult.error;
 
   return {
     ...provider,
     category: provider.categories as Category,
-    services: services || [],
-    portfolio_images: portfolioImages || [],
-    reviews: (reviews as ReviewWithClient[]) || [],
+    services: servicesResult.data || [],
+    portfolio_images: portfolioResult.data || [],
+    reviews: (reviewsResult.data as ReviewWithClient[]) || [],
   };
 }
 

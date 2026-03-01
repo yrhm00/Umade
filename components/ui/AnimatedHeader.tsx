@@ -12,6 +12,7 @@ import { ChevronLeft } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
+import { goBackOrFallback } from '@/lib/navigation';
 
 interface AnimatedHeaderProps {
   scrollY: SharedValue<number>;
@@ -43,7 +44,7 @@ export function AnimatedHeader({
     if (onBackPress) {
       onBackPress();
     } else {
-      router.back();
+      goBackOrFallback(router);
     }
   };
 

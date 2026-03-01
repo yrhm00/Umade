@@ -13,12 +13,13 @@ import { PressableScale } from '@/components/ui/PressableScale';
 import { CreateInspirationForm } from '@/components/inspirations';
 import { useCreateInspiration } from '@/hooks/useCreateInspiration';
 import { CreateInspirationInput, InspirationImageInput } from '@/types/inspiration';
+import { goBackOrFallback } from '@/lib/navigation';
 
 export default function CreateInspirationScreen() {
   const { mutateAsync: createInspiration, isPending } = useCreateInspiration();
 
   const handleBack = useCallback(() => {
-    router.back();
+    goBackOrFallback(router);
   }, []);
 
   const handleSubmit = useCallback(
@@ -28,7 +29,7 @@ export default function CreateInspirationScreen() {
         Alert.alert(
           'Inspiration publiee !',
           'Votre inspiration est maintenant visible par tous les utilisateurs.',
-          [{ text: 'OK', onPress: () => router.back() }]
+          [{ text: 'OK', onPress: () => goBackOrFallback(router) }]
         );
       } catch (error) {
         console.error('Error creating inspiration:', error);

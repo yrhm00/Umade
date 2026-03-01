@@ -1,6 +1,7 @@
 import { Avatar } from '@/components/ui/Avatar';
 import { Layout } from '@/constants/Layout';
 import { useColors } from '@/hooks/useColors';
+import { getChatMessagePreview } from '@/lib/chatMessagePreview';
 import { formatRelativeTime } from '@/lib/utils';
 import { useAuthStore } from '@/stores/authStore';
 import { ConversationWithDetails } from '@/types';
@@ -28,6 +29,9 @@ export const ConversationCard = React.memo(function ConversationCard({
     : conversation.client?.avatar_url ?? undefined;
 
   const lastMessage = conversation.last_message;
+  const lastMessagePreview = getChatMessagePreview(lastMessage?.content, {
+    deletedForAll: lastMessage?.deleted_for_all,
+  });
   const hasUnread = conversation.unread_count > 0;
 
   return (
@@ -75,7 +79,7 @@ export const ConversationCard = React.memo(function ConversationCard({
               numberOfLines={1}
             >
               {lastMessage.sender_id === userId && 'Vous: '}
-              {lastMessage.content}
+              {lastMessagePreview}
             </Text>
           ) : (
             <Text style={[styles.noMessage, { color: colors.textTertiary }]}>Nouvelle conversation</Text>

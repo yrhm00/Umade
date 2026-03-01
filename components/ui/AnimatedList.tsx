@@ -35,14 +35,14 @@ export function AnimatedList<T>({
     ({ item, index }) => {
       const enteringAnimation = animateOnMount
         ? FadeInDown.delay(index * staggerDelay)
-            .springify()
+            .duration(260)
             .damping(15)
         : undefined;
 
       return (
         <Animated.View
           entering={enteringAnimation}
-          layout={ReanimatedLayout.springify()}
+          layout={ReanimatedLayout.duration(260)}
           style={itemContainerStyle}
         >
           {renderItem({ item, index })}

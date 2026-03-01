@@ -6,6 +6,10 @@
 import { BookingConfirmation } from '@/components/booking/BookingConfirmation';
 import { DateTimePicker } from '@/components/booking/DateTimePicker';
 import { ServiceSelector } from '@/components/booking/ServiceSelector';
+import {
+  ElegantCelebrationOverlay,
+  ElegantCelebrationOverlayRef,
+} from '@/components/celebrations/ElegantCelebrationOverlay';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
@@ -16,21 +20,25 @@ import { useCreateBooking } from '@/hooks/useBookings';
 import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { useUserEvents } from '@/hooks/useEvents';
 import { useProviderDetail } from '@/hooks/useProviders';
+import { AppHaptics } from '@/lib/haptics';
 import { Service } from '@/types';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowLeft, ArrowRight, Check } from 'lucide-react-native';
-import React, { useMemo, useState } from 'react';
+import { ArrowLeft, ArrowRight, CalendarCheck2, Check } from 'lucide-react-native';
+import React, { useMemo, useRef, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import Animated, { FadeIn, FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { goBackOrFallback } from '@/lib/navigation';
 
 type BookingStep = 'service' | 'datetime' | 'event' | 'notes' | 'confirm';
 
@@ -54,6 +62,10 @@ export default function BookingFlowScreen() {
     useProviderDetail(providerId);
   const { data: events } = useUserEvents();
   const { mutate: createBooking, isPending: isCreating } = useCreateBooking();
+
+  // Celebration
+  const celebrationRef = useRef<ElegantCelebrationOverlayRef>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   // Step state
   const [currentStep, setCurrentStep] = useState<BookingStep>('service');
@@ -111,7 +123,7 @@ export default function BookingFlowScreen() {
     if (prevIndex >= 0) {
       setCurrentStep(STEPS[prevIndex]);
     } else {
-      router.back();
+      goBackOrFallback(router);
     }
   };
 
@@ -129,16 +141,9 @@ export default function BookingFlowScreen() {
       } as any,
       {
         onSuccess: () => {
-          Alert.alert(
-            'Réservation envoyée',
-            'Votre demande de réservation a été envoyée au prestataire. Vous recevrez une confirmation.',
-            [
-              {
-                text: 'OK',
-                onPress: () => router.replace('/(tabs)/events'),
-              },
-            ]
-          );
+          celebrationRef.current?.fire();
+          AppHaptics.celebration();
+          setTimeout(() => setShowSuccess(true), 400);
         },
         onError: (error) => {
           Alert.alert(
@@ -159,7 +164,7 @@ export default function BookingFlowScreen() {
       <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundSecondary }]}>
         <View style={styles.errorContainer}>
           <Text style={[styles.errorText, { color: colors.textSecondary }]}>Prestataire non trouvé</Text>
-          <Button title="Retour" onPress={() => router.back()} variant="outline" />
+          <Button title="Retour" onPress={() => goBackOrFallback(router)} variant="outline" />
         </View>
       </SafeAreaView>
     );
@@ -361,6 +366,61 @@ export default function BookingFlowScreen() {
           )}
         </View>
       </SafeAreaView>
+
+      {/* Celebration overlay */}
+      <ElegantCelebrationOverlay ref={celebrationRef} />
+
+      {/* Success sheet */}
+      {showSuccess && (
+        <Animated.View
+          entering={FadeIn.duration(300)}
+          style={[StyleSheet.absoluteFill, styles.successOverlay]}
+        >
+          <Pressable style={styles.successBackdrop} onPress={() => { setShowSuccess(false); router.replace('/(tabs)/events'); }} />
+          <Animated.View
+            entering={FadeInUp.delay(100).springify().damping(18)}
+            style={[styles.successSheet, { backgroundColor: colors.card }]}
+          >
+            <View style={[styles.successIconCircle, { backgroundColor: `${colors.primary}15` }]}>
+              <CalendarCheck2 size={40} color={colors.primary} />
+            </View>
+            <Text style={[styles.successTitle, { color: colors.text }]}>
+              Réservation envoyée !
+            </Text>
+            <Text style={[styles.successMessage, { color: colors.textSecondary }]}>
+              Votre demande pour{' '}
+              <Text style={{ fontWeight: '600', color: colors.text }}>
+                {selectedService?.name}
+              </Text>
+              {' '}chez{' '}
+              <Text style={{ fontWeight: '600', color: colors.text }}>
+                {provider?.business_name}
+              </Text>
+              {selectedDate && (
+                <>
+                  {' '}le{' '}
+                  <Text style={{ fontWeight: '600', color: colors.text }}>
+                    {new Date(selectedDate).toLocaleDateString('fr-BE', {
+                      day: 'numeric',
+                      month: 'long',
+                    })}
+                  </Text>
+                </>
+              )}
+              {' '}a été envoyée. Vous recevrez une confirmation.
+            </Text>
+            <Button
+              title="Voir mes événements"
+              onPress={() => {
+                setShowSuccess(false);
+                router.replace('/(tabs)/events');
+              }}
+              size="lg"
+              style={styles.successButton}
+            />
+          </Animated.View>
+        </Animated.View>
+      )}
     </>
   );
 }
@@ -458,5 +518,44 @@ const styles = StyleSheet.create({
   confirmButton: {
     flex: 1,
     marginLeft: Layout.spacing.md,
+  },
+  // Success overlay
+  successOverlay: {
+    zIndex: 100,
+    justifyContent: 'flex-end',
+  },
+  successBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  successSheet: {
+    borderTopLeftRadius: Layout.radius.xl,
+    borderTopRightRadius: Layout.radius.xl,
+    padding: Layout.spacing.xl,
+    paddingBottom: Layout.spacing.xxl,
+    alignItems: 'center',
+  },
+  successIconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Layout.spacing.lg,
+  },
+  successTitle: {
+    fontSize: Layout.fontSize['2xl'],
+    fontWeight: '700',
+    marginBottom: Layout.spacing.sm,
+    textAlign: 'center',
+  },
+  successMessage: {
+    fontSize: Layout.fontSize.md,
+    lineHeight: 24,
+    textAlign: 'center',
+    marginBottom: Layout.spacing.xl,
+  },
+  successButton: {
+    width: '100%',
   },
 });

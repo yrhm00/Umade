@@ -17,6 +17,7 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { goBackOrFallback } from '@/lib/navigation';
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
@@ -57,7 +58,7 @@ export default function ForgotPasswordScreen() {
         [
           {
             text: 'OK',
-            onPress: () => router.back(),
+            onPress: () => goBackOrFallback(router),
           },
         ]
       );
@@ -88,7 +89,7 @@ export default function ForgotPasswordScreen() {
           <View style={styles.header}>
             <TouchableOpacity
               style={styles.backButton}
-              onPress={() => router.back()}
+              onPress={() => goBackOrFallback(router)}
             >
               <ArrowLeft size={24} color={Colors.text.primary} />
             </TouchableOpacity>
@@ -131,7 +132,7 @@ export default function ForgotPasswordScreen() {
           {/* Footer */}
           <View style={styles.footer}>
             <Text style={styles.footerText}>Vous vous souvenez ?</Text>
-            <TouchableOpacity onPress={() => router.back()}>
+            <TouchableOpacity onPress={() => goBackOrFallback(router)}>
               <Text style={styles.footerLink}>Retour à la connexion</Text>
             </TouchableOpacity>
           </View>

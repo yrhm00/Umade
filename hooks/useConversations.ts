@@ -30,20 +30,17 @@ async function fetchUserConversations(
 
   // Filtrer selon le rôle et gérer le tri/filtrage
   if (provider) {
-    // C'est un provider
     query = query
       .eq('provider_id', provider.id)
       .eq('provider_hidden', false)
       .order('provider_pinned', { ascending: false });
   } else {
-    // C'est un client
     query = query
       .eq('client_id', userId)
       .eq('client_hidden', false)
       .order('client_pinned', { ascending: false });
   }
 
-  // Tri secondaire par date de message
   query = query.order('last_message_at', { ascending: false, nullsFirst: false });
 
   const { data: conversations, error } = await query;
@@ -51,39 +48,87 @@ async function fetchUserConversations(
   if (error) throw error;
   if (!conversations || conversations.length === 0) return [];
 
-  // Enrich each conversation with last message and unread count
-  const enriched = await Promise.all(
-    conversations.map(async (conv) => {
-      // Last message
-      const { data: lastMsg } = await supabase
-        .from('messages')
-        .select('content, sender_id, created_at')
-        .eq('conversation_id', conv.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+  const conversationIds = conversations.map((c) => c.id);
 
-      // Unread count (messages not from me that haven't been read)
-      const { count } = await supabase
-        .from('messages')
-        .select('*', { count: 'exact', head: true })
-        .eq('conversation_id', conv.id)
-        .neq('sender_id', userId)
-        .is('read_at', null);
+  // Batch fetch: last messages for all conversations (1 query instead of N)
+  const { data: allMessages } = await supabase
+    .from('messages')
+    .select('id, conversation_id, content, sender_id, created_at, deleted_for_all')
+    .in('conversation_id', conversationIds)
+    .order('created_at', { ascending: false });
 
-      // Determine pinned state for UI
-      const isPinned = provider
-        ? (conv as any).provider_pinned
-        : (conv as any).client_pinned;
+  let hiddenMessageSet = new Set<string>();
+  if (allMessages && allMessages.length > 0) {
+    const allMessageIds = allMessages.map((msg) => msg.id);
+    const { data: hiddenMessages } = await supabase
+      .from('message_deletions')
+      .select('message_id')
+      .eq('user_id', userId)
+      .in('message_id', allMessageIds);
 
-      return {
-        ...conv,
-        last_message: lastMsg || undefined,
-        unread_count: count || 0,
-        isPinned, // Add virtual field for UI
-      } as ConversationWithDetails & { isPinned: boolean };
-    })
-  );
+    hiddenMessageSet = new Set((hiddenMessages || []).map((row) => row.message_id));
+  }
+
+  const lastMessageMap = new Map<
+    string,
+    { content: string | null; sender_id: string; created_at: string | null; deleted_for_all: boolean | null }
+  >();
+  if (allMessages) {
+    for (const msg of allMessages) {
+      if (hiddenMessageSet.has(msg.id)) continue;
+      // Keep only the first (most recent) message per conversation
+      if (!lastMessageMap.has(msg.conversation_id)) {
+        lastMessageMap.set(msg.conversation_id, {
+          content: msg.content,
+          sender_id: msg.sender_id,
+          created_at: msg.created_at,
+          deleted_for_all: (msg as any).deleted_for_all ?? false,
+        });
+      }
+    }
+  }
+
+  // Batch fetch: unread messages for all conversations (1 query instead of N)
+  const { data: unreadMessages } = await supabase
+    .from('messages')
+    .select('id, conversation_id')
+    .in('conversation_id', conversationIds)
+    .neq('sender_id', userId)
+    .eq('deleted_for_all', false)
+    .is('read_at', null);
+
+  const unreadCountMap = new Map<string, number>();
+  if (unreadMessages) {
+    let hiddenUnreadSet = new Set<string>();
+    if (unreadMessages.length > 0) {
+      const unreadIds = unreadMessages.map((row) => row.id);
+      const { data: hiddenUnread } = await supabase
+        .from('message_deletions')
+        .select('message_id')
+        .eq('user_id', userId)
+        .in('message_id', unreadIds);
+      hiddenUnreadSet = new Set((hiddenUnread || []).map((row) => row.message_id));
+    }
+
+    for (const msg of unreadMessages) {
+      if (hiddenUnreadSet.has((msg as any).id)) continue;
+      unreadCountMap.set(msg.conversation_id, (unreadCountMap.get(msg.conversation_id) || 0) + 1);
+    }
+  }
+
+  // Enrich conversations with batch-fetched data
+  const enriched = conversations.map((conv) => {
+    const isPinned = provider
+      ? (conv as any).provider_pinned
+      : (conv as any).client_pinned;
+
+    return {
+      ...conv,
+      last_message: lastMessageMap.get(conv.id) || undefined,
+      unread_count: unreadCountMap.get(conv.id) || 0,
+      isPinned,
+    } as ConversationWithDetails & { isPinned: boolean };
+  });
 
   // Sort: pinned first, then by last message date
   enriched.sort((a, b) => {
@@ -91,10 +136,9 @@ async function fetchUserConversations(
     const bPinned = (b as any).isPinned ? 1 : 0;
 
     if (bPinned !== aPinned) {
-      return bPinned - aPinned; // Pinned first
+      return bPinned - aPinned;
     }
 
-    // Then by date (newest first)
     const aDate = new Date(a.last_message_at || a.created_at || 0).getTime();
     const bDate = new Date(b.last_message_at || b.created_at || 0).getTime();
     return bDate - aDate;

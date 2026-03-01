@@ -1,9 +1,11 @@
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
+import { AppHaptics } from '@/lib/haptics';
 import { useColors, useIsDarkTheme } from '@/hooks/useColors';
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
   ActivityIndicator,
+  StyleProp,
   StyleSheet,
   Text,
   TextStyle,
@@ -24,8 +26,8 @@ interface ButtonProps {
   fullWidth?: boolean;
   icon?: React.ReactNode;
   iconPosition?: 'left' | 'right';
-  style?: ViewStyle;
-  textStyle?: TextStyle;
+  style?: StyleProp<ViewStyle>;
+  textStyle?: StyleProp<TextStyle>;
 }
 
 export function Button({
@@ -44,6 +46,11 @@ export function Button({
   const colors = useColors();
   const isDark = useIsDarkTheme();
   const isDisabled = disabled || loading;
+
+  const handlePress = useCallback(() => {
+    AppHaptics.buttonPress();
+    onPress();
+  }, [onPress]);
 
   const variantStyles = {
     primary: {
@@ -97,7 +104,7 @@ export function Button({
   return (
     <TouchableOpacity
       style={buttonStyles}
-      onPress={onPress}
+      onPress={handlePress}
       disabled={isDisabled}
       activeOpacity={0.7}
     >

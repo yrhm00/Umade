@@ -3,7 +3,7 @@ import { Layout } from '@/constants/Layout';
 import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect } from 'react';
-import { StyleSheet, View, ViewStyle } from 'react-native';
+import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import Animated, {
   interpolate,
   useAnimatedStyle,
@@ -19,7 +19,7 @@ interface SkeletonProps {
   width?: number | string;
   height?: number;
   borderRadius?: number;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   lines?: number;
   lineHeight?: number;
 }
@@ -239,6 +239,182 @@ Skeleton.AvatarWithText = function SkeletonAvatarWithText({
   );
 };
 
+// Conversation/Chat list item skeleton
+Skeleton.ConversationItem = function SkeletonConversationItem() {
+  const colors = useColors();
+  return (
+    <View style={[styles.conversationItem, { borderBottomColor: colors.border }]}>
+      <Skeleton.Circle size={52} />
+      <View style={styles.conversationContent}>
+        <View style={styles.conversationHeader}>
+          <Skeleton height={16} width={140} />
+          <Skeleton height={12} width={50} />
+        </View>
+        <Skeleton height={14} width="85%" style={styles.textLine} />
+      </View>
+    </View>
+  );
+};
+
+// Booking card skeleton
+Skeleton.BookingCard = function SkeletonBookingCard() {
+  const colors = useColors();
+  return (
+    <View style={[styles.bookingCard, { backgroundColor: colors.card }]}>
+      <View style={styles.bookingHeader}>
+        <Skeleton.Circle size={48} />
+        <View style={styles.bookingHeaderText}>
+          <Skeleton height={16} width={150} />
+          <Skeleton height={12} width={100} style={styles.textLine} />
+        </View>
+        <Skeleton height={24} width={70} borderRadius={12} />
+      </View>
+      <View style={styles.bookingDetails}>
+        <Skeleton height={14} width="60%" />
+        <Skeleton height={14} width="40%" style={styles.textLine} />
+      </View>
+    </View>
+  );
+};
+
+// Checklist item skeleton
+Skeleton.ChecklistItem = function SkeletonChecklistItem() {
+  const colors = useColors();
+  return (
+    <View style={[styles.checklistItem, { borderBottomColor: colors.border }]}>
+      <Skeleton variant="rect" width={24} height={24} borderRadius={6} />
+      <View style={styles.checklistContent}>
+        <Skeleton height={14} width="70%" />
+        <Skeleton height={10} width={60} style={styles.textLine} />
+      </View>
+    </View>
+  );
+};
+
+// Home header skeleton (Welcome + Countdown)
+Skeleton.HomeHeader = function SkeletonHomeHeader() {
+  const colors = useColors();
+  return (
+    <View style={styles.homeHeader}>
+      {/* Welcome */}
+      <View style={styles.welcomeSection}>
+        <Skeleton height={28} width={200} />
+        <Skeleton height={16} width={160} style={styles.textLine} />
+        <Skeleton height={14} width={240} style={styles.textLine} />
+      </View>
+      {/* Countdown card */}
+      <View style={[styles.countdownCard, { backgroundColor: colors.primary }]}>
+        <View style={styles.countdownContent}>
+          <Skeleton.Circle size={40} style={{ opacity: 0.3 }} />
+          <View style={styles.countdownText}>
+            <Skeleton height={12} width={80} style={{ opacity: 0.3 }} />
+            <Skeleton height={10} width={120} style={[styles.textLine, { opacity: 0.3 }]} />
+          </View>
+        </View>
+        <View style={styles.countdownNumber}>
+          <Skeleton height={32} width={50} style={{ opacity: 0.3 }} />
+        </View>
+      </View>
+    </View>
+  );
+};
+
+// Full screen list skeleton
+Skeleton.List = function SkeletonList({
+  count = 5,
+  itemHeight = 80,
+  gap = Layout.spacing.md,
+}: {
+  count?: number;
+  itemHeight?: number;
+  gap?: number;
+}) {
+  return (
+    <View style={{ gap }}>
+      {Array.from({ length: count }).map((_, index) => (
+        <Skeleton key={index} variant="card" height={itemHeight} />
+      ))}
+    </View>
+  );
+};
+
+// Provider detail page skeleton
+Skeleton.ProviderDetail = function SkeletonProviderDetail() {
+  const colors = useColors();
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      {/* Gallery */}
+      <SkeletonBase width="100%" height={300} borderRadius={0} />
+
+      <View style={{ padding: Layout.spacing.lg }}>
+        {/* Business name */}
+        <SkeletonBase width="65%" height={24} style={{ marginBottom: Layout.spacing.sm }} />
+
+        {/* Category + Follow */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: Layout.spacing.sm, marginBottom: Layout.spacing.md }}>
+          <SkeletonBase width={110} height={28} borderRadius={Layout.radius.full} />
+          <SkeletonBase width={70} height={28} borderRadius={Layout.radius.full} />
+        </View>
+
+        {/* Rating row */}
+        <View style={{ flexDirection: 'row', gap: Layout.spacing.sm, marginBottom: Layout.spacing.sm }}>
+          <SkeletonBase width={90} height={16} />
+          <SkeletonBase width={50} height={16} />
+        </View>
+
+        {/* Location */}
+        <SkeletonBase width="40%" height={14} style={{ marginBottom: Layout.spacing.lg }} />
+
+        {/* Trust indicators (3 cards) */}
+        <View style={{ flexDirection: 'row', gap: Layout.spacing.sm, marginBottom: Layout.spacing.xl }}>
+          {Array.from({ length: 3 }).map((_, i) => (
+            <View key={i} style={{ flex: 1, backgroundColor: colors.card, borderRadius: Layout.radius.lg, padding: Layout.spacing.md, alignItems: 'center', gap: Layout.spacing.xs }}>
+              <SkeletonBase width={32} height={32} borderRadius={16} />
+              <SkeletonBase width={50} height={14} />
+              <SkeletonBase width={70} height={10} />
+            </View>
+          ))}
+        </View>
+
+        {/* Description section */}
+        <SkeletonBase width={100} height={18} style={{ marginBottom: Layout.spacing.md }} />
+        <Skeleton variant="text" lines={3} lineHeight={14} />
+
+        {/* Services section */}
+        <SkeletonBase width={80} height={18} style={{ marginTop: Layout.spacing.xl, marginBottom: Layout.spacing.md }} />
+        {Array.from({ length: 3 }).map((_, i) => (
+          <View key={i} style={{ backgroundColor: colors.card, borderRadius: Layout.radius.lg, padding: Layout.spacing.md, marginBottom: Layout.spacing.sm }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <View style={{ flex: 1, gap: Layout.spacing.xs }}>
+                <SkeletonBase width="60%" height={16} />
+                <SkeletonBase width="80%" height={12} />
+                <SkeletonBase width={60} height={12} />
+              </View>
+              <SkeletonBase width={60} height={18} />
+            </View>
+          </View>
+        ))}
+
+        {/* Reviews section */}
+        <SkeletonBase width={50} height={18} style={{ marginTop: Layout.spacing.xl, marginBottom: Layout.spacing.md }} />
+        {Array.from({ length: 2 }).map((_, i) => (
+          <View key={i} style={{ backgroundColor: colors.card, borderRadius: Layout.radius.lg, padding: Layout.spacing.md, marginBottom: Layout.spacing.sm }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: Layout.spacing.sm, marginBottom: Layout.spacing.sm }}>
+              <SkeletonBase width={40} height={40} borderRadius={20} />
+              <View style={{ flex: 1, gap: Layout.spacing.xs }}>
+                <SkeletonBase width={100} height={14} />
+                <SkeletonBase width={70} height={12} />
+              </View>
+              <SkeletonBase width={60} height={12} />
+            </View>
+            <Skeleton variant="text" lines={2} lineHeight={12} />
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
   container: {
     overflow: 'hidden',
@@ -274,5 +450,80 @@ const styles = StyleSheet.create({
   avatarText: {
     marginLeft: Layout.spacing.md,
     flex: 1,
+  },
+  // Conversation item
+  conversationItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: Layout.spacing.md,
+    paddingHorizontal: Layout.spacing.lg,
+    borderBottomWidth: 1,
+  },
+  conversationContent: {
+    flex: 1,
+    marginLeft: Layout.spacing.md,
+  },
+  conversationHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  // Booking card
+  bookingCard: {
+    borderRadius: Layout.radius.xl,
+    padding: Layout.spacing.lg,
+    marginBottom: Layout.spacing.md,
+  },
+  bookingHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  bookingHeaderText: {
+    flex: 1,
+    marginLeft: Layout.spacing.md,
+  },
+  bookingDetails: {
+    marginTop: Layout.spacing.md,
+    paddingTop: Layout.spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.05)',
+  },
+  // Checklist item
+  checklistItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: Layout.spacing.sm,
+    borderBottomWidth: 1,
+    gap: Layout.spacing.md,
+  },
+  checklistContent: {
+    flex: 1,
+  },
+  // Home header
+  homeHeader: {
+    paddingHorizontal: Layout.spacing.lg,
+    paddingTop: Layout.spacing.md,
+  },
+  welcomeSection: {
+    marginBottom: Layout.spacing.lg,
+  },
+  countdownCard: {
+    borderRadius: Layout.radius.xl,
+    padding: Layout.spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Layout.spacing.lg,
+  },
+  countdownContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Layout.spacing.md,
+  },
+  countdownText: {
+    gap: 4,
+  },
+  countdownNumber: {
+    alignItems: 'center',
   },
 });

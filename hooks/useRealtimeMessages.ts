@@ -9,6 +9,32 @@ import { useAuthStore } from '@/stores/authStore';
 import { Config } from '@/constants/Config';
 import { MessageWithSender } from '@/types';
 
+type RealtimeStatus = 'SUBSCRIBED' | 'TIMED_OUT' | 'CLOSED' | 'CHANNEL_ERROR';
+
+function subscribeWithRetry(
+  channel: ReturnType<typeof supabase.channel>,
+  channelName: string,
+  retryCount = 0,
+  maxRetries = 3
+) {
+  const retryDelay = Math.min(2000 * Math.pow(2, retryCount), 16000);
+
+  channel.subscribe((status: RealtimeStatus, err?: Error) => {
+    if (status === 'SUBSCRIBED') {
+      if (__DEV__) console.log(`[Realtime] ${channelName} subscribed`);
+    } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+      if (__DEV__) console.warn(`[Realtime] ${channelName} error (${status}):`, err?.message);
+
+      if (retryCount < maxRetries) {
+        setTimeout(() => {
+          if (__DEV__) console.log(`[Realtime] Retrying ${channelName} (attempt ${retryCount + 1}/${maxRetries})...`);
+          supabase.removeChannel(channel);
+        }, retryDelay);
+      }
+    }
+  });
+}
+
 /**
  * Subscribe to new messages in a specific conversation.
  * Adds incoming messages to the React Query cache in real time.
@@ -50,6 +76,9 @@ export function useRealtimeMessages(conversationId: string | undefined) {
             content: newMsg.content,
             read_at: newMsg.read_at,
             created_at: newMsg.created_at,
+            deleted_for_all: newMsg.deleted_for_all ?? false,
+            deleted_for_all_at: newMsg.deleted_for_all_at ?? null,
+            deleted_for_all_by: newMsg.deleted_for_all_by ?? null,
             sender: sender || undefined,
           };
 
@@ -94,7 +123,7 @@ export function useRealtimeMessages(conversationId: string | undefined) {
         (payload) => {
           const updated = payload.new as any;
 
-          // Update read_at in cache (for read receipts)
+          // Update message in cache (read receipts + soft deletion for everyone)
           queryClient.setQueryData(
             ['messages', conversationId],
             (oldData: any) => {
@@ -103,7 +132,14 @@ export function useRealtimeMessages(conversationId: string | undefined) {
               const newPages = oldData.pages.map((page: MessageWithSender[]) =>
                 page.map((msg) =>
                   msg.id === updated.id
-                    ? { ...msg, read_at: updated.read_at }
+                    ? {
+                        ...msg,
+                        content: updated.content,
+                        read_at: updated.read_at,
+                        deleted_for_all: updated.deleted_for_all ?? false,
+                        deleted_for_all_at: updated.deleted_for_all_at ?? null,
+                        deleted_for_all_by: updated.deleted_for_all_by ?? null,
+                      }
                     : msg
                 )
               );
@@ -111,8 +147,9 @@ export function useRealtimeMessages(conversationId: string | undefined) {
             }
           );
         }
-      )
-      .subscribe();
+      );
+
+    subscribeWithRetry(channel, `messages:${conversationId}`);
 
     return () => {
       supabase.removeChannel(channel);
@@ -136,6 +173,24 @@ export function useRealtimeConversations() {
       .on(
         'postgres_changes',
         {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'messages',
+        },
+        (payload) => {
+          const next = payload.new as any;
+          const prev = payload.old as any;
+
+          if (next.deleted_for_all !== prev.deleted_for_all || next.content !== prev.content) {
+            queryClient.invalidateQueries({
+              queryKey: [Config.cacheKeys.conversations],
+            });
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
           event: 'INSERT',
           schema: 'public',
           table: 'messages',
@@ -151,8 +206,9 @@ export function useRealtimeConversations() {
             queryKey: [Config.cacheKeys.conversations],
           });
         }
-      )
-      .subscribe();
+      );
+
+    subscribeWithRetry(channel, 'user-conversations');
 
     return () => {
       supabase.removeChannel(channel);

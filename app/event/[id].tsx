@@ -14,13 +14,20 @@ import { formatDate, formatPrice } from '@/lib/utils';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import {
   Calendar,
+  CheckSquare,
+  ChevronRight,
+  Clock,
   FileText,
+  Grid3X3,
   MapPin,
   Plus,
   Trash2,
   Users,
+  UserPlus,
   Wallet,
 } from 'lucide-react-native';
+import Animated, { FadeInRight } from 'react-native-reanimated';
+import { PressableScale } from '@/components/ui/PressableScale';
 import React from 'react';
 import {
   Alert,
@@ -32,6 +39,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { goBackOrFallback } from '@/lib/navigation';
 
 export default function EventDetailScreen() {
   const router = useRouter();
@@ -52,7 +60,7 @@ export default function EventDetailScreen() {
           style: 'destructive',
           onPress: () => {
             deleteEvent(id!, {
-              onSuccess: () => router.back(),
+              onSuccess: () => goBackOrFallback(router),
               onError: (error) => {
                 Alert.alert('Erreur', error.message);
               },
@@ -72,7 +80,7 @@ export default function EventDetailScreen() {
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.errorContainer}>
           <Text style={[styles.errorText, { color: colors.textSecondary }]}>Événement non trouvé</Text>
-          <Button title="Retour" onPress={() => router.back()} variant="outline" />
+          <Button title="Retour" onPress={() => goBackOrFallback(router)} variant="outline" />
         </View>
       </SafeAreaView>
     );
@@ -154,6 +162,37 @@ export default function EventDetailScreen() {
               <Text style={[styles.detailText, { color: colors.text }]}>{event.notes}</Text>
             </View>
           )}
+        </View>
+
+        {/* Planning Tools Section */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: Layout.spacing.md }]}>
+            Outils de planification
+          </Text>
+          <View style={styles.toolsGrid}>
+            {[
+              { icon: Wallet, label: 'Budget', color: '#10B981', route: `/event/${id}/budget` },
+              { icon: Users, label: 'Invités', color: '#3B82F6', route: `/event/${id}/guests` },
+              { icon: Grid3X3, label: 'Plan de table', color: '#8B5CF6', route: `/event/${id}/seating` },
+              { icon: Clock, label: 'Timeline', color: '#F59E0B', route: `/event/${id}/timeline` },
+              { icon: CheckSquare, label: 'Checklist', color: '#EC4899', route: `/event/${id}/checklist` },
+              { icon: UserPlus, label: 'Partager', color: '#14B8A6', route: `/event/${id}/collaborators` },
+            ].map((tool, index) => (
+              <Animated.View key={tool.label} entering={FadeInRight.delay(index * 50)}>
+                <PressableScale
+                  onPress={() => router.push(tool.route as any)}
+                  haptic="light"
+                  style={[styles.toolCard, { backgroundColor: colors.card }]}
+                >
+                  <View style={[styles.toolIconCircle, { backgroundColor: `${tool.color}20` }]}>
+                    <tool.icon size={22} color={tool.color} />
+                  </View>
+                  <Text style={[styles.toolLabel, { color: colors.text }]}>{tool.label}</Text>
+                  <ChevronRight size={18} color={colors.textTertiary} />
+                </PressableScale>
+              </Animated.View>
+            ))}
+          </View>
         </View>
 
         {/* Bookings Section */}
@@ -284,5 +323,27 @@ const styles = StyleSheet.create({
   },
   findButton: {
     minWidth: 180,
+  },
+  toolsGrid: {
+    gap: Layout.spacing.sm,
+  },
+  toolCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Layout.spacing.md,
+    borderRadius: Layout.radius.lg,
+    gap: Layout.spacing.md,
+  },
+  toolIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  toolLabel: {
+    flex: 1,
+    fontSize: Layout.fontSize.md,
+    fontWeight: '600',
   },
 });

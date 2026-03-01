@@ -137,12 +137,14 @@ export function useToggleFavorite() {
       if (!userId) throw new Error('User not authenticated');
 
       // Vérifier si déjà en favoris
-      const { data: existing } = await supabase
+      const { data: existing, error: existingError } = await supabase
         .from('favorites')
         .select('id')
         .eq('user_id', userId)
         .eq('provider_id', providerId)
-        .single();
+        .maybeSingle();
+
+      if (existingError) throw existingError;
 
       if (existing) {
         // Supprimer des favoris

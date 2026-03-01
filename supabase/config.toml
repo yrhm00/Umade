@@ -1,0 +1,16 @@
+project_id = "umade"
+
+[functions.create-booking-checkout]
+verify_jwt = false
+
+[functions.stripe-webhook-bookings]
+verify_jwt = false
+
+[functions.checkout-return]
+verify_jwt = false
+
+[functions.provider-connect-onboarding]
+verify_jwt = false
+
+[functions.provider-request-payout]
+verify_jwt = false

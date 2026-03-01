@@ -11,14 +11,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { useFindOrCreateConversation } from '@/hooks/useConversations';
 import { useInspirationFavoriteActions } from '@/hooks/useInspirationFavorites';
-import { useSendMessage } from '@/hooks/useMessages';
 import {
   InspirationDetail as InspirationDetailType,
   InspirationImage,
   getEventTypeLabel,
   getStyleLabel,
 } from '@/types/inspiration';
-import { BlurView } from 'expo-blur';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import {
@@ -40,6 +38,8 @@ import {
   ViewToken,
 } from 'react-native';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { goBackOrFallback } from '@/lib/navigation';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -54,6 +54,7 @@ export function InspirationDetail({
 }: InspirationDetailProps) {
   const colors = useColors();
   const isDark = useIsDarkTheme();
+  const insets = useSafeAreaInsets();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isContacting, setIsContacting] = useState(false);
   const { isFavorite, toggleFavorite, isLoading } = useInspirationFavoriteActions();
@@ -62,7 +63,6 @@ export function InspirationDetail({
 
   const { userId, isAuthenticated } = useAuth();
   const { mutateAsync: findOrCreateConversation } = useFindOrCreateConversation();
-  const { mutateAsync: sendMessage } = useSendMessage();
 
   const images = inspiration.inspiration_images || [];
 
@@ -119,21 +119,21 @@ export function InspirationDetail({
       // 1. Find or create conversation with provider
       const conversation = await findOrCreateConversation(inspiration.providers!.id);
 
-      // 2. Send inspiration context message
-      const contextMessage = JSON.stringify({
+      // 2. Prepare inspiration context to pass as query param (not sent yet)
+      const inspirationContext = {
         type: 'inspiration_context',
         inspiration_id: inspiration.id,
         title: inspiration.title || 'Inspiration',
         image_url: images[0]?.image_url || '',
-      });
+      };
 
-      await sendMessage({
-        conversation_id: conversation.id,
-        content: contextMessage,
-      });
-
-      // 3. Navigate to chat
-      router.push(`/chat/${conversation.id}` as any);
+      // 3. Navigate to chat with inspiration attached (not sent)
+      router.push({
+        pathname: `/chat/${conversation.id}`,
+        params: {
+          pendingInspiration: JSON.stringify(inspirationContext),
+        },
+      } as any);
     } catch (error) {
       console.error('Error contacting provider:', error);
       Alert.alert('Erreur', 'Impossible de démarrer la conversation. Veuillez réessayer.');
@@ -146,7 +146,7 @@ export function InspirationDetail({
     if (onClose) {
       onClose();
     } else {
-      router.back();
+      goBackOrFallback(router);
     }
   };
 
@@ -183,7 +183,7 @@ export function InspirationDetail({
           entering={FadeIn.delay(200)}
           style={styles.headerOverlay}
         >
-          <BlurView intensity={40} tint="dark" style={styles.headerBlur}>
+          <View style={[styles.headerBar, { paddingTop: insets.top + Layout.spacing.sm }]}>
             <PressableScale onPress={handleBack} haptic="light">
               <View style={styles.iconButton}>
                 <ChevronLeft size={24} color={Colors.white} />
@@ -206,7 +206,7 @@ export function InspirationDetail({
                 </View>
               </PressableScale>
             </View>
-          </BlurView>
+          </View>
         </Animated.View>
 
         {/* Pagination dots */}
@@ -227,7 +227,7 @@ export function InspirationDetail({
 
       {/* Contenu */}
       <Animated.ScrollView
-        entering={FadeInUp.delay(300).springify()}
+        entering={FadeInUp.delay(300).duration(260)}
         style={styles.content}
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
@@ -350,11 +350,10 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 10,
   },
-  headerBlur: {
+  headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 50,
     paddingHorizontal: Layout.spacing.md,
     paddingBottom: Layout.spacing.md,
   },

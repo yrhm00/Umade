@@ -20,6 +20,7 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { goBackOrFallback } from '@/lib/navigation';
 
 const AVAILABILITY_STORAGE_KEY = '@umade_provider_availability';
 
@@ -152,7 +153,7 @@ export default function ProviderAvailabilityScreen() {
             }
 
             Alert.alert('Succès', 'Vos disponibilités ont été enregistrées et sont maintenant visibles pour les clients.', [
-                { text: 'OK', onPress: () => router.back() },
+                { text: 'OK', onPress: () => goBackOrFallback(router) },
             ]);
         } catch (error) {
             console.error('Error saving schedule:', error);
@@ -380,7 +381,7 @@ export default function ProviderAvailabilityScreen() {
             <View style={styles.header}>
                 <TouchableOpacity
                     style={styles.backButton}
-                    onPress={() => router.back()}
+                    onPress={() => goBackOrFallback(router)}
                 >
                     <ArrowLeft size={24} color={Colors.text.primary} />
                 </TouchableOpacity>
@@ -619,7 +620,7 @@ const styles = StyleSheet.create({
     },
     statusTextOpen: {
         fontSize: 14,
-        color: Colors.success,
+        color: Colors.success.DEFAULT,
         fontWeight: '500',
     },
     statusTextClosed: {
@@ -663,4 +664,4 @@ const styles = StyleSheet.create({
         color: Colors.text.secondary,
         marginTop: 2,
     },
-});
+}) as any;

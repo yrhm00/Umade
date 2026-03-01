@@ -3,7 +3,7 @@ import { Colors } from '@/constants/Colors';
 import { useTotalUnreadCount } from '@/hooks/useConversations';
 import { useAuthStore } from '@/stores/authStore';
 import { Redirect, Tabs } from 'expo-router';
-import { Calendar, MessageCircle, Search, User, Sparkles } from 'lucide-react-native';
+import { Calendar, MessageCircle, Search, User, Home } from 'lucide-react-native';
 import React from 'react';
 
 
@@ -20,7 +20,7 @@ export default function TabLayout() {
 
   // Connecté mais pas onboardé → rediriger vers l'onboarding
   if (!isOnboarded) {
-    return <Redirect href="/onboarding" />;
+    return <Redirect href={"/onboarding/event-type" as any} />;
   }
 
   // Prestataire → rediriger vers le dashboard provider
@@ -41,9 +41,9 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Inspirations',
+          title: 'Accueil',
           tabBarIcon: ({ color, size }) => (
-            <Sparkles size={size} color={color} />
+            <Home size={size} color={color} />
           ),
         }}
       />

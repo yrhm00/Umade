@@ -14,25 +14,60 @@ const MESSAGES_PER_PAGE = 30;
 
 async function fetchMessages(
   conversationId: string,
+  userId: string,
   cursor?: string
 ): Promise<MessageWithSender[]> {
-  let query = supabase
-    .from('messages')
-    .select(`
-      *,
-      sender:profiles!messages_sender_id_fkey(id, full_name, avatar_url)
-    `)
-    .eq('conversation_id', conversationId)
-    .order('created_at', { ascending: false })
-    .limit(MESSAGES_PER_PAGE);
+  const visibleMessages: MessageWithSender[] = [];
+  let batchCursor = cursor;
+  let hasMoreBatches = true;
 
-  if (cursor) {
-    query = query.lt('created_at', cursor);
+  while (hasMoreBatches && visibleMessages.length < MESSAGES_PER_PAGE) {
+    let query = supabase
+      .from('messages')
+      .select(`
+        *,
+        sender:profiles!messages_sender_id_fkey(id, full_name, avatar_url)
+      `)
+      .eq('conversation_id', conversationId)
+      .order('created_at', { ascending: false })
+      .limit(MESSAGES_PER_PAGE);
+
+    if (batchCursor) {
+      query = query.lt('created_at', batchCursor);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    const batch = (data as MessageWithSender[]) || [];
+    if (batch.length === 0) break;
+
+    let filteredBatch = batch;
+    if (userId) {
+      const messageIds = batch.map((msg) => msg.id);
+      const { data: hiddenMessages, error: hiddenError } = await supabase
+        .from('message_deletions')
+        .select('message_id')
+        .eq('user_id', userId)
+        .in('message_id', messageIds);
+
+      if (hiddenError) throw hiddenError;
+
+      const hiddenSet = new Set((hiddenMessages || []).map((item) => item.message_id));
+      filteredBatch = batch.filter((msg) => !hiddenSet.has(msg.id));
+    }
+
+    visibleMessages.push(...filteredBatch);
+
+    if (batch.length < MESSAGES_PER_PAGE) {
+      hasMoreBatches = false;
+    } else {
+      batchCursor = batch[batch.length - 1]?.created_at ?? undefined;
+      if (!batchCursor) hasMoreBatches = false;
+    }
   }
 
-  const { data, error } = await query;
-  if (error) throw error;
-  return (data as MessageWithSender[]) || [];
+  return visibleMessages.slice(0, MESSAGES_PER_PAGE);
 }
 
 async function sendMessage(
@@ -65,7 +100,35 @@ async function markMessagesAsRead(
     .update({ read_at: new Date().toISOString() })
     .eq('conversation_id', conversationId)
     .neq('sender_id', userId)
+    .eq('deleted_for_all', false)
     .is('read_at', null);
+
+  if (error) throw error;
+}
+
+async function deleteMessageForEveryone(
+  messageId: string
+): Promise<void> {
+  const { error } = await supabase.rpc('delete_message_for_everyone' as any, {
+    target_message_id: messageId,
+  });
+
+  if (error) throw error;
+}
+
+async function deleteMessageForMe(
+  messageId: string,
+  userId: string
+): Promise<void> {
+  const { error } = await supabase
+    .from('message_deletions')
+    .upsert(
+      {
+        message_id: messageId,
+        user_id: userId,
+      },
+      { onConflict: 'message_id,user_id' }
+    );
 
   if (error) throw error;
 }
@@ -73,15 +136,17 @@ async function markMessagesAsRead(
 // === HOOKS ===
 
 export function useMessages(conversationId: string | undefined) {
+  const { userId } = useAuth();
+
   return useInfiniteQuery({
     queryKey: ['messages', conversationId],
-    queryFn: ({ pageParam }) => fetchMessages(conversationId!, pageParam),
+    queryFn: ({ pageParam }) => fetchMessages(conversationId!, userId!, pageParam),
     getNextPageParam: (lastPage) => {
       if (lastPage.length < MESSAGES_PER_PAGE) return undefined;
       return lastPage[lastPage.length - 1]?.created_at ?? undefined;
     },
     initialPageParam: undefined as string | undefined,
-    enabled: !!conversationId,
+    enabled: !!conversationId && !!userId,
     staleTime: 1000 * 60,
   });
 }
@@ -166,6 +231,97 @@ export function useMarkAsRead() {
       queryClient.invalidateQueries({
         queryKey: [Config.cacheKeys.conversations],
       });
+    },
+  });
+}
+
+export function useDeleteMessageForEveryone() {
+  const queryClient = useQueryClient();
+  const { userId } = useAuth();
+
+  return useMutation({
+    mutationFn: ({
+      conversationId,
+      messageId,
+    }: {
+      conversationId: string;
+      messageId: string;
+    }) => deleteMessageForEveryone(messageId),
+    onMutate: async ({ conversationId, messageId }) => {
+      await queryClient.cancelQueries({ queryKey: ['messages', conversationId] });
+      const previousData = queryClient.getQueryData(['messages', conversationId]);
+
+      queryClient.setQueryData(['messages', conversationId], (oldData: any) => {
+        if (!oldData) return oldData;
+
+        const now = new Date().toISOString();
+        const newPages = oldData.pages.map((page: MessageWithSender[]) =>
+          page.map((msg) =>
+            msg.id === messageId
+              ? {
+                  ...msg,
+                  content: '',
+                  deleted_for_all: true,
+                  deleted_for_all_at: now,
+                  deleted_for_all_by: userId ?? null,
+                }
+              : msg
+          )
+        );
+
+        return { ...oldData, pages: newPages };
+      });
+
+      return { previousData, conversationId };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousData && context?.conversationId) {
+        queryClient.setQueryData(['messages', context.conversationId], context.previousData);
+      }
+    },
+    onSettled: (_data, _error, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['messages', vars.conversationId] });
+      queryClient.invalidateQueries({ queryKey: [Config.cacheKeys.conversations] });
+    },
+  });
+}
+
+export function useDeleteMessageForMe() {
+  const queryClient = useQueryClient();
+  const { userId } = useAuth();
+
+  return useMutation({
+    mutationFn: ({
+      conversationId,
+      messageId,
+    }: {
+      conversationId: string;
+      messageId: string;
+    }) => deleteMessageForMe(messageId, userId!),
+    onMutate: async ({ conversationId, messageId }) => {
+      await queryClient.cancelQueries({ queryKey: ['messages', conversationId] });
+      const previousData = queryClient.getQueryData(['messages', conversationId]);
+
+      queryClient.setQueryData(['messages', conversationId], (oldData: any) => {
+        if (!oldData) return oldData;
+
+        const newPages = oldData.pages.map((page: MessageWithSender[]) =>
+          page.filter((msg) => msg.id !== messageId)
+        );
+
+        return { ...oldData, pages: newPages };
+      });
+
+      return { previousData, conversationId };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousData && context?.conversationId) {
+        queryClient.setQueryData(['messages', context.conversationId], context.previousData);
+      }
+    },
+    onSettled: (_data, _error, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['messages', vars.conversationId] });
+      queryClient.invalidateQueries({ queryKey: [Config.cacheKeys.conversations] });
     },
   });
 }

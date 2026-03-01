@@ -19,6 +19,7 @@ import {
 } from 'react-native';
 import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { goBackOrFallback } from '@/lib/navigation';
 
 interface PortfolioImage {
     id: string;
@@ -232,7 +233,7 @@ export default function ProviderPortfolioScreen() {
                         style={styles.deleteButton}
                         onPress={() => handleDelete(item.id)}
                     >
-                        <Trash2 size={20} color={Colors.error} />
+                        <Trash2 size={20} color={Colors.error.DEFAULT} />
                     </TouchableOpacity>
                 </TouchableOpacity>
             </ScaleDecorator>
@@ -247,7 +248,7 @@ export default function ProviderPortfolioScreen() {
         <SafeAreaView style={styles.container} edges={['top']}>
             {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                <TouchableOpacity onPress={() => goBackOrFallback(router)} style={styles.backButton}>
                     <ArrowLeft size={24} color={Colors.text.primary} />
                 </TouchableOpacity>
                 <Text style={styles.title}>Mon Portfolio</Text>

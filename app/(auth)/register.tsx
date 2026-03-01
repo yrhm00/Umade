@@ -18,6 +18,7 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { goBackOrFallback } from '@/lib/navigation';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -93,7 +94,7 @@ export default function RegisterScreen() {
           <View style={styles.header}>
             <TouchableOpacity
               style={styles.backButton}
-              onPress={() => router.back()}
+              onPress={() => goBackOrFallback(router)}
             >
               <ArrowLeft size={24} color={Colors.text.primary} />
             </TouchableOpacity>

@@ -14,15 +14,16 @@ import {
   InspirationFilters,
   InspirationStyle,
 } from '@/types/inspiration';
-import BottomSheet, {
+import {
   BottomSheetBackdrop,
+  BottomSheetModal,
+  BottomSheetScrollView,
   BottomSheetView,
 } from '@gorhom/bottom-sheet';
 import { Check, X } from 'lucide-react-native';
 import React, { forwardRef, useCallback, useMemo } from 'react';
 import {
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -35,9 +36,9 @@ interface FilterSheetProps {
   onClose: () => void;
 }
 
-export const FilterSheet = forwardRef<BottomSheet, FilterSheetProps>(
+export const FilterSheet = forwardRef<BottomSheetModal, FilterSheetProps>(
   function FilterSheet({ filters, onFiltersChange, onClose }, ref) {
-    const snapPoints = useMemo(() => ['75%'], []);
+    const snapPoints = useMemo(() => ['85%'], []);
     const insets = useSafeAreaInsets();
     const colors = useColors();
     const isDark = useIsDarkTheme();
@@ -89,20 +90,24 @@ export const FilterSheet = forwardRef<BottomSheet, FilterSheetProps>(
     };
 
     const hasFilters = (filters.event_types?.length ?? 0) > 0 || (filters.styles?.length ?? 0) > 0;
+    // The custom LiquidTabBar is a floating overlay (height 70 + 10px offset).
+    // Add extra bottom padding so the CTA is never covered by it.
+    const tabBarOverlayHeight = 80;
 
     return (
-      <BottomSheet
+      <BottomSheetModal
         ref={ref}
-        index={-1}
+        index={0}
         snapPoints={snapPoints}
         enablePanDownToClose
+        enableDynamicSizing={false}
         backdropComponent={renderBackdrop}
         backgroundStyle={[styles.sheetBackground, { backgroundColor: colors.background }]}
         handleIndicatorStyle={[styles.handleIndicator, { backgroundColor: colors.border }]}
       >
         <BottomSheetView style={styles.container}>
           {/* Header */}
-          <View style={[styles.header, { borderBottomColor: colors.border }]}>
+          <View style={styles.header}>
             <Text style={[styles.headerTitle, { color: colors.text }]}>Filtres</Text>
             <PressableScale onPress={onClose} haptic="light">
               <View style={[styles.closeButton, { backgroundColor: isDark ? colors.backgroundTertiary : Colors.gray[100] }]}>
@@ -111,8 +116,9 @@ export const FilterSheet = forwardRef<BottomSheet, FilterSheetProps>(
             </PressableScale>
           </View>
 
-          <ScrollView
+          <BottomSheetScrollView
             style={styles.content}
+            contentContainerStyle={{ paddingBottom: Layout.spacing.xl + insets.bottom + tabBarOverlayHeight }}
             showsVerticalScrollIndicator={false}
           >
             {/* Type d'evenement */}
@@ -144,12 +150,11 @@ export const FilterSheet = forwardRef<BottomSheet, FilterSheetProps>(
                 ))}
               </View>
             </View>
-          </ScrollView>
+          </BottomSheetScrollView>
 
           {/* Actions */}
           <View style={[styles.actions, {
-            paddingBottom: Math.max(insets.bottom, Layout.spacing.xl) + Layout.spacing.md,
-            borderTopColor: colors.border
+            paddingBottom: Math.max(insets.bottom + tabBarOverlayHeight, Layout.spacing.md),
           }]}>
             {hasFilters && (
               <AnimatedButton
@@ -169,7 +174,7 @@ export const FilterSheet = forwardRef<BottomSheet, FilterSheetProps>(
             />
           </View>
         </BottomSheetView>
-      </BottomSheet>
+      </BottomSheetModal>
     );
   }
 );
@@ -234,7 +239,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingBottom: Layout.spacing.md,
-    borderBottomWidth: 1,
   },
   headerTitle: {
     fontSize: Layout.fontSize.xl,
@@ -283,7 +287,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: Layout.spacing.md,
     paddingVertical: Layout.spacing.lg,
-    borderTopWidth: 1,
+    borderTopWidth: 0,
   },
   resetButton: {
     flex: 1,

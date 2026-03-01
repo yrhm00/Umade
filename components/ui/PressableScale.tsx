@@ -1,12 +1,12 @@
 import React, { useCallback } from 'react';
 import { Pressable, PressableProps, ViewStyle, StyleProp } from 'react-native';
 import Animated, {
+  Easing,
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
+  withTiming,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { SpringConfigs } from '@/constants/Animations';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -23,7 +23,7 @@ interface PressableScaleProps extends Omit<PressableProps, 'style'> {
 export function PressableScale({
   children,
   style,
-  scale = 0.97,
+  scale = 0.985,
   haptic = 'light',
   disabled = false,
   onPressIn,
@@ -58,7 +58,10 @@ export function PressableScale({
 
   const handlePressIn = useCallback(
     (e: any) => {
-      scaleValue.value = withSpring(scale, SpringConfigs.stiff);
+      scaleValue.value = withTiming(scale, {
+        duration: 120,
+        easing: Easing.out(Easing.quad),
+      });
       onPressIn?.(e);
     },
     [scale, onPressIn]
@@ -66,7 +69,10 @@ export function PressableScale({
 
   const handlePressOut = useCallback(
     (e: any) => {
-      scaleValue.value = withSpring(1, SpringConfigs.stiff);
+      scaleValue.value = withTiming(1, {
+        duration: 180,
+        easing: Easing.out(Easing.cubic),
+      });
       onPressOut?.(e);
     },
     [onPressOut]

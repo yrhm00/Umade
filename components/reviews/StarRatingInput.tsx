@@ -1,8 +1,9 @@
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import Animated, {
+  Easing,
   useAnimatedStyle,
-  withSpring,
+  withTiming,
 } from 'react-native-reanimated';
 import { Star } from 'lucide-react-native';
 import { Colors } from '@/constants/Colors';
@@ -34,9 +35,9 @@ function StarButton({
     return {
       transform: [
         {
-          scale: withSpring(isSelected ? 1.1 : 1, {
-            damping: 10,
-            stiffness: 100,
+          scale: withTiming(isSelected ? 1.08 : 1, {
+            duration: 180,
+            easing: Easing.out(Easing.cubic),
           }),
         },
       ],

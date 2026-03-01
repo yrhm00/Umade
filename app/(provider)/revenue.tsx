@@ -24,6 +24,7 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { goBackOrFallback } from '@/lib/navigation';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const CHART_HEIGHT = 150;
@@ -228,7 +229,7 @@ export default function ProviderRevenueScreen() {
             <View style={styles.header}>
                 <TouchableOpacity
                     style={styles.backButton}
-                    onPress={() => router.back()}
+                    onPress={() => goBackOrFallback(router)}
                 >
                     <ArrowLeft size={24} color={Colors.text.primary} />
                 </TouchableOpacity>

@@ -3,6 +3,7 @@
  */
 
 import { Colors } from '@/constants/Colors';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'expo-router';
 import {
@@ -14,6 +15,7 @@ import {
     FileText,
     HelpCircle,
     LogOut,
+    Palette,
     Shield,
     Star,
     User,
@@ -29,6 +31,7 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { goBackOrFallback } from '@/lib/navigation';
 
 interface SettingItem {
     icon: React.ElementType;
@@ -46,6 +49,8 @@ interface SettingSection {
 
 export default function ProviderSettingsScreen() {
     const router = useRouter();
+    const colors = useColors();
+    const isDark = useIsDarkTheme();
     const { profile, signOut } = useAuthStore();
 
     const handleLogout = () => {
@@ -104,6 +109,13 @@ export default function ProviderSettingsScreen() {
                     showChevron: true,
                 },
                 {
+                    icon: Palette,
+                    label: 'Apparence',
+                    description: 'Mode clair, sombre, OLED ou système',
+                    onPress: () => router.push('/settings/appearance'),
+                    showChevron: true,
+                },
+                {
                     icon: CreditCard,
                     label: 'Paiements',
                     description: 'Coordonnées bancaires et historique',
@@ -155,50 +167,72 @@ export default function ProviderSettingsScreen() {
     const renderSettingItem = (item: SettingItem, index: number, isLast: boolean) => (
         <TouchableOpacity
             key={index}
-            style={[styles.settingItem, !isLast && styles.settingItemBorder]}
+            style={[
+                styles.settingItem,
+                !isLast && styles.settingItemBorder,
+                !isLast && { borderBottomColor: colors.border },
+            ]}
             onPress={item.onPress}
             activeOpacity={0.7}
         >
-            <View style={[styles.iconContainer, item.danger && styles.iconContainerDanger]}>
+            <View
+                style={[
+                    styles.iconContainer,
+                    { backgroundColor: `${colors.primary}12` },
+                    item.danger && styles.iconContainerDanger,
+                ]}
+            >
                 <item.icon
                     size={20}
-                    color={item.danger ? Colors.error.DEFAULT : Colors.primary.DEFAULT}
+                    color={item.danger ? colors.error : colors.primary}
                 />
             </View>
             <View style={styles.settingContent}>
-                <Text style={[styles.settingLabel, item.danger && styles.settingLabelDanger]}>
+                <Text
+                    style={[
+                        styles.settingLabel,
+                        { color: colors.text },
+                        item.danger && styles.settingLabelDanger,
+                        item.danger && { color: colors.error },
+                    ]}
+                >
                     {item.label}
                 </Text>
                 {item.description && (
-                    <Text style={styles.settingDescription}>{item.description}</Text>
+                    <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
+                        {item.description}
+                    </Text>
                 )}
             </View>
             {item.showChevron && (
-                <ChevronRight size={20} color={Colors.gray[400]} />
+                <ChevronRight size={20} color={colors.textTertiary} />
             )}
         </TouchableOpacity>
     );
 
     return (
-        <SafeAreaView style={styles.container} edges={['top']}>
-            <View style={styles.header}>
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+            <View style={[styles.header, { borderBottomColor: colors.border, backgroundColor: colors.background }]}>
                 <TouchableOpacity
-                    style={styles.backButton}
-                    onPress={() => router.back()}
+                    style={[
+                        styles.backButton,
+                        { backgroundColor: isDark ? colors.backgroundTertiary : colors.backgroundSecondary },
+                    ]}
+                    onPress={() => goBackOrFallback(router)}
                 >
-                    <ArrowLeft size={24} color={Colors.text.primary} />
+                    <ArrowLeft size={24} color={colors.text} />
                 </TouchableOpacity>
-                <Text style={styles.title}>Paramètres</Text>
+                <Text style={[styles.title, { color: colors.text }]}>Paramètres</Text>
                 <View style={styles.placeholder} />
             </View>
 
             <ScrollView
-                style={styles.content}
+                style={[styles.content, { backgroundColor: colors.background }]}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}
             >
                 {/* Profile Header */}
-                <View style={styles.profileCard}>
+                <View style={[styles.profileCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
                     <View style={styles.avatarContainer}>
                         {profile?.avatar_url ? (
                             <Image
@@ -207,14 +241,19 @@ export default function ProviderSettingsScreen() {
                                 resizeMode="cover"
                             />
                         ) : (
-                            <View style={styles.avatarPlaceholder}>
-                                <User size={32} color={Colors.gray[400]} />
+                            <View
+                                style={[
+                                    styles.avatarPlaceholder,
+                                    { backgroundColor: isDark ? colors.backgroundTertiary : colors.backgroundSecondary },
+                                ]}
+                            >
+                                <User size={32} color={colors.textTertiary} />
                             </View>
                         )}
                     </View>
                     <View style={styles.profileInfo}>
-                        <Text style={styles.profileName}>{profile?.full_name || 'Prestataire'}</Text>
-                        <Text style={styles.profileRole}>Compte Prestataire</Text>
+                        <Text style={[styles.profileName, { color: colors.text }]}>{profile?.full_name || 'Prestataire'}</Text>
+                        <Text style={[styles.profileRole, { color: colors.textSecondary }]}>Compte Prestataire</Text>
                     </View>
                 </View>
 
@@ -222,9 +261,9 @@ export default function ProviderSettingsScreen() {
                 {sections.map((section, sectionIndex) => (
                     <View key={sectionIndex} style={styles.section}>
                         {section.title && (
-                            <Text style={styles.sectionTitle}>{section.title}</Text>
+                            <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{section.title}</Text>
                         )}
-                        <View style={styles.sectionContent}>
+                        <View style={[styles.sectionContent, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
                             {section.items.map((item, itemIndex) =>
                                 renderSettingItem(item, itemIndex, itemIndex === section.items.length - 1)
                             )}
@@ -233,7 +272,7 @@ export default function ProviderSettingsScreen() {
                 ))}
 
                 {/* App Version */}
-                <Text style={styles.version}>Version 1.0.0</Text>
+                <Text style={[styles.version, { color: colors.textTertiary }]}>Version 1.0.0</Text>
             </ScrollView>
         </SafeAreaView>
     );
@@ -242,7 +281,6 @@ export default function ProviderSettingsScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: Colors.background.primary,
     },
     header: {
         flexDirection: 'row',
@@ -251,18 +289,17 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 12,
         borderBottomWidth: 1,
-        borderBottomColor: Colors.gray[100],
     },
     backButton: {
         width: 40,
         height: 40,
+        borderRadius: 20,
         alignItems: 'center',
         justifyContent: 'center',
     },
     title: {
         fontSize: 18,
         fontWeight: '600',
-        color: Colors.text.primary,
     },
     placeholder: {
         width: 40,
@@ -277,10 +314,10 @@ const styles = StyleSheet.create({
     profileCard: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: Colors.white,
         borderRadius: 16,
         padding: 16,
         marginBottom: 24,
+        borderWidth: 1,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.05,
@@ -299,7 +336,6 @@ const styles = StyleSheet.create({
         width: 64,
         height: 64,
         borderRadius: 32,
-        backgroundColor: Colors.gray[100],
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -309,11 +345,9 @@ const styles = StyleSheet.create({
     profileName: {
         fontSize: 18,
         fontWeight: '600',
-        color: Colors.text.primary,
     },
     profileRole: {
         fontSize: 14,
-        color: Colors.text.secondary,
         marginTop: 4,
     },
     section: {
@@ -322,15 +356,14 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 13,
         fontWeight: '600',
-        color: Colors.text.secondary,
         textTransform: 'uppercase',
         letterSpacing: 0.5,
         marginBottom: 8,
         marginLeft: 4,
     },
     sectionContent: {
-        backgroundColor: Colors.white,
         borderRadius: 12,
+        borderWidth: 1,
         overflow: 'hidden',
     },
     settingItem: {
@@ -340,13 +373,11 @@ const styles = StyleSheet.create({
     },
     settingItemBorder: {
         borderBottomWidth: 1,
-        borderBottomColor: Colors.gray[100],
     },
     iconContainer: {
         width: 40,
         height: 40,
         borderRadius: 10,
-        backgroundColor: Colors.primary.DEFAULT + '10',
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 12,
@@ -360,20 +391,17 @@ const styles = StyleSheet.create({
     settingLabel: {
         fontSize: 16,
         fontWeight: '500',
-        color: Colors.text.primary,
     },
     settingLabelDanger: {
         color: Colors.error.DEFAULT,
     },
     settingDescription: {
         fontSize: 13,
-        color: Colors.text.secondary,
         marginTop: 2,
     },
     version: {
         textAlign: 'center',
         fontSize: 13,
-        color: Colors.text.tertiary,
         marginTop: 16,
     },
 });

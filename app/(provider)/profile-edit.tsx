@@ -35,6 +35,7 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { goBackOrFallback } from '@/lib/navigation';
 
 interface ProviderData {
     id: string;
@@ -172,7 +173,7 @@ export default function ProviderProfileEditScreen() {
             queryClient.invalidateQueries({ queryKey: ['provider'] });
             refreshProfile();
             Alert.alert('Succès', 'Votre profil a été mis à jour', [
-                { text: 'OK', onPress: () => router.back() },
+                { text: 'OK', onPress: () => goBackOrFallback(router) },
             ]);
         },
         onError: (error) => {
@@ -327,7 +328,7 @@ export default function ProviderProfileEditScreen() {
                 <View style={styles.header}>
                     <TouchableOpacity
                         style={styles.backButton}
-                        onPress={() => router.back()}
+                        onPress={() => goBackOrFallback(router)}
                     >
                         <ArrowLeft size={24} color={Colors.text.primary} />
                     </TouchableOpacity>
