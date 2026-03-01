@@ -177,6 +177,9 @@ export interface MessageWithSender {
   content: string;
   read_at: string | null;
   created_at: string | null;
+  deleted_for_all?: boolean | null;
+  deleted_for_all_at?: string | null;
+  deleted_for_all_by?: string | null;
   sender?: {
     id: string;
     full_name: string | null;
@@ -202,9 +205,10 @@ export interface ConversationWithDetails {
     avatar_url: string | null;
   };
   last_message?: {
-    content: string;
+    content: string | null;
     sender_id: string;
     created_at: string | null;
+    deleted_for_all?: boolean | null;
   };
   unread_count: number;
 }

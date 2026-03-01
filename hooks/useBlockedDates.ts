@@ -31,7 +31,7 @@ export function useBlockedDates() {
                 .single();
 
             if (error) throw error;
-            return (data?.blocked_dates as BlockedPeriod[]) || [];
+            return ((data as any)?.blocked_dates as unknown as BlockedPeriod[]) || [];
         },
         enabled: !!userId,
     });
@@ -53,7 +53,7 @@ export function useProviderBlockedDates(providerId: string | undefined) {
                 .single();
 
             if (error) throw error;
-            return (data?.blocked_dates as BlockedPeriod[]) || [];
+            return ((data as any)?.blocked_dates as unknown as BlockedPeriod[]) || [];
         },
         enabled: !!providerId,
     });
@@ -79,7 +79,7 @@ export function useAddBlockedPeriod() {
 
             if (fetchError) throw fetchError;
 
-            const existingPeriods = (provider?.blocked_dates as BlockedPeriod[]) || [];
+            const existingPeriods = ((provider as any)?.blocked_dates as unknown as BlockedPeriod[]) || [];
             const updatedPeriods = [...existingPeriods, newPeriod];
 
             // Trier par date de début
@@ -88,7 +88,7 @@ export function useAddBlockedPeriod() {
             // Mettre à jour
             const { error: updateError } = await supabase
                 .from('providers')
-                .update({ blocked_dates: updatedPeriods })
+                .update({ blocked_dates: updatedPeriods as any })
                 .eq('id', provider.id);
 
             if (updateError) throw updateError;
@@ -110,7 +110,7 @@ export function useDeleteBlockedPeriod() {
     const { userId } = useAuth();
 
     return useMutation({
-        mutationFn: async (periodIndex: number) => {
+        mutationFn: async (periodToDelete: BlockedPeriod) => {
             if (!userId) throw new Error('Non authentifié');
 
             // Récupérer les périodes existantes
@@ -122,13 +122,16 @@ export function useDeleteBlockedPeriod() {
 
             if (fetchError) throw fetchError;
 
-            const existingPeriods = (provider?.blocked_dates as BlockedPeriod[]) || [];
-            const updatedPeriods = existingPeriods.filter((_, index) => index !== periodIndex);
+            const existingPeriods = ((provider as any)?.blocked_dates as unknown as BlockedPeriod[]) || [];
+            // Filtrer par identité (start + end) au lieu d'index pour éviter les suppressions incorrectes
+            const updatedPeriods = existingPeriods.filter(
+                (p) => !(p.start === periodToDelete.start && p.end === periodToDelete.end)
+            );
 
             // Mettre à jour
             const { error: updateError } = await supabase
                 .from('providers')
-                .update({ blocked_dates: updatedPeriods })
+                .update({ blocked_dates: updatedPeriods as any })
                 .eq('id', provider.id);
 
             if (updateError) throw updateError;

@@ -141,7 +141,7 @@ export function CreateInspirationForm({
           Photos <Text style={styles.required}>*</Text>
         </Text>
         <Text style={styles.sectionHint}>
-          Ajoutez jusqu'a 10 photos de votre realisation
+          Ajoutez jusqu'à 10 photos de votre réalisation
         </Text>
 
         <View style={styles.imagesGrid}>
@@ -192,7 +192,7 @@ export function CreateInspirationForm({
           style={[styles.input, styles.textArea]}
           value={description}
           onChangeText={setDescription}
-          placeholder="Decrivez votre realisation..."
+          placeholder="Décrivez votre réalisation..."
           placeholderTextColor={Colors.text.muted}
           multiline
           numberOfLines={4}

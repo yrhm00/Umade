@@ -6,6 +6,7 @@ import { Config } from '@/constants/Config';
 import { Booking, BookingStatus, InsertTables, supabase } from '@/lib/supabase';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from './useAuth';
+import { useMyProviderId } from './useMyProviderId';
 
 interface BookingWithDetails extends Booking {
   providers?: {
@@ -24,6 +25,10 @@ interface BookingWithDetails extends Booking {
   profiles?: {
     full_name: string | null;
     avatar_url: string | null;
+    email?: string | null;
+    phone?: string | null;
+    city?: string | null;
+    postal_code?: string | null;
   };
 }
 
@@ -65,22 +70,13 @@ export function useBookings(status?: BookingStatus) {
 export type BookingFilter = BookingStatus | 'upcoming';
 
 export function useProviderBookings(filter?: BookingFilter) {
-  const { profile } = useAuth();
+  const providerId = useMyProviderId();
   const today = new Date().toISOString().split('T')[0];
 
   return useQuery({
-    queryKey: [Config.cacheKeys.bookings, 'provider', profile?.id, filter],
+    queryKey: [Config.cacheKeys.bookings, 'provider', providerId, filter],
     queryFn: async (): Promise<BookingWithDetails[]> => {
-      if (!profile?.id) return [];
-
-      // Récupérer le provider_id à partir du profile
-      const { data: providerData } = await supabase
-        .from('providers')
-        .select('id')
-        .eq('user_id', profile.id)
-        .single();
-
-      if (!providerData) return [];
+      if (!providerId) return [];
 
       let query = supabase
         .from('bookings')
@@ -89,7 +85,7 @@ export function useProviderBookings(filter?: BookingFilter) {
           profiles:client_id (full_name, avatar_url),
           services (id, name, price)
         `)
-        .eq('provider_id', providerData.id);
+        .eq('provider_id', providerId);
 
       if (filter === 'upcoming') {
         query = query
@@ -101,7 +97,6 @@ export function useProviderBookings(filter?: BookingFilter) {
         if (filter) {
           query = query.eq('status', filter);
         }
-        // Default order for history/all
         query = query
           .order('booking_date', { ascending: false })
           .order('start_time', { ascending: false });
@@ -112,26 +107,18 @@ export function useProviderBookings(filter?: BookingFilter) {
       if (error) throw error;
       return (data || []) as BookingWithDetails[];
     },
-    enabled: !!profile?.id,
+    enabled: !!providerId,
   });
 }
 
 export function useUpcomingProviderBookings(limit = 3) {
-  const { profile } = useAuth();
+  const providerId = useMyProviderId();
   const today = new Date().toISOString().split('T')[0];
 
   return useQuery({
-    queryKey: [Config.cacheKeys.bookings, 'provider', 'upcoming', profile?.id],
+    queryKey: [Config.cacheKeys.bookings, 'provider', 'upcoming', providerId],
     queryFn: async (): Promise<BookingWithDetails[]> => {
-      if (!profile?.id) return [];
-
-      const { data: providerData } = await supabase
-        .from('providers')
-        .select('id')
-        .eq('user_id', profile.id)
-        .single();
-
-      if (!providerData) return [];
+      if (!providerId) return [];
 
       const { data, error } = await supabase
         .from('bookings')
@@ -140,7 +127,7 @@ export function useUpcomingProviderBookings(limit = 3) {
           profiles:client_id (full_name, avatar_url),
           services (id, name, price)
         `)
-        .eq('provider_id', providerData.id)
+        .eq('provider_id', providerId)
         .gte('booking_date', today)
         .in('status', ['confirmed', 'pending'])
         .order('booking_date', { ascending: true })
@@ -150,7 +137,7 @@ export function useUpcomingProviderBookings(limit = 3) {
       if (error) throw error;
       return (data || []) as BookingWithDetails[];
     },
-    enabled: !!profile?.id,
+    enabled: !!providerId,
   });
 }
 
@@ -169,6 +156,7 @@ export function useBooking(bookingId: string | undefined) {
             business_name,
             profiles:user_id (full_name, avatar_url, phone)
           ),
+          profiles:client_id (full_name, avatar_url, email, phone, city, postal_code),
           services (id, name, price, description)
         `)
         .eq('id', bookingId)
@@ -201,6 +189,7 @@ export function useCreateBooking() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [Config.cacheKeys.bookings] });
       queryClient.invalidateQueries({ queryKey: [Config.cacheKeys.events] });
+      queryClient.invalidateQueries({ queryKey: [Config.cacheKeys.providers] });
     },
   });
 }

@@ -4,13 +4,24 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
 import { useUpcomingProviderBookings } from '@/hooks/useBookings';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
+import {
+  useProviderConnectOnboarding,
+  useProviderRequestPayout,
+  useProviderStripeConnectStatus,
+  useProviderWalletSummary,
+} from '@/hooks/useProviderPayout';
 import { useProviderConversations, useProviderStats } from '@/hooks/useProviderStats';
 import { useProviderRevenue, useRevenuePeriod } from '@/hooks/useRevenue';
+import { getChatMessagePreview } from '@/lib/chatMessagePreview';
 import { formatPrice } from '@/lib/utils';
 import { useAuthStore } from '@/stores/authStore';
+import * as ExpoLinking from 'expo-linking';
 import { useRouter } from 'expo-router';
-import { Calendar, DollarSign, MessageSquare, Settings, Star } from 'lucide-react-native';
+import * as WebBrowser from 'expo-web-browser';
+import { Calendar, DollarSign, MessageSquare, Settings, Star, Wallet } from 'lucide-react-native';
 import {
+  Alert,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -27,8 +38,26 @@ interface StatCard {
   color: string;
 }
 
+const PROVIDER_FEE_RATE = 0.025;
+
+function toGrossAmount(netAmount: number): number {
+  const safeNet = Math.max(netAmount || 0, 0);
+  return Math.round((safeNet / (1 - PROVIDER_FEE_RATE) + Number.EPSILON) * 100) / 100;
+}
+
+function formatStripeRequirement(requirement: string): string {
+  return requirement
+    .replace(/\./g, ' > ')
+    .replace(/\[(.*?)\]/g, ' $1 ')
+    .replace(/_/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 export default function ProviderDashboardScreen() {
   const router = useRouter();
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
   const { profile, signOut } = useAuthStore();
 
   const {
@@ -48,6 +77,20 @@ export default function ProviderDashboardScreen() {
     isLoading: conversationsLoading,
     refetch: refetchConversations
   } = useProviderConversations();
+  const {
+    data: walletSummary,
+    isLoading: walletLoading,
+    refetch: refetchWalletSummary,
+  } = useProviderWalletSummary();
+  const { data: stripeConnectStatus, refetch: refetchStripeConnectStatus } = useProviderStripeConnectStatus();
+  const {
+    mutateAsync: startConnectOnboardingAsync,
+    isPending: isStartingConnectOnboarding,
+  } = useProviderConnectOnboarding();
+  const {
+    mutateAsync: requestPayoutAsync,
+    isPending: isRequestingPayout,
+  } = useProviderRequestPayout();
 
   const { period } = useRevenuePeriod();
   const {
@@ -61,8 +104,94 @@ export default function ProviderDashboardScreen() {
       refetchStats(),
       refetchConversations(),
       refetchRevenue(),
-      refetchUpcoming()
+      refetchUpcoming(),
+      refetchWalletSummary(),
+      refetchStripeConnectStatus(),
     ]);
+  };
+
+  const walletGross = {
+    held: toGrossAmount(walletSummary?.held_amount || 0),
+    available: toGrossAmount(walletSummary?.available_amount || 0),
+  };
+
+  const isStripePayoutReady =
+    stripeConnectStatus?.details_submitted === true &&
+    stripeConnectStatus?.charges_enabled === true &&
+    stripeConnectStatus?.payouts_enabled === true;
+  const pendingRequirements = stripeConnectStatus?.requirements_currently_due || [];
+  const canRequestPayout = isStripePayoutReady && (walletSummary?.available_amount || 0) > 0;
+  const shouldLaunchConnectOnboarding = !isStripePayoutReady;
+
+  const walletActionTitle = canRequestPayout
+    ? `Recevoir ${formatPrice(walletGross.available)}`
+    : shouldLaunchConnectOnboarding
+      ? 'Activer les retraits Stripe'
+      : 'Recevoir mon argent';
+
+  const payoutHint = shouldLaunchConnectOnboarding
+    ? pendingRequirements.length > 0
+      ? `${pendingRequirements.length} information(s) Stripe à compléter`
+      : 'Validation Stripe requise'
+    : walletGross.available <= 0
+      ? 'Aucun montant disponible'
+      : `En attente : ${formatPrice(walletGross.held)}`;
+
+  const handleRequestPayout = async () => {
+    if (!canRequestPayout || isRequestingPayout) return;
+    try {
+      const result = await requestPayoutAsync({});
+      Alert.alert(
+        'Retrait lancé',
+        `Virement en cours (${formatPrice(result.amount)}). Le statut sera mis à jour automatiquement.`
+      );
+      await refetchWalletSummary();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Impossible de lancer le retrait pour le moment.';
+      Alert.alert('Retrait indisponible', message);
+    }
+  };
+
+  const handleStartConnectOnboarding = async () => {
+    if (isStartingConnectOnboarding) return;
+    try {
+      const appReturnUrl = ExpoLinking.createURL('/dashboard', {
+        queryParams: { connect: 'return' },
+      });
+      const appRefreshUrl = ExpoLinking.createURL('/dashboard', {
+        queryParams: { connect: 'refresh' },
+      });
+
+      const onboarding = await startConnectOnboardingAsync({
+        returnUrl: appReturnUrl,
+        refreshUrl: appRefreshUrl,
+      });
+
+      const connectUrl = onboarding.onboardingUrl || onboarding.dashboardLoginUrl;
+      if (!connectUrl) {
+        throw new Error('Lien de configuration Stripe indisponible.');
+      }
+
+      await WebBrowser.openAuthSessionAsync(connectUrl, appReturnUrl);
+      await Promise.all([refetchStripeConnectStatus(), refetchWalletSummary()]);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Impossible de lancer la configuration Stripe pour le moment.';
+      Alert.alert('Configuration Stripe indisponible', message);
+    }
+  };
+
+  const handleWalletPrimaryAction = async () => {
+    if (canRequestPayout) {
+      await handleRequestPayout();
+      return;
+    }
+    if (shouldLaunchConnectOnboarding) {
+      await handleStartConnectOnboarding();
+    }
   };
 
   const statCards: StatCard[] = [
@@ -70,25 +199,25 @@ export default function ProviderDashboardScreen() {
       title: 'Réservations',
       value: stats?.bookingsCount?.toString() || '0',
       icon: Calendar,
-      color: Colors.primary.DEFAULT,
+      color: colors.primary,
     },
     {
       title: 'Non lus',
       value: stats?.unreadMessagesCount?.toString() || '0',
       icon: MessageSquare,
-      color: Colors.secondary.DEFAULT,
+      color: colors.primaryLight,
     },
     {
       title: 'Note moyenne',
       value: stats?.averageRating?.toFixed(1) || '-',
       icon: Star,
-      color: Colors.warning.DEFAULT,
+      color: colors.warning,
     },
     {
       title: 'Revenus',
       value: revenueData ? formatPrice(revenueData.total) : '-',
       icon: DollarSign,
-      color: Colors.success.DEFAULT,
+      color: colors.success,
     },
   ];
 
@@ -118,7 +247,7 @@ export default function ProviderDashboardScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
@@ -126,27 +255,30 @@ export default function ProviderDashboardScreen() {
           <RefreshControl
             refreshing={statsLoading || conversationsLoading || upcomingLoading}
             onRefresh={onRefresh}
-            tintColor={Colors.primary.DEFAULT}
+            tintColor={colors.primary}
           />
         }
       >
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.greeting}>Bonjour,</Text>
-            <Text style={styles.name}>{profile?.full_name || 'Prestataire'}</Text>
+            <Text style={[styles.greeting, { color: colors.textSecondary }]}>Bonjour,</Text>
+            <Text style={[styles.name, { color: colors.text }]}>{profile?.full_name || 'Prestataire'}</Text>
           </View>
           <TouchableOpacity
-            style={styles.settingsButton}
+            style={[
+              styles.settingsButton,
+              { backgroundColor: isDark ? colors.backgroundTertiary : colors.backgroundSecondary },
+            ]}
             onPress={() => router.push('/(provider)/settings')}
           >
-            <Settings size={24} color={Colors.text.primary} />
+            <Settings size={24} color={colors.text} />
           </TouchableOpacity>
         </View>
 
         {/* Stats Grid */}
         <View style={styles.statsContainer}>
-          <Text style={styles.sectionTitle}>Vue d'ensemble</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Vue d'ensemble</Text>
           {statsLoading ? (
             <LoadingSpinner size="small" />
           ) : (
@@ -167,15 +299,15 @@ export default function ProviderDashboardScreen() {
                 return (
                   <TouchableOpacity
                     key={index}
-                    style={styles.statCard}
+                    style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}
                     onPress={handlePress}
                     activeOpacity={0.7}
                   >
                     <View style={[styles.statIconContainer, { backgroundColor: `${stat.color}15` }]}>
                       <stat.icon size={24} color={stat.color} />
                     </View>
-                    <Text style={styles.statValue}>{stat.value}</Text>
-                    <Text style={styles.statTitle}>{stat.title}</Text>
+                    <Text style={[styles.statValue, { color: colors.text }]}>{stat.value}</Text>
+                    <Text style={[styles.statTitle, { color: colors.textSecondary }]}>{stat.title}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -183,12 +315,72 @@ export default function ProviderDashboardScreen() {
           )}
         </View>
 
+        <View style={styles.section}>
+          <View style={[styles.walletPanel, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+            <View style={styles.walletPanelHeader}>
+              <View
+                style={[
+                  styles.walletPanelIconWrap,
+                  { backgroundColor: isDark ? `${colors.primary}24` : `${colors.primary}14` },
+                ]}
+              >
+                <Wallet size={18} color={colors.primary} />
+              </View>
+              <View style={styles.walletPanelTitleWrap}>
+                <Text style={[styles.walletPanelTitle, { color: colors.text }]}>Mon porte-monnaie</Text>
+              </View>
+            </View>
+
+            {walletLoading ? (
+              <LoadingSpinner size="small" />
+            ) : (
+              <View style={styles.walletPanelBody}>
+                <Text style={[styles.walletMainAmount, { color: colors.text }]}>
+                  {formatPrice(walletGross.available)}
+                </Text>
+                <Text style={[styles.walletMainLabel, { color: colors.textSecondary }]}>
+                  Disponible maintenant (brut)
+                </Text>
+                <Text style={[styles.walletSecondaryLabel, { color: colors.textSecondary }]}>
+                  Bloqué: {formatPrice(walletGross.held)}
+                </Text>
+                {shouldLaunchConnectOnboarding && pendingRequirements.length > 0 && (
+                  <View style={styles.walletRequirementsList}>
+                    {pendingRequirements.slice(0, 3).map((requirement) => (
+                      <Text
+                        key={requirement}
+                        style={[styles.walletRequirementItem, { color: colors.textSecondary }]}
+                      >
+                        • {formatStripeRequirement(requirement)}
+                      </Text>
+                    ))}
+                  </View>
+                )}
+                <Button
+                  title={walletActionTitle}
+                  onPress={handleWalletPrimaryAction}
+                  loading={isRequestingPayout || isStartingConnectOnboarding}
+                  disabled={
+                    isRequestingPayout ||
+                    isStartingConnectOnboarding ||
+                    (!canRequestPayout && !shouldLaunchConnectOnboarding)
+                  }
+                  fullWidth
+                />
+                <Text style={[styles.walletHintText, { color: colors.textTertiary }]}>
+                  {payoutHint}
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
+
         {/* Prochaines réservations */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Prochaines réservations</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Prochaines réservations</Text>
             <TouchableOpacity onPress={() => router.push('/(provider)/bookings')}>
-              <Text style={styles.seeAll}>Voir tout</Text>
+              <Text style={[styles.seeAll, { color: colors.primary }]}>Voir tout</Text>
             </TouchableOpacity>
           </View>
 
@@ -199,11 +391,20 @@ export default function ProviderDashboardScreen() {
               {upcomingBookings.map((booking) => (
                 <TouchableOpacity
                   key={booking.id}
-                  style={styles.bookingCard}
+                  style={[styles.bookingCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}
                   onPress={() => router.push(`/(provider)/bookings`)}
                 >
                   <View style={styles.bookingRow}>
-                    <View style={styles.dateBadge}>
+                    <View
+                      style={[
+                        styles.dateBadge,
+                        {
+                          backgroundColor: isDark
+                            ? colors.backgroundTertiary
+                            : Colors.secondary.dark,
+                        },
+                      ]}
+                    >
                       <Text style={styles.dateDay}>
                         {new Date(booking.booking_date).getDate()}
                       </Text>
@@ -213,21 +414,31 @@ export default function ProviderDashboardScreen() {
                     </View>
 
                     <View style={styles.bookingInfo}>
-                      <Text style={styles.bookingService} numberOfLines={1}>
+                      <Text style={[styles.bookingService, { color: colors.text }]} numberOfLines={1}>
                         {booking.services?.name || 'Service inconnu'}
                       </Text>
-                      <Text style={styles.bookingClient}>
+                      <Text style={[styles.bookingClient, { color: colors.textSecondary }]}>
                         {booking.profiles?.full_name || 'Client inconnu'}
                       </Text>
                     </View>
 
                     <View style={[
                       styles.statusBadge,
-                      { backgroundColor: booking.status === 'confirmed' ? Colors.success.DEFAULT + '20' : Colors.warning.DEFAULT + '20' }
+                      {
+                        backgroundColor:
+                          booking.status === 'confirmed'
+                            ? `${colors.success}22`
+                            : `${colors.warning}22`,
+                      },
                     ]}>
                       <Text style={[
                         styles.statusText,
-                        { color: booking.status === 'confirmed' ? Colors.success.DEFAULT : Colors.warning.DEFAULT }
+                        {
+                          color:
+                            booking.status === 'confirmed'
+                              ? colors.success
+                              : colors.warning,
+                        },
                       ]}>
                         {booking.status === 'confirmed' ? 'Confirmé' : 'En attente'}
                       </Text>
@@ -237,12 +448,12 @@ export default function ProviderDashboardScreen() {
               ))}
             </View>
           ) : (
-            <View style={styles.emptyState}>
-              <Calendar size={48} color={Colors.gray[300]} />
-              <Text style={styles.emptyStateText}>
+            <View style={[styles.emptyState, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+              <Calendar size={48} color={colors.textTertiary} />
+              <Text style={[styles.emptyStateText, { color: colors.text }]}>
                 Aucune réservation à venir
               </Text>
-              <Text style={styles.emptyStateSubtext}>
+              <Text style={[styles.emptyStateSubtext, { color: colors.textSecondary }]}>
                 Vos prochaines réservations apparaîtront ici
               </Text>
             </View>
@@ -252,20 +463,20 @@ export default function ProviderDashboardScreen() {
         {/* Messages récents */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Messages récents</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Messages récents</Text>
             <TouchableOpacity onPress={() => router.push('/(provider)/messages')}>
-              <Text style={styles.seeAll}>Voir tout</Text>
+              <Text style={[styles.seeAll, { color: colors.primary }]}>Voir tout</Text>
             </TouchableOpacity>
           </View>
 
           {conversationsLoading ? (
             <LoadingSpinner size="small" />
           ) : recentConversations && recentConversations.length > 0 ? (
-            <View style={styles.conversationsList}>
+            <View style={[styles.conversationsList, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
               {recentConversations.map((conv) => (
                 <TouchableOpacity
                   key={conv.id}
-                  style={styles.conversationItem}
+                  style={[styles.conversationItem, { borderBottomColor: colors.border }]}
                   onPress={() => handleConversationPress(conv.id)}
                   activeOpacity={0.7}
                 >
@@ -276,19 +487,21 @@ export default function ProviderDashboardScreen() {
                   />
                   <View style={styles.conversationContent}>
                     <View style={styles.conversationHeader}>
-                      <Text style={styles.conversationName} numberOfLines={1}>
+                      <Text style={[styles.conversationName, { color: colors.text }]} numberOfLines={1}>
                         {conv.client?.full_name || 'Client'}
                       </Text>
-                      <Text style={styles.conversationTime}>
+                      <Text style={[styles.conversationTime, { color: colors.textTertiary }]}>
                         {formatTime(conv.last_message?.created_at)}
                       </Text>
                     </View>
-                    <Text style={styles.conversationMessage} numberOfLines={1}>
-                      {conv.last_message?.content || 'Nouvelle conversation'}
+                    <Text style={[styles.conversationMessage, { color: colors.textSecondary }]} numberOfLines={1}>
+                      {getChatMessagePreview(conv.last_message?.content, {
+                        deletedForAll: conv.last_message?.deleted_for_all,
+                      })}
                     </Text>
                   </View>
                   {conv.unread_count > 0 && (
-                    <View style={styles.unreadBadge}>
+                    <View style={[styles.unreadBadge, { backgroundColor: colors.primary }]}>
                       <Text style={styles.unreadBadgeText}>
                         {conv.unread_count > 9 ? '9+' : conv.unread_count}
                       </Text>
@@ -298,12 +511,12 @@ export default function ProviderDashboardScreen() {
               ))}
             </View>
           ) : (
-            <View style={styles.emptyState}>
-              <MessageSquare size={48} color={Colors.gray[300]} />
-              <Text style={styles.emptyStateText}>
+            <View style={[styles.emptyState, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+              <MessageSquare size={48} color={colors.textTertiary} />
+              <Text style={[styles.emptyStateText, { color: colors.text }]}>
                 Aucun message récent
               </Text>
-              <Text style={styles.emptyStateSubtext}>
+              <Text style={[styles.emptyStateSubtext, { color: colors.textSecondary }]}>
                 Vos conversations apparaîtront ici
               </Text>
             </View>
@@ -312,7 +525,7 @@ export default function ProviderDashboardScreen() {
 
         {/* Actions rapides */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Actions rapides</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Actions rapides</Text>
           <View style={styles.quickActions}>
             <Button
               title="Modifier mon profil"
@@ -377,7 +590,6 @@ export default function ProviderDashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background.primary,
   },
   scrollContent: {
     paddingBottom: 120,
@@ -391,19 +603,16 @@ const styles = StyleSheet.create({
   },
   greeting: {
     fontSize: Layout.fontSize.md,
-    color: Colors.text.secondary,
   },
   name: {
     fontSize: Layout.fontSize['2xl'],
     fontWeight: '700',
-    color: Colors.text.primary,
     marginTop: Layout.spacing.xs,
   },
   settingsButton: {
     width: 40,
     height: 40,
     borderRadius: Layout.radius.md,
-    backgroundColor: Colors.gray[100],
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -414,7 +623,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: Layout.fontSize.lg,
     fontWeight: '600',
-    color: Colors.text.primary,
     marginBottom: Layout.spacing.md,
   },
   statsGrid: {
@@ -425,11 +633,9 @@ const styles = StyleSheet.create({
   statCard: {
     flex: 1,
     minWidth: '45%',
-    backgroundColor: Colors.white,
     padding: Layout.spacing.md,
     borderRadius: Layout.radius.lg,
     borderWidth: 1,
-    borderColor: Colors.gray[200],
   },
   statIconContainer: {
     width: 48,
@@ -442,12 +648,61 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: Layout.fontSize['2xl'],
     fontWeight: '700',
-    color: Colors.text.primary,
     marginBottom: Layout.spacing.xs,
   },
   statTitle: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
+  },
+  walletPanel: {
+    borderRadius: Layout.radius.lg,
+    borderWidth: 1,
+    padding: Layout.spacing.md,
+    gap: Layout.spacing.md,
+  },
+  walletPanelHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Layout.spacing.sm,
+  },
+  walletPanelIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  walletPanelTitleWrap: {
+    flex: 1,
+  },
+  walletPanelTitle: {
+    fontSize: Layout.fontSize.lg,
+    fontWeight: '700',
+  },
+  walletPanelBody: {
+    gap: Layout.spacing.xs,
+  },
+  walletMainAmount: {
+    fontSize: Layout.fontSize['3xl'],
+    fontWeight: '700',
+  },
+  walletMainLabel: {
+    fontSize: Layout.fontSize.sm,
+  },
+  walletSecondaryLabel: {
+    fontSize: Layout.fontSize.sm,
+    marginBottom: Layout.spacing.sm,
+  },
+  walletRequirementsList: {
+    gap: 2,
+    marginBottom: Layout.spacing.sm,
+  },
+  walletRequirementItem: {
+    fontSize: Layout.fontSize.xs,
+    lineHeight: 16,
+  },
+  walletHintText: {
+    fontSize: Layout.fontSize.xs,
+    textAlign: 'center',
   },
   section: {
     marginTop: Layout.spacing.xl,
@@ -461,34 +716,27 @@ const styles = StyleSheet.create({
   },
   seeAll: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.primary.DEFAULT,
     fontWeight: '500',
   },
   emptyState: {
-    backgroundColor: Colors.white,
     padding: Layout.spacing.xl,
     borderRadius: Layout.radius.lg,
     borderWidth: 1,
-    borderColor: Colors.gray[200],
     alignItems: 'center',
   },
   emptyStateText: {
     fontSize: Layout.fontSize.md,
     fontWeight: '600',
-    color: Colors.text.primary,
     marginTop: Layout.spacing.md,
   },
   emptyStateSubtext: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
     marginTop: Layout.spacing.xs,
     textAlign: 'center',
   },
   conversationsList: {
-    backgroundColor: Colors.white,
     borderRadius: Layout.radius.lg,
     borderWidth: 1,
-    borderColor: Colors.gray[200],
     overflow: 'hidden',
   },
   conversationItem: {
@@ -496,7 +744,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Layout.spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.gray[100],
     gap: Layout.spacing.md,
   },
   conversationContent: {
@@ -511,19 +758,15 @@ const styles = StyleSheet.create({
   conversationName: {
     fontSize: Layout.fontSize.md,
     fontWeight: '600',
-    color: Colors.text.primary,
     flex: 1,
   },
   conversationTime: {
     fontSize: Layout.fontSize.xs,
-    color: Colors.text.tertiary,
   },
   conversationMessage: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
   },
   unreadBadge: {
-    backgroundColor: Colors.primary.DEFAULT,
     borderRadius: 12,
     minWidth: 24,
     height: 24,
@@ -547,11 +790,9 @@ const styles = StyleSheet.create({
     gap: Layout.spacing.sm,
   },
   bookingCard: {
-    backgroundColor: Colors.white,
     padding: Layout.spacing.md,
     borderRadius: Layout.radius.lg,
     borderWidth: 1,
-    borderColor: Colors.gray[200],
   },
   bookingRow: {
     flexDirection: 'row',
@@ -584,11 +825,9 @@ const styles = StyleSheet.create({
   bookingService: {
     fontSize: Layout.fontSize.md,
     fontWeight: '600',
-    color: Colors.text.primary,
   },
   bookingClient: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
     marginBottom: 2,
   },
   timeRow: {

@@ -2,26 +2,27 @@
  * Bottom sheet pour les filtres de recherche de prestataires
  */
 
-import React, { useState, useEffect, forwardRef, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-} from 'react-native';
-import BottomSheet, {
-  BottomSheetView,
-  BottomSheetBackdrop,
-  BottomSheetScrollView,
-} from '@gorhom/bottom-sheet';
-import Slider from '@react-native-community/slider';
-import { Button } from '@/components/ui/Button';
 import { CategoryPill } from '@/components/common/CategoryPill';
-import { useCategories } from '@/hooks/useCategories';
-import { ProviderFilters } from '@/types';
+import { Button } from '@/components/ui/Button';
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
+import { useCategories } from '@/hooks/useCategories';
+import { ProviderFilters } from '@/types';
+import {
+  BottomSheetBackdrop,
+  BottomSheetModal,
+  BottomSheetScrollView,
+  BottomSheetView,
+} from '@gorhom/bottom-sheet';
+import Slider from '@react-native-community/slider';
+import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface FiltersBottomSheetProps {
   filters: ProviderFilters;
@@ -51,9 +52,13 @@ const RATING_OPTIONS = [
   { label: '4.5+', value: 4.5 },
 ];
 
-export const FiltersBottomSheet = forwardRef<BottomSheet, FiltersBottomSheetProps>(
+export const FiltersBottomSheet = forwardRef<BottomSheetModal, FiltersBottomSheetProps>(
   ({ filters, onApply, onReset }, ref) => {
     const { data: categories } = useCategories();
+    const insets = useSafeAreaInsets();
+    // The custom LiquidTabBar is a floating overlay (height 70 + 10px offset).
+    // Add extra bottom padding so the "Appliquer" CTA is never covered by it.
+    const tabBarOverlayHeight = 80;
 
     const [localFilters, setLocalFilters] = useState<ProviderFilters>(filters);
 
@@ -62,11 +67,11 @@ export const FiltersBottomSheet = forwardRef<BottomSheet, FiltersBottomSheetProp
       setLocalFilters(filters);
     }, [filters]);
 
-    const snapPoints = ['75%'];
+    const snapPoints = useMemo(() => ['85%'], []);
 
     const handleApply = () => {
       onApply(localFilters);
-      (ref as any)?.current?.close();
+      (ref as any)?.current?.dismiss?.();
     };
 
     const handleReset = () => {
@@ -95,17 +100,18 @@ export const FiltersBottomSheet = forwardRef<BottomSheet, FiltersBottomSheetProp
     ].filter(Boolean).length;
 
     return (
-      <BottomSheet
+      <BottomSheetModal
         ref={ref}
-        index={-1}
+        index={0}
         snapPoints={snapPoints}
+        enableDynamicSizing={false}
         enablePanDownToClose
+        enableContentPanningGesture
         backdropComponent={renderBackdrop}
         backgroundStyle={styles.bottomSheetBackground}
         handleIndicatorStyle={styles.handleIndicator}
       >
-        <View style={styles.container}>
-          {/* Header */}
+        <BottomSheetView style={styles.container}>
           <View style={styles.header}>
             <Text style={styles.title}>Filtres</Text>
             <TouchableOpacity onPress={handleReset}>
@@ -115,128 +121,136 @@ export const FiltersBottomSheet = forwardRef<BottomSheet, FiltersBottomSheetProp
 
           <BottomSheetScrollView
             style={styles.scrollView}
-            contentContainerStyle={styles.scrollContent}
+            contentContainerStyle={[
+              styles.scrollContent,
+              { paddingBottom: Layout.spacing.xxl + insets.bottom + tabBarOverlayHeight },
+            ]}
             showsVerticalScrollIndicator={false}
           >
-            {/* Catégories */}
-            <View style={styles.filterSection}>
-              <Text style={styles.filterLabel}>Catégorie</Text>
-              <View style={styles.optionsWrap}>
-                <CategoryPill
-                  label="Toutes"
-                  isSelected={!localFilters.categorySlug}
-                  onPress={() =>
-                    setLocalFilters((f) => ({ ...f, categorySlug: undefined }))
-                  }
-                />
-                {categories?.map((cat) => (
-                  <CategoryPill
-                    key={cat.id}
-                    label={cat.name}
-                    icon={cat.icon || undefined}
-                    isSelected={localFilters.categorySlug === cat.slug}
-                    onPress={() =>
-                      setLocalFilters((f) => ({
-                        ...f,
-                        categorySlug:
-                          f.categorySlug === cat.slug ? undefined : cat.slug,
-                      }))
-                    }
-                  />
-                ))}
-              </View>
-            </View>
-
-            {/* Ville */}
-            <View style={styles.filterSection}>
-              <Text style={styles.filterLabel}>Ville</Text>
-              <View style={styles.optionsWrap}>
-                <CategoryPill
-                  label="Toutes"
-                  isSelected={!localFilters.city}
-                  onPress={() =>
-                    setLocalFilters((f) => ({ ...f, city: undefined }))
-                  }
-                />
-                {CITIES.map((city) => (
-                  <CategoryPill
-                    key={city}
-                    label={city}
-                    isSelected={localFilters.city === city}
-                    onPress={() =>
-                      setLocalFilters((f) => ({
-                        ...f,
-                        city: f.city === city ? undefined : city,
-                      }))
-                    }
-                  />
-                ))}
-              </View>
-            </View>
-
-            {/* Note minimum */}
-            <View style={styles.filterSection}>
-              <Text style={styles.filterLabel}>Note minimum</Text>
-              <View style={styles.ratingOptions}>
-                {RATING_OPTIONS.map((opt) => (
-                  <TouchableOpacity
-                    key={opt.label}
-                    style={[
-                      styles.ratingOption,
-                      localFilters.minRating === opt.value &&
-                        styles.ratingOptionSelected,
-                    ]}
-                    onPress={() =>
-                      setLocalFilters((f) => ({ ...f, minRating: opt.value }))
-                    }
-                  >
-                    <Text
-                      style={[
-                        styles.ratingOptionText,
-                        localFilters.minRating === opt.value &&
-                          styles.ratingOptionTextSelected,
-                      ]}
-                    >
-                      {opt.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-
-            {/* Budget maximum */}
-            <View style={styles.filterSection}>
-              <Text style={styles.filterLabel}>Budget maximum</Text>
-              <Text style={styles.budgetValue}>
-                {localFilters.maxPrice
-                  ? `${localFilters.maxPrice.toLocaleString('fr-BE')} €`
-                  : 'Pas de limite'}
-              </Text>
-              <Slider
-                style={styles.slider}
-                minimumValue={0}
-                maximumValue={5000}
-                step={100}
-                value={localFilters.maxPrice || 0}
-                onValueChange={(value) =>
-                  setLocalFilters((f) => ({
-                    ...f,
-                    maxPrice: value > 0 ? value : undefined,
-                  }))
+          {/* Catégories */}
+          <View style={styles.filterSection}>
+            <Text style={styles.filterLabel}>Catégorie</Text>
+            <View style={styles.optionsWrap}>
+              <CategoryPill
+                label="Toutes"
+                isSelected={!localFilters.categorySlug}
+                onPress={() =>
+                  setLocalFilters((f) => ({ ...f, categorySlug: undefined }))
                 }
-                minimumTrackTintColor={Colors.primary.DEFAULT}
-                maximumTrackTintColor={Colors.gray[200]}
-                thumbTintColor={Colors.primary.DEFAULT}
               />
-              <View style={styles.sliderLabels}>
-                <Text style={styles.sliderLabel}>0 €</Text>
-                <Text style={styles.sliderLabel}>5000 €</Text>
-              </View>
+              {categories?.map((cat) => (
+                <CategoryPill
+                  key={cat.id}
+                  label={cat.name}
+                  icon={cat.icon || undefined}
+                  isSelected={localFilters.categorySlug === cat.slug}
+                  onPress={() =>
+                    setLocalFilters((f) => ({
+                      ...f,
+                      categorySlug:
+                        f.categorySlug === cat.slug ? undefined : cat.slug,
+                    }))
+                  }
+                />
+              ))}
             </View>
-          </BottomSheetScrollView>
+          </View>
 
+          {/* Ville */}
+          <View style={styles.filterSection}>
+            <Text style={styles.filterLabel}>Ville</Text>
+            <View style={styles.optionsWrap}>
+              <CategoryPill
+                label="Toutes"
+                isSelected={!localFilters.city}
+                onPress={() =>
+                  setLocalFilters((f) => ({ ...f, city: undefined }))
+                }
+              />
+              {CITIES.map((city) => (
+                <CategoryPill
+                  key={city}
+                  label={city}
+                  isSelected={localFilters.city === city}
+                  onPress={() =>
+                    setLocalFilters((f) => ({
+                      ...f,
+                      city: f.city === city ? undefined : city,
+                    }))
+                  }
+                />
+              ))}
+            </View>
+          </View>
+
+          {/* Note minimum */}
+          <View style={styles.filterSection}>
+            <Text style={styles.filterLabel}>Note minimum</Text>
+            <View style={styles.ratingOptions}>
+              {RATING_OPTIONS.map((opt) => (
+                <TouchableOpacity
+                  key={opt.label}
+                  style={[
+                    styles.ratingOption,
+                    localFilters.minRating === opt.value &&
+                      styles.ratingOptionSelected,
+                  ]}
+                  onPress={() =>
+                    setLocalFilters((f) => ({ ...f, minRating: opt.value }))
+                  }
+                >
+                  <Text
+                    style={[
+                      styles.ratingOptionText,
+                      localFilters.minRating === opt.value &&
+                        styles.ratingOptionTextSelected,
+                    ]}
+                  >
+                    {opt.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* Budget maximum */}
+          <View style={styles.filterSection}>
+            <Text style={styles.filterLabel}>Budget maximum</Text>
+            <Text style={styles.budgetValue}>
+              {localFilters.maxPrice
+                ? `${localFilters.maxPrice.toLocaleString('fr-BE')} €`
+                : 'Pas de limite'}
+            </Text>
+            <Slider
+              style={styles.slider}
+              minimumValue={0}
+              maximumValue={5000}
+              step={100}
+              value={localFilters.maxPrice || 0}
+              onValueChange={(value) =>
+                setLocalFilters((f) => ({
+                  ...f,
+                  maxPrice: value > 0 ? value : undefined,
+                }))
+              }
+              minimumTrackTintColor={Colors.primary.DEFAULT}
+              maximumTrackTintColor={Colors.gray[200]}
+              thumbTintColor={Colors.primary.DEFAULT}
+            />
+            <View style={styles.sliderLabels}>
+              <Text style={styles.sliderLabel}>0 €</Text>
+              <Text style={styles.sliderLabel}>5000 €</Text>
+            </View>
+          </View>
+
+          </BottomSheetScrollView>
           {/* Footer avec bouton appliquer */}
-          <View style={styles.footer}>
+          <View
+            style={[
+              styles.footer,
+              { paddingBottom: Math.max(insets.bottom + tabBarOverlayHeight, Layout.spacing.md) },
+            ]}
+          >
             <Button
               title={
                 activeFiltersCount > 0
@@ -248,8 +262,8 @@ export const FiltersBottomSheet = forwardRef<BottomSheet, FiltersBottomSheetProp
               fullWidth
             />
           </View>
-        </View>
-      </BottomSheet>
+        </BottomSheetView>
+      </BottomSheetModal>
     );
   }
 );
@@ -273,8 +287,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: Layout.spacing.lg,
     paddingVertical: Layout.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.gray[100],
   },
   title: {
     fontSize: Layout.fontSize.xl,
@@ -351,9 +363,9 @@ const styles = StyleSheet.create({
     color: Colors.text.tertiary,
   },
   footer: {
-    padding: Layout.spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: Colors.gray[100],
-    backgroundColor: Colors.white,
+    marginTop: Layout.spacing.md,
+    paddingTop: Layout.spacing.md,
+    paddingBottom: Layout.spacing.lg,
+    borderTopWidth: 0,
   },
 });

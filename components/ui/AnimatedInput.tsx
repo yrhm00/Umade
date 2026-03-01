@@ -1,4 +1,3 @@
-import { SpringConfigs } from '@/constants/Animations';
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
 import { useColors, useIsDarkTheme } from '@/hooks/useColors';
@@ -19,7 +18,6 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSequence,
-  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 
@@ -84,10 +82,7 @@ export const AnimatedInput = React.memo(function AnimatedInput({
   // Update label position when value changes
   React.useEffect(() => {
     if (floatingLabel) {
-      labelPosition.value = withSpring(
-        value || isFocused ? 1 : 0,
-        SpringConfigs.gentle
-      );
+      labelPosition.value = withTiming(value || isFocused ? 1 : 0, { duration: 220 });
     }
   }, [value, isFocused, floatingLabel]);
 
@@ -97,7 +92,7 @@ export const AnimatedInput = React.memo(function AnimatedInput({
       if (focusTimer.current) clearTimeout(focusTimer.current);
       focusTimer.current = setTimeout(() => {
         setIsFocused(true);
-        focusProgress.value = withSpring(1, SpringConfigs.gentle);
+        focusProgress.value = withTiming(1, { duration: 220 });
       }, 150);
     },
     [onFocus]
@@ -110,7 +105,7 @@ export const AnimatedInput = React.memo(function AnimatedInput({
         focusTimer.current = null;
       }
       setIsFocused(false);
-      focusProgress.value = withSpring(0, SpringConfigs.gentle);
+      focusProgress.value = withTiming(0, { duration: 220 });
       onBlur?.(event);
     },
     [onBlur]

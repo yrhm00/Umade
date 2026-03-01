@@ -3,9 +3,10 @@ import { Layout } from '@/constants/Layout';
 import { useColors } from '@/hooks/useColors';
 import React from 'react';
 import { StyleSheet, Text, View, ViewStyle } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 
 interface EmptyStateProps {
-  icon?: string;
+  icon?: React.ReactNode | string;
   title: string;
   description?: string;
   actionLabel?: string;
@@ -23,9 +24,32 @@ export function EmptyState({
 }: EmptyStateProps) {
   const colors = useColors();
 
+  const renderIcon = () => {
+    if (!icon) return null;
+
+    // Legacy emoji string support
+    if (typeof icon === 'string') {
+      return (
+        <View style={[styles.iconContainer, { backgroundColor: `${colors.primary}10` }]}>
+          <Text style={styles.iconEmoji}>{icon}</Text>
+        </View>
+      );
+    }
+
+    // Lucide icon or React node
+    return (
+      <View style={[styles.iconContainer, { backgroundColor: `${colors.primary}10` }]}>
+        {icon}
+      </View>
+    );
+  };
+
   return (
-    <View style={[styles.container, style]}>
-      {icon && <Text style={styles.icon}>{icon}</Text>}
+    <Animated.View
+      entering={FadeIn.duration(400)}
+      style={[styles.container, style]}
+    >
+      {renderIcon()}
       <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
       {description && (
         <Text style={[styles.description, { color: colors.textSecondary }]}>{description}</Text>
@@ -39,7 +63,7 @@ export function EmptyState({
           style={styles.button}
         />
       )}
-    </View>
+    </Animated.View>
   );
 }
 
@@ -50,9 +74,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: Layout.spacing.xl,
   },
-  icon: {
-    fontSize: 64,
+  iconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: Layout.spacing.lg,
+  },
+  iconEmoji: {
+    fontSize: 36,
   },
   title: {
     fontSize: Layout.fontSize.lg,
@@ -65,6 +96,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: Layout.spacing.lg,
+    opacity: 0.8,
   },
   button: {
     minWidth: 150,

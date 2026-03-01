@@ -1,16 +1,25 @@
 /**
  * Hook pour gerer les favoris d'inspirations (Phase 9)
+ * Avec support hors-ligne
  */
 
 import { Config } from '@/constants/Config';
 import { supabase } from '@/lib/supabase';
+import {
+  loadFavoriteIds,
+  loadFavoriteInspirations,
+  saveFavoriteIds,
+  saveFavoriteInspirations,
+} from '@/lib/offlineStorage';
 import { InspirationWithProvider } from '@/types/inspiration';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
+import { useEffect } from 'react';
 import { useAuth } from './useAuth';
+import { useIsOnline } from './useNetworkStatus';
 
-// Helper pour accéder aux tables non encore dans les types auto-générés
-const fromTable = (table: string) => supabase.from(table as any);
+// Helper: on force "any" pour eviter les SelectQueryError (selects imbriques/relations).
+const fromTable = (table: string) => (supabase as any).from(table);
 
 // ============================================
 // Hook pour les IDs des inspirations favorites
@@ -18,21 +27,48 @@ const fromTable = (table: string) => supabase.from(table as any);
 
 export function useInspirationFavoriteIds() {
   const { userId } = useAuth();
+  const isOnline = useIsOnline();
 
-  return useQuery({
+  const query = useQuery({
     queryKey: [Config.cacheKeys.inspirations, 'favoriteIds', userId],
     queryFn: async (): Promise<string[]> => {
       if (!userId) return [];
+
+      // Si hors-ligne, charger depuis le stockage local
+      if (!isOnline) {
+        return await loadFavoriteIds();
+      }
 
       const { data, error } = await fromTable('inspiration_favorites')
         .select('inspiration_id')
         .eq('user_id', userId);
 
       if (error) throw error;
-      return ((data as any[]) || []).map((f) => f.inspiration_id);
+      const ids = ((data as any[]) || []).map((f) => f.inspiration_id);
+
+      // Sauvegarder en local pour usage hors-ligne
+      await saveFavoriteIds(ids);
+
+      return ids;
     },
     enabled: !!userId,
+    // Garder les données en cache plus longtemps pour le mode hors-ligne
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes (was cacheTime)
   });
+
+  // Charger les données hors-ligne au démarrage
+  useEffect(() => {
+    if (!isOnline && userId && !query.data) {
+      loadFavoriteIds().then((ids) => {
+        if (ids.length > 0) {
+          query.refetch();
+        }
+      });
+    }
+  }, [isOnline, userId]);
+
+  return query;
 }
 
 // ============================================
@@ -41,11 +77,17 @@ export function useInspirationFavoriteIds() {
 
 export function useUserFavoriteInspirations() {
   const { userId } = useAuth();
+  const isOnline = useIsOnline();
 
-  return useQuery({
+  const query = useQuery({
     queryKey: [Config.cacheKeys.inspirations, 'favorites', userId],
     queryFn: async (): Promise<InspirationWithProvider[]> => {
       if (!userId) return [];
+
+      // Si hors-ligne, charger depuis le stockage local
+      if (!isOnline) {
+        return await loadFavoriteInspirations();
+      }
 
       const { data, error } = await fromTable('inspiration_favorites')
         .select(`
@@ -80,7 +122,7 @@ export function useUserFavoriteInspirations() {
       if (error) throw error;
 
       // Extraire les inspirations des favoris
-      return ((data as any[]) || [])
+      const inspirations = ((data as any[]) || [])
         .map((fav) => fav.inspirations)
         .filter((insp): insp is any => insp !== null)
         .map((item) => ({
@@ -90,9 +132,30 @@ export function useUserFavoriteInspirations() {
               a.display_order - b.display_order
           ),
         })) as InspirationWithProvider[];
+
+      // Sauvegarder en local pour usage hors-ligne
+      await saveFavoriteInspirations(inspirations);
+
+      return inspirations;
     },
     enabled: !!userId,
+    // Garder les données en cache plus longtemps pour le mode hors-ligne
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
   });
+
+  // Charger les données hors-ligne au démarrage
+  useEffect(() => {
+    if (!isOnline && userId && !query.data) {
+      loadFavoriteInspirations().then((inspirations) => {
+        if (inspirations.length > 0) {
+          query.refetch();
+        }
+      });
+    }
+  }, [isOnline, userId]);
+
+  return query;
 }
 
 // ============================================
@@ -117,11 +180,13 @@ export function useToggleInspirationFavorite() {
       if (!userId) throw new Error('User not authenticated');
 
       // Verifier si deja en favoris
-      const { data: existing } = await fromTable('inspiration_favorites')
+      const { data: existing, error: existingError } = await fromTable('inspiration_favorites')
         .select('id')
         .eq('user_id', userId)
         .eq('inspiration_id', inspirationId)
-        .single();
+        .maybeSingle();
+
+      if (existingError) throw existingError;
 
       if (existing) {
         // Supprimer des favoris

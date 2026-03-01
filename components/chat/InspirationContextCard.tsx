@@ -56,15 +56,17 @@ export function InspirationContextCard({ data, isOwn }: InspirationContextCardPr
                 <View style={styles.content}>
                     <View style={styles.header}>
                         <Sparkles size={14} color={Colors.primary.DEFAULT} />
-                        <Text style={styles.label}>Inspiration</Text>
+                        <Text style={styles.label}>Inspiration partagee</Text>
                     </View>
 
-                    <Text style={styles.title} numberOfLines={2}>
+                    <Text style={styles.title} numberOfLines={1}>
                         {data.title || 'Publication'}
                     </Text>
 
                     <View style={styles.viewLink}>
-                        <Text style={styles.viewLinkText}>Voir l'inspiration</Text>
+                        <Text style={styles.viewLinkText} numberOfLines={1}>
+                            Voir la publication
+                        </Text>
                         <ExternalLink size={12} color={Colors.primary.DEFAULT} />
                     </View>
                 </View>
@@ -84,8 +86,7 @@ export function InspirationContextCard({ data, isOwn }: InspirationContextCardPr
 
 const styles = StyleSheet.create({
     container: {
-        marginBottom: Layout.spacing.sm,
-        paddingHorizontal: Layout.spacing.md,
+        marginBottom: Layout.spacing.xs,
         alignItems: 'flex-start',
     },
     containerOwn: {
@@ -96,7 +97,7 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.white,
         borderRadius: Layout.radius.lg,
         overflow: 'hidden',
-        maxWidth: '85%',
+        width: '100%',
         borderWidth: 1,
         borderColor: Colors.gray[200],
         shadowColor: Colors.black,
@@ -106,48 +107,55 @@ const styles = StyleSheet.create({
         elevation: 2,
     },
     image: {
-        width: 80,
-        height: 80,
+        width: 84,
+        height: 84,
     },
     content: {
         flex: 1,
-        padding: Layout.spacing.sm,
-        justifyContent: 'space-between',
+        minWidth: 0,
+        minHeight: 84,
+        paddingHorizontal: Layout.spacing.sm,
+        paddingVertical: Layout.spacing.sm,
+        justifyContent: 'center',
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 4,
+        marginBottom: 4,
     },
     label: {
-        fontSize: 11,
+        fontSize: 10,
         fontWeight: '600',
         color: Colors.primary.DEFAULT,
         textTransform: 'uppercase',
-        letterSpacing: 0.5,
+        letterSpacing: 0.3,
     },
     title: {
         fontSize: 13,
-        fontWeight: '500',
+        fontWeight: '600',
         color: Colors.text.primary,
-        lineHeight: 18,
+        lineHeight: 17,
     },
     viewLink: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 4,
+        marginTop: 6,
+        minWidth: 0,
     },
     viewLinkText: {
         fontSize: 11,
         color: Colors.primary.DEFAULT,
         fontWeight: '500',
+        flexShrink: 1,
     },
     messageBubble: {
         marginTop: Layout.spacing.xs,
         paddingVertical: Layout.spacing.sm,
         paddingHorizontal: Layout.spacing.md,
         borderRadius: Layout.radius.lg,
-        maxWidth: '85%',
+        maxWidth: '100%',
     },
     bubbleOwn: {
         backgroundColor: Colors.primary.DEFAULT,

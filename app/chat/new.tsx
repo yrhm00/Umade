@@ -9,6 +9,7 @@ import { useFindOrCreateConversation } from '@/hooks/useConversations';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { goBackOrFallback } from '@/lib/navigation';
 
 export default function NewConversationScreen() {
   const router = useRouter();
@@ -19,7 +20,7 @@ export default function NewConversationScreen() {
 
   useEffect(() => {
     if (!providerId) {
-      router.back();
+      goBackOrFallback(router);
       return;
     }
 
@@ -28,7 +29,7 @@ export default function NewConversationScreen() {
         router.replace(`/chat/${conversation.id}`);
       },
       onError: () => {
-        router.back();
+        goBackOrFallback(router);
       },
     });
   }, [providerId, findOrCreate, router]);

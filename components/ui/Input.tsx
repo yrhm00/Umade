@@ -2,7 +2,7 @@ import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
 import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { Eye, EyeOff } from 'lucide-react-native';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -39,29 +39,19 @@ export const Input = React.memo(function Input({
   const isDark = useIsDarkTheme();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
-  const focusTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isPassword = secureTextEntry !== undefined;
   const showPassword = isPassword && isPasswordVisible;
 
-  // Le style focus est appliqué APRÈS que le clavier soit ouvert.
-  // Appliquer un changement de shadow iOS pendant l'ouverture du clavier
-  // force la création d'un nouveau CALayer natif, ce qui fait perdre le
-  // firstResponder (focus) au TextInput et ferme le clavier.
+  // Sur iOS, certains changements de "shadow" pendant l'ouverture du clavier
+  // peuvent faire perdre le focus au TextInput. On garde donc un focus style
+  // simple (borderColor uniquement) et on applique l'etat immediatement.
   const handleFocus = useCallback((event: any) => {
     onFocus?.(event);
-    // Defer : attendre que le clavier soit complètement ouvert
-    if (focusTimer.current) clearTimeout(focusTimer.current);
-    focusTimer.current = setTimeout(() => {
-      setIsFocused(true);
-    }, 150);
+    setIsFocused(true);
   }, [onFocus]);
 
   const handleBlur = useCallback((event: any) => {
-    if (focusTimer.current) {
-      clearTimeout(focusTimer.current);
-      focusTimer.current = null;
-    }
     setIsFocused(false);
     onBlur?.(event);
   }, [onBlur]);
@@ -75,8 +65,6 @@ export const Input = React.memo(function Input({
     },
     isFocused && {
       borderColor: colors.primary,
-      shadowOpacity: 0.1,
-      elevation: 2,
     },
     error && {
       borderColor: colors.error,

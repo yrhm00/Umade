@@ -46,14 +46,14 @@ export function AnimatedCard({
 
   // Calculate entering animation
   const enteringAnimation = entering
-    ? FadeInDown.delay(delay).springify().damping(15)
+    ? FadeInDown.delay(delay).duration(260)
     : undefined;
 
   if (onPress) {
     return (
       <Animated.View
         entering={enteringAnimation}
-        layout={ReanimatedLayout.springify()}
+        layout={ReanimatedLayout.duration(260)}
       >
         <PressableScale
           onPress={onPress}
@@ -71,7 +71,7 @@ export function AnimatedCard({
     <Animated.View
       style={cardStyles}
       entering={enteringAnimation}
-      layout={ReanimatedLayout.springify()}
+      layout={ReanimatedLayout.duration(260)}
     >
       {children}
     </Animated.View>

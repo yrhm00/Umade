@@ -1,16 +1,23 @@
+import { BadgeIcon } from '@/components/badges/BadgeIcon';
+import { SectionHeader } from '@/components/common/SectionHeader';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
+import { PressableScale } from '@/components/ui/PressableScale';
 import { Layout } from '@/constants/Layout';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserBadges } from '@/hooks/useBadges';
 import { useClientStats } from '@/hooks/useClientStats';
+import { useCredits } from '@/hooks/useReferral';
 import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { ThemeMode, useThemeStore } from '@/stores/themeStore';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import {
   Bell,
   ChevronRight,
   FileText,
+  Gift,
   Heart,
   HelpCircle,
   LogOut,
@@ -26,14 +33,15 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const THEME_LABELS: Record<ThemeMode, string> = {
   light: 'Clair',
   dark: 'Sombre',
+  oled: 'OLED',
   system: 'Système',
 };
 
@@ -44,18 +52,20 @@ interface MenuItemProps {
   badge?: string;
   destructive?: boolean;
   colors: ReturnType<typeof useColors>;
+  isDark: boolean;
 }
 
-function MenuItem({ icon, label, onPress, badge, destructive, colors }: MenuItemProps) {
+function MenuItem({ icon, label, onPress, badge, destructive, colors, isDark }: MenuItemProps) {
   return (
-    <TouchableOpacity
-      style={styles.menuItem}
+    <PressableScale
+      scale={0.98}
+      haptic="selection"
       onPress={onPress}
-      activeOpacity={0.7}
+      style={styles.menuItem}
     >
       <View style={[
         styles.menuIcon,
-        { backgroundColor: destructive ? 'rgba(239, 68, 68, 0.1)' : `${colors.primary}15` }
+        { backgroundColor: destructive ? 'rgba(239, 68, 68, 0.1)' : isDark ? `${colors.primary}30` : `${colors.primary}12` }
       ]}>
         {icon}
       </View>
@@ -72,7 +82,7 @@ function MenuItem({ icon, label, onPress, badge, destructive, colors }: MenuItem
         size={20}
         color={destructive ? colors.error : colors.textTertiary}
       />
-    </TouchableOpacity>
+    </PressableScale>
   );
 }
 
@@ -82,6 +92,8 @@ export default function ProfileScreen() {
   const isDark = useIsDarkTheme();
   const { profile, signOut, isLoading: authLoading } = useAuth();
   const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useClientStats();
+  const { data: credits } = useCredits();
+  const { data: userBadges = [] } = useUserBadges();
   const themeMode = useThemeStore((state) => state.mode);
 
   const handleSignOut = () => {
@@ -120,57 +132,100 @@ export default function ProfileScreen() {
         </View>
 
         {/* Profile Card */}
-        <Card variant="elevated" style={styles.profileCard}>
-          <View style={styles.profileHeader}>
-            <Avatar
-              source={profile?.avatar_url}
-              name={profile?.full_name || '?'}
-              size="xl"
-            />
-            <View style={styles.profileInfo}>
-              <Text style={[styles.profileName, { color: colors.text }]}>
-                {profile?.full_name || 'Utilisateur'}
-              </Text>
-              <Text style={[styles.profileEmail, { color: colors.textSecondary }]}>
-                {profile?.email}
-              </Text>
-              <Badge
-                label={profile?.role === 'provider' ? 'Prestataire' : 'Client'}
-                variant="info"
-                size="sm"
+        <Animated.View entering={FadeInDown.delay(0).duration(260)}>
+          <Card variant="elevated" style={styles.profileCard}>
+            <View style={styles.profileHeader}>
+              <Avatar
+                source={profile?.avatar_url}
+                name={profile?.full_name || '?'}
+                size="xl"
               />
+              <View style={styles.profileInfo}>
+                <Text style={[styles.profileName, { color: colors.text }]}>
+                  {profile?.full_name || 'Utilisateur'}
+                </Text>
+                <Text style={[styles.profileEmail, { color: colors.textSecondary }]}>
+                  {profile?.email}
+                </Text>
+                <Badge
+                  label={profile?.role === 'provider' ? 'Prestataire' : 'Client'}
+                  variant="info"
+                  size="sm"
+                />
+              </View>
             </View>
-          </View>
-          <TouchableOpacity
-            style={[styles.editButton, { backgroundColor: `${colors.primary}15` }]}
-            onPress={() => router.push('/profile/edit')}
-          >
-            <Text style={[styles.editButtonText, { color: colors.primary }]}>Modifier le profil</Text>
-          </TouchableOpacity>
-        </Card>
+            <PressableScale
+              scale={0.97}
+              haptic="light"
+              onPress={() => router.push('/profile/edit')}
+              style={[styles.editButton, { backgroundColor: `${colors.primary}15` }]}
+            >
+              <Text style={[styles.editButtonText, { color: colors.primary }]}>Modifier le profil</Text>
+            </PressableScale>
+          </Card>
+        </Animated.View>
 
         {/* Stats (for clients) */}
         {profile?.role === 'client' && (
-          <View style={[styles.statsContainer, { backgroundColor: colors.card }]}>
-            <View style={styles.statItem}>
-              <Text style={[styles.statValue, { color: colors.primary }]}>{stats?.bookingsCount || 0}</Text>
-              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Réservations</Text>
-            </View>
-            <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
-            <View style={styles.statItem}>
-              <Text style={[styles.statValue, { color: colors.primary }]}>{stats?.favoritesCount || 0}</Text>
-              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Favoris</Text>
-            </View>
-            <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
-            <View style={styles.statItem}>
-              <Text style={[styles.statValue, { color: colors.primary }]}>{stats?.reviewsCount || 0}</Text>
-              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Avis</Text>
-            </View>
-          </View>
+          <Animated.View entering={FadeInDown.delay(100).duration(260)}>
+            <LinearGradient
+              colors={[colors.primary, colors.primaryDark]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.statsContainer}
+            >
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{stats?.bookingsCount || 0}</Text>
+                <Text style={styles.statLabel}>Réservations</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{stats?.favoritesCount || 0}</Text>
+                <Text style={styles.statLabel}>Favoris</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{stats?.reviewsCount || 0}</Text>
+                <Text style={styles.statLabel}>Avis</Text>
+              </View>
+            </LinearGradient>
+          </Animated.View>
+        )}
+
+        {/* Badges section */}
+        {userBadges.length > 0 && (
+          <Animated.View entering={FadeInDown.delay(150).duration(260)} style={styles.badgesSection}>
+            <SectionHeader
+              title="Mes badges"
+              actionLabel="Voir tous"
+              onAction={() => router.push('/badges' as any)}
+            />
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.badgesList}
+            >
+              {userBadges.slice(0, 5).map((ub) => (
+                <PressableScale
+                  key={ub.id}
+                  scale={0.95}
+                  haptic="selection"
+                  onPress={() => router.push('/badges' as any)}
+                >
+                  <BadgeIcon
+                    icon={ub.badges.icon}
+                    name={ub.badges.name}
+                    earned
+                    size="sm"
+                  />
+                </PressableScale>
+              ))}
+            </ScrollView>
+          </Animated.View>
         )}
 
         {/* Menu Sections */}
-        <View style={styles.menuSection}>
+        <Animated.View entering={FadeInDown.delay(200).duration(260)} style={styles.menuSection}>
           <Text style={[styles.menuSectionTitle, { color: colors.textSecondary }]}>Mon compte</Text>
           <Card variant="outlined" padding="none">
             <MenuItem
@@ -178,6 +233,7 @@ export default function ProfileScreen() {
               label="Informations personnelles"
               onPress={() => router.push('/profile/edit')}
               colors={colors}
+              isDark={isDark}
             />
             <View style={[styles.menuDivider, { backgroundColor: colors.border }]} />
             <MenuItem
@@ -185,6 +241,7 @@ export default function ProfileScreen() {
               label="Mes favoris"
               onPress={() => router.push('/favorites')}
               colors={colors}
+              isDark={isDark}
             />
             <View style={[styles.menuDivider, { backgroundColor: colors.border }]} />
             <MenuItem
@@ -192,11 +249,21 @@ export default function ProfileScreen() {
               label="Mes avis"
               onPress={() => router.push('/reviews/user' as any)}
               colors={colors}
+              isDark={isDark}
+            />
+            <View style={[styles.menuDivider, { backgroundColor: colors.border }]} />
+            <MenuItem
+              icon={<Gift size={20} color={colors.primary} />}
+              label="Parrainage"
+              badge={credits?.balance ? `${credits.balance} crédits` : undefined}
+              onPress={() => router.push('/referral' as any)}
+              colors={colors}
+              isDark={isDark}
             />
           </Card>
-        </View>
+        </Animated.View>
 
-        <View style={styles.menuSection}>
+        <Animated.View entering={FadeInDown.delay(300).duration(260)} style={styles.menuSection}>
           <Text style={[styles.menuSectionTitle, { color: colors.textSecondary }]}>Paramètres</Text>
           <Card variant="outlined" padding="none">
             <MenuItem
@@ -204,6 +271,7 @@ export default function ProfileScreen() {
               label="Notifications"
               onPress={() => router.push('/notifications')}
               colors={colors}
+              isDark={isDark}
             />
             <View style={[styles.menuDivider, { backgroundColor: colors.border }]} />
             <MenuItem
@@ -212,6 +280,7 @@ export default function ProfileScreen() {
               badge={THEME_LABELS[themeMode]}
               onPress={() => router.push('/settings/appearance' as any)}
               colors={colors}
+              isDark={isDark}
             />
             <View style={[styles.menuDivider, { backgroundColor: colors.border }]} />
             <MenuItem
@@ -219,6 +288,7 @@ export default function ProfileScreen() {
               label="Préférences notifications"
               onPress={() => router.push('/settings/notifications' as any)}
               colors={colors}
+              isDark={isDark}
             />
             <View style={[styles.menuDivider, { backgroundColor: colors.border }]} />
             <MenuItem
@@ -226,6 +296,7 @@ export default function ProfileScreen() {
               label="Aide & Support"
               onPress={() => router.push('/help')}
               colors={colors}
+              isDark={isDark}
             />
             <View style={[styles.menuDivider, { backgroundColor: colors.border }]} />
             <MenuItem
@@ -233,11 +304,12 @@ export default function ProfileScreen() {
               label="Conditions d'utilisation"
               onPress={() => router.push('/legal/terms')}
               colors={colors}
+              isDark={isDark}
             />
           </Card>
-        </View>
+        </Animated.View>
 
-        <View style={styles.menuSection}>
+        <Animated.View entering={FadeInDown.delay(400).duration(260)} style={styles.menuSection}>
           <Card variant="outlined" padding="none">
             <MenuItem
               icon={<LogOut size={20} color={colors.error} />}
@@ -245,9 +317,10 @@ export default function ProfileScreen() {
               onPress={handleSignOut}
               destructive
               colors={colors}
+              isDark={isDark}
             />
           </Card>
-        </View>
+        </Animated.View>
 
         {/* Version */}
         <Text style={[styles.version, { color: colors.textTertiary }]}>Version 1.0.0</Text>
@@ -305,8 +378,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginHorizontal: Layout.spacing.lg,
     marginBottom: Layout.spacing.lg,
-    padding: Layout.spacing.md,
-    borderRadius: Layout.radius.lg,
+    padding: Layout.spacing.lg,
+    borderRadius: Layout.radius.xl,
   },
   statItem: {
     flex: 1,
@@ -315,13 +388,16 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: Layout.fontSize['2xl'],
     fontWeight: '700',
+    color: '#FFFFFF',
   },
   statLabel: {
     fontSize: Layout.fontSize.xs,
     marginTop: 2,
+    color: 'rgba(255,255,255,0.8)',
   },
   statDivider: {
     width: 1,
+    backgroundColor: 'rgba(255,255,255,0.2)',
   },
   menuSection: {
     marginHorizontal: Layout.spacing.lg,
@@ -359,5 +435,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: Layout.fontSize.xs,
     marginTop: Layout.spacing.md,
+  },
+  badgesSection: {
+    marginBottom: Layout.spacing.md,
+  },
+  badgesList: {
+    paddingHorizontal: Layout.spacing.lg,
+    gap: Layout.spacing.md,
   },
 });

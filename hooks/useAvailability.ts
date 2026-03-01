@@ -36,35 +36,54 @@ export function useProviderAvailability(
     queryFn: async (): Promise<Map<string, DayAvailability>> => {
       if (!providerId) return new Map();
 
-      // 1. Récupérer les dates bloquées du provider
-      const { data: provider, error } = await supabase
-        .from('providers')
-        .select('blocked_dates')
-        .eq('id', providerId)
-        .single();
-
-      if (error) throw error;
-
-      const blockedPeriods = (provider?.blocked_dates as BlockedPeriod[]) || [];
-      const dayMap = new Map<string, DayAvailability>();
-
       const daysInMonth = new Date(year, month, 0).getDate();
+      const firstDay = `${year}-${String(month).padStart(2, '0')}-01`;
+      const lastDay = `${year}-${String(month).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`;
+
+      // Fetch blocked dates ET créneaux réels en parallèle
+      const [providerResult, availabilityResult] = await Promise.all([
+        supabase
+          .from('providers')
+          .select('blocked_dates')
+          .eq('id', providerId)
+          .single(),
+        supabase
+          .from('availabilities')
+          .select('date, start_time, end_time')
+          .eq('provider_id', providerId)
+          .gte('date', firstDay)
+          .lte('date', lastDay),
+      ]);
+
+      if (providerResult.error) throw providerResult.error;
+
+      const blockedPeriods = (providerResult.data?.blocked_dates as unknown as BlockedPeriod[]) || [];
+
+      // Construire un Map des créneaux réels par date
+      const slotsMap = new Map<string, { start_time: string; end_time: string }[]>();
+      (availabilityResult.data || []).forEach((a) => {
+        const existing = slotsMap.get(a.date) || [];
+        existing.push({ start_time: a.start_time, end_time: a.end_time });
+        slotsMap.set(a.date, existing);
+      });
+
+      const dayMap = new Map<string, DayAvailability>();
       const today = new Date();
       const todayStr = today.toISOString().split('T')[0];
 
-      // Générer tous les jours du mois
       for (let d = 1; d <= daysInMonth; d++) {
         const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 
-        // Vérifier si le jour est disponible
         const isPast = dateStr < todayStr;
         const isBlocked = isDateBlocked(dateStr, blockedPeriods);
         const isAvailable = !isPast && !isBlocked;
 
+        // Utiliser les vrais créneaux si disponibles, sinon fallback sur le dummy slot
+        const realSlots = slotsMap.get(dateStr);
         dayMap.set(dateStr, {
           date: dateStr,
           isAvailable,
-          slots: isAvailable ? [{ start_time: '00:00', end_time: '23:59' }] : [], // Dummy slot allows selection
+          slots: isAvailable ? (realSlots || [{ start_time: '00:00', end_time: '23:59' }]) : [],
         });
       }
 
@@ -77,7 +96,7 @@ export function useProviderAvailability(
 
 /**
  * Récupère les créneaux disponibles pour un prestataire à une date donnée.
- * (Deprecated but kept for compatibility if needed, returns empty or dummy)
+ * Utilise le RPC get_available_slots si disponible, sinon fallback sur query directe.
  */
 export function useAvailableSlots(
   providerId: string | undefined,
@@ -86,10 +105,35 @@ export function useAvailableSlots(
   return useQuery({
     queryKey: [Config.cacheKeys.availability, 'slots', providerId, date],
     queryFn: async (): Promise<{ start_time: string; end_time: string }[]> => {
-      // Always return generic booking range or empty
-      return [];
+      if (!providerId || !date) return [];
+
+      // Tenter d'utiliser le RPC get_available_slots
+      const { data, error } = await supabase.rpc('get_available_slots' as any, {
+        p_provider_id: providerId,
+        p_date: date,
+      });
+
+      if (error) {
+        // Fallback : query directe sur la table availabilities
+        const { data: slots, error: slotsError } = await supabase
+          .from('availabilities')
+          .select('start_time, end_time')
+          .eq('provider_id', providerId)
+          .eq('date', date);
+
+        if (slotsError) throw slotsError;
+        return (slots || []).map((slot) => ({
+          start_time: slot.start_time,
+          end_time: slot.end_time,
+        }));
+      }
+
+      return (data || []).map((slot: any) => ({
+        start_time: slot.start_time,
+        end_time: slot.end_time,
+      }));
     },
     enabled: !!providerId && !!date,
-    staleTime: Infinity,
+    staleTime: 1000 * 60 * 5,
   });
 }

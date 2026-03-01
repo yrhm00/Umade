@@ -21,6 +21,7 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { goBackOrFallback } from '@/lib/navigation';
 
 export default function BlockedDatesScreen() {
     const router = useRouter();
@@ -76,7 +77,7 @@ export default function BlockedDatesScreen() {
                     style: 'destructive',
                     onPress: async () => {
                         try {
-                            await deleteMutation.mutateAsync(index);
+                            await deleteMutation.mutateAsync(period);
                         } catch (error) {
                             console.error('Error deleting blocked period:', error);
                             Alert.alert('Erreur', 'Impossible de supprimer la période');
@@ -154,7 +155,7 @@ export default function BlockedDatesScreen() {
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
             <View style={styles.header}>
-                <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                <TouchableOpacity style={styles.backButton} onPress={() => goBackOrFallback(router)}>
                     <ArrowLeft size={24} color={Colors.text.primary} />
                 </TouchableOpacity>
                 <Text style={styles.title}>Indisponibilités</Text>
@@ -169,7 +170,7 @@ export default function BlockedDatesScreen() {
             <FlatList
                 data={blockedPeriods || []}
                 renderItem={renderPeriod}
-                keyExtractor={(_, index) => index.toString()}
+                keyExtractor={(item) => `${item.start}-${item.end}`}
                 contentContainerStyle={styles.listContent}
                 ListEmptyComponent={renderEmpty}
             />

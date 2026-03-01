@@ -9,6 +9,7 @@ import { useColors } from '@/hooks/useColors';
 import { useInspiration } from '@/hooks/useInspirations';
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
+import { AlertCircle } from 'lucide-react-native';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 export default function InspirationDetailScreen() {
@@ -29,7 +30,7 @@ export default function InspirationDetailScreen() {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <EmptyState
-          icon="😕"
+          icon={<AlertCircle size={32} color={colors.primary} />}
           title="Inspiration introuvable"
           description="Cette inspiration n'existe pas ou a ete supprimee."
         />

@@ -1,24 +1,36 @@
 /**
- * Ecran principal - Feed d'inspirations style Pinterest (Phase 9)
- * Liquid Glass Header + Option 2 + Dark Mode Support
+ * Ecran principal - Home personnalisée + Feed d'inspirations (Phase 10)
+ * Liquid Glass Header + Dark Mode Support
  */
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { SectionHeader } from '@/components/common/SectionHeader';
+import {
+  WelcomeHeader,
+  CountdownCard,
+  ChecklistPreview,
+  ArticlesSection,
+  PopularProvidersSection,
+} from '@/components/home';
 import { FilterSheet, MasonryGrid } from '@/components/inspirations';
+import { StoriesStrip } from '@/components/stories';
 import { PressableScale } from '@/components/ui/PressableScale';
+import { VoiceSearchButton } from '@/components/ui/VoiceSearchButton';
 import { Layout } from '@/constants/Layout';
 import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { useInspirationFeed } from '@/hooks/useInspirations';
+import { useUserPreferences } from '@/hooks/useUserPreferences';
 import {
   InspirationFilters,
   InspirationSortBy,
   InspirationWithProvider,
 } from '@/types/inspiration';
-import BottomSheet from '@gorhom/bottom-sheet';
+import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { BlurView } from 'expo-blur';
 import { router } from 'expo-router';
 import {
   Heart,
+  Palette,
   Search,
   SlidersHorizontal,
   X,
@@ -44,27 +56,36 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 const SEARCH_BAR_HEIGHT = 56;
 const SCROLL_THRESHOLD = 50;
 
-export default function InspirationsScreen() {
+export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const colors = useColors();
   const isDark = useIsDarkTheme();
+
+  const { data: preferences } = useUserPreferences();
 
   const [filters, setFilters] = useState<InspirationFilters>({});
   const [sortBy, setSortBy] = useState<InspirationSortBy>('recent');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
-  const filterSheetRef = useRef<BottomSheet>(null);
+  const filterSheetRef = useRef<BottomSheetModal>(null);
   const searchInputRef = useRef<TextInput>(null);
 
   const scrollY = useSharedValue(0);
 
+  // Apply preferred styles to inspiration filters
   const activeFilters = useMemo(
     () => ({
       ...filters,
       searchQuery: searchQuery.trim() || undefined,
+      // Filter by preferred styles if no manual filter is set
+      styles: filters.styles?.length
+        ? filters.styles
+        : preferences?.preferred_styles?.length
+        ? (preferences.preferred_styles as any)
+        : undefined,
     }),
-    [filters, searchQuery]
+    [filters, searchQuery, preferences?.preferred_styles]
   );
 
   const {
@@ -97,11 +118,11 @@ export default function InspirationsScreen() {
   }, [refetch]);
 
   const handleOpenFilters = useCallback(() => {
-    filterSheetRef.current?.expand();
+    filterSheetRef.current?.present();
   }, []);
 
   const handleCloseFilters = useCallback(() => {
-    filterSheetRef.current?.close();
+    filterSheetRef.current?.dismiss();
   }, []);
 
   const handleFavoritesPress = useCallback(() => {
@@ -130,16 +151,16 @@ export default function InspirationsScreen() {
     }
   }, [searchQuery]);
 
+  const handleVoiceResult = useCallback((text: string) => {
+    setSearchQuery(text);
+    setIsSearchExpanded(false);
+  }, []);
+
   const hasActiveFilters = (filters.event_types?.length ?? 0) > 0 || (filters.styles?.length ?? 0) > 0;
   const activeFilterCount =
     (filters.event_types?.length ?? 0) + (filters.styles?.length ?? 0);
 
   const headerHeight = insets.top + 52 + SEARCH_BAR_HEIGHT;
-
-  // Theme-aware colors for glass effects
-  const glassOverlayColor = isDark
-    ? 'rgba(26, 22, 37, 0.7)'
-    : 'rgba(255, 255, 255, 0.15)';
 
   const glassButtonBg = isDark
     ? 'rgba(95, 74, 139, 0.3)'
@@ -204,13 +225,28 @@ export default function InspirationsScreen() {
         isLoadingMore={isFetchingNextPage}
         isRefreshing={isRefetching}
         ListHeaderComponent={
-          <View style={{ height: headerHeight - 8 }} />
+          <View style={{ paddingTop: headerHeight - 8 }}>
+            {/* Stories Strip */}
+            <StoriesStrip />
+
+            {/* Prestataires populaires */}
+            <PopularProvidersSection />
+
+            <WelcomeHeader />
+            <CountdownCard />
+            <ChecklistPreview />
+
+            {/* Articles éditoriaux */}
+            <ArticlesSection />
+
+            <SectionHeader title="Inspirations pour toi" delay={100} />
+          </View>
         }
         ListEmptyComponent={
           <EmptyState
-            icon="🎨"
+            icon={<Palette size={32} color={colors.primary} />}
             title="Aucune inspiration"
-            description="Aucune inspiration ne correspond a vos criteres. Essayez de modifier vos filtres."
+            description="Aucune inspiration ne correspond à vos critères. Essayez de modifier vos filtres."
             actionLabel="Effacer les filtres"
             onAction={() => {
               setFilters({});
@@ -221,17 +257,32 @@ export default function InspirationsScreen() {
       />
 
       {/* Liquid Glass Header */}
-      <View style={[styles.glassHeader, { paddingTop: insets.top }]} pointerEvents="box-none">
+      <View
+        style={[
+          styles.glassHeader,
+          {
+            paddingTop: insets.top,
+          },
+        ]}
+        pointerEvents="box-none"
+      >
         <BlurView
-          intensity={60}
+          intensity={28}
           tint={isDark ? 'dark' : 'light'}
-          style={styles.glassBlur}
+          style={StyleSheet.absoluteFill}
         />
-        <View style={[styles.glassOverlay, { backgroundColor: glassOverlayColor }]} />
+        {/* Uniform tint overlay (no gradient line) */}
+        <View
+          style={[
+            StyleSheet.absoluteFill,
+            { backgroundColor: isDark ? 'rgba(15,13,22,0.25)' : 'rgba(255,255,255,0.18)' },
+          ]}
+          pointerEvents="none"
+        />
 
         {/* Header row */}
         <View style={styles.headerContent} pointerEvents="auto">
-          <Text style={[styles.title, { color: colors.text }]}>Inspirations</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Accueil</Text>
           <View style={styles.headerActions}>
             {/* Search icon (visible when scrolled) */}
             <Animated.View style={headerSearchStyle}>
@@ -302,6 +353,10 @@ export default function InspirationsScreen() {
                   <X size={18} color={colors.textTertiary} />
                 </Pressable>
               )}
+              <VoiceSearchButton
+                onResult={handleVoiceResult}
+                size={32}
+              />
             </View>
 
             <PressableScale onPress={handleOpenFilters} haptic="light">
@@ -392,12 +447,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 10,
-  },
-  glassBlur: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  glassOverlay: {
-    ...StyleSheet.absoluteFillObject,
   },
   headerContent: {
     flexDirection: 'row',
@@ -533,5 +582,14 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     fontSize: Layout.fontSize.md,
     fontWeight: '500',
+  },
+  sectionHeader: {
+    paddingHorizontal: Layout.spacing.lg,
+    paddingTop: Layout.spacing.lg,
+    paddingBottom: Layout.spacing.sm,
+  },
+  sectionTitle: {
+    fontSize: Layout.fontSize.lg,
+    fontWeight: '700',
   },
 });

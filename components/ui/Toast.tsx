@@ -95,8 +95,8 @@ export function Toast({
 
   return (
     <Animated.View
-      entering={SlideInUp.springify().damping(15)}
-      exiting={SlideOutUp.springify().damping(15)}
+      entering={SlideInUp.duration(260)}
+      exiting={SlideOutUp.duration(260)}
       style={[
         styles.container,
         { marginTop: insets.top + Layout.spacing.sm },

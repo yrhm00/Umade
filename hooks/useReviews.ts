@@ -53,16 +53,24 @@ async function fetchProviderReviews(
 async function fetchProviderReviewStats(
   providerId: string
 ): Promise<ReviewStats> {
-  const { data, error } = await supabase
-    .from('reviews')
-    .select('rating')
-    .eq('provider_id', providerId)
-    .eq('is_visible', true);
+  // Utiliser les stats dénormalisées du provider + 5 count queries parallèles (head: true = 0 lignes transférées)
+  const [providerResult, r1, r2, r3, r4, r5] = await Promise.all([
+    supabase
+      .from('providers')
+      .select('average_rating, review_count')
+      .eq('id', providerId)
+      .single(),
+    supabase.from('reviews').select('*', { count: 'exact', head: true }).eq('provider_id', providerId).eq('is_visible', true).eq('rating', 1),
+    supabase.from('reviews').select('*', { count: 'exact', head: true }).eq('provider_id', providerId).eq('is_visible', true).eq('rating', 2),
+    supabase.from('reviews').select('*', { count: 'exact', head: true }).eq('provider_id', providerId).eq('is_visible', true).eq('rating', 3),
+    supabase.from('reviews').select('*', { count: 'exact', head: true }).eq('provider_id', providerId).eq('is_visible', true).eq('rating', 4),
+    supabase.from('reviews').select('*', { count: 'exact', head: true }).eq('provider_id', providerId).eq('is_visible', true).eq('rating', 5),
+  ]);
 
-  if (error) throw error;
+  if (providerResult.error) throw providerResult.error;
 
-  const reviews = data || [];
-  const total = reviews.length;
+  const total = providerResult.data?.review_count || 0;
+  const average = providerResult.data?.average_rating || 0;
 
   if (total === 0) {
     return {
@@ -72,18 +80,16 @@ async function fetchProviderReviewStats(
     };
   }
 
-  const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
-  const distribution: ReviewStats['distribution'] = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-
-  reviews.forEach((r) => {
-    const rating = r.rating as 1 | 2 | 3 | 4 | 5;
-    distribution[rating]++;
-  });
-
   return {
-    average_rating: Math.round((sum / total) * 10) / 10,
+    average_rating: Math.round(average * 10) / 10,
     total_count: total,
-    distribution,
+    distribution: {
+      1: r1.count || 0,
+      2: r2.count || 0,
+      3: r3.count || 0,
+      4: r4.count || 0,
+      5: r5.count || 0,
+    },
   };
 }
 
@@ -112,15 +118,16 @@ async function fetchUserReviews(userId: string): Promise<ReviewWithDetails[]> {
 async function fetchReviewableBookings(
   userId: string
 ): Promise<ReviewableBooking[]> {
-  // Réservations complétées sans avis
-  const { data, error } = await supabase
+  // Réservations complétées sans avis — une seule requête avec LEFT JOIN
+  const { data, error } = await (supabase as any)
     .from('bookings')
     .select(
       `
       id,
       booking_date,
       provider:providers(id, business_name),
-      service:services(name)
+      service:services(name),
+      reviews!reviews_booking_id_fkey(id)
     `
     )
     .eq('client_id', userId)
@@ -129,22 +136,10 @@ async function fetchReviewableBookings(
 
   if (error) throw error;
 
-  // Pour chaque booking, vérifier s'il a déjà un avis
-  const bookingsWithoutReview: ReviewableBooking[] = [];
-
-  for (const booking of data || []) {
-    const { data: existingReview } = await supabase
-      .from('reviews')
-      .select('id')
-      .eq('booking_id', booking.id)
-      .maybeSingle();
-
-    if (!existingReview) {
-      bookingsWithoutReview.push(booking as unknown as ReviewableBooking);
-    }
-  }
-
-  return bookingsWithoutReview;
+  // Filtrer les bookings sans review (reviews array vide)
+  return ((data || []) as any[])
+    .filter((booking) => !booking.reviews || booking.reviews.length === 0)
+    .map(({ reviews: _reviews, ...rest }) => rest) as unknown as ReviewableBooking[];
 }
 
 async function fetchBookingForReview(bookingId: string) {

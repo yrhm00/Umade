@@ -1,12 +1,12 @@
 /**
- * Theme Store - Gestion du mode clair/sombre/système
+ * Theme Store - Gestion du mode clair/sombre/OLED/système
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-export type ThemeMode = 'light' | 'dark' | 'system';
+export type ThemeMode = 'light' | 'dark' | 'oled' | 'system';
 
 interface ThemeState {
     mode: ThemeMode;
@@ -29,3 +29,11 @@ export const useThemeStore = create<ThemeState>()(
 // Sélecteurs pour optimiser les re-renders
 export const selectThemeMode = (state: ThemeState) => state.mode;
 export const selectSetThemeMode = (state: ThemeState) => state.setMode;
+
+// Labels pour l'UI
+export const THEME_LABELS: Record<ThemeMode, string> = {
+    light: 'Clair',
+    dark: 'Sombre',
+    oled: 'OLED (Noir pur)',
+    system: 'Automatique',
+};

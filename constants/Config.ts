@@ -40,5 +40,7 @@ export const Config = {
     notifications: 'notifications',
     favorites: 'favorites',
     inspirations: 'inspirations',
+    editorial: 'editorial',
+    badges: 'badges',
   },
 } as const;

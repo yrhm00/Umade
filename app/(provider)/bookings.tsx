@@ -2,15 +2,16 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
 import { useProviderBookings } from '@/hooks/useBookings';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { BookingStatus } from '@/lib/supabase';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Calendar, Clock } from 'lucide-react-native';
 import React, { useCallback, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { goBackOrFallback } from '@/lib/navigation';
 
 const STATUS_LABELS: Record<string, string> = {
     pending: 'En attente',
@@ -37,6 +38,8 @@ const FILTER_OPTIONS: { label: string; value: BookingStatus | 'upcoming' | undef
 
 export default function ProviderBookingsScreen() {
     const router = useRouter();
+    const colors = useColors();
+    const isDark = useIsDarkTheme();
     const [statusFilter, setStatusFilter] = useState<BookingStatus | 'upcoming' | undefined>('upcoming');
 
     const { data: bookings, isLoading, refetch, isRefetching } =
@@ -91,7 +94,7 @@ export default function ProviderBookingsScreen() {
     const renderBookingItem = useCallback(
         ({ item }: { item: any }) => (
             <TouchableOpacity
-                style={styles.bookingCard}
+                style={[styles.bookingCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}
                 onPress={() => router.push(`/booking/${item.id}/details`)}
                 activeOpacity={0.7}
             >
@@ -103,10 +106,10 @@ export default function ProviderBookingsScreen() {
                             size="md"
                         />
                         <View style={styles.clientDetails}>
-                            <Text style={styles.clientName}>
+                            <Text style={[styles.clientName, { color: colors.text }]}>
                                 {item.profiles?.full_name || 'Client'}
                             </Text>
-                            <Text style={styles.serviceName}>
+                            <Text style={[styles.serviceName, { color: colors.textSecondary }]}>
                                 {item.services?.name || 'Service'}
                             </Text>
                         </View>
@@ -118,15 +121,15 @@ export default function ProviderBookingsScreen() {
                     />
                 </View>
 
-                <View style={styles.bookingDetails}>
+                <View style={[styles.bookingDetails, { borderTopColor: colors.border }]}>
                     <View style={styles.detailRow}>
-                        <Calendar size={16} color={Colors.text.secondary} />
-                        <Text style={styles.detailText}>{formatDate(item.booking_date)}</Text>
+                        <Calendar size={16} color={colors.textSecondary} />
+                        <Text style={[styles.detailText, { color: colors.textSecondary }]}>{formatDate(item.booking_date)}</Text>
                     </View>
                     {item.start_time && (
                         <View style={styles.detailRow}>
-                            <Clock size={16} color={Colors.text.secondary} />
-                            <Text style={styles.detailText}>
+                            <Clock size={16} color={colors.textSecondary} />
+                            <Text style={[styles.detailText, { color: colors.textSecondary }]}>
                                 {formatTime(item.start_time)}
                                 {item.end_time && ` - ${formatTime(item.end_time)}`}
                             </Text>
@@ -134,32 +137,35 @@ export default function ProviderBookingsScreen() {
                     )}
                 </View>
 
-                <View style={styles.bookingFooter}>
-                    <Text style={styles.price}>{formatPrice(item.total_price)}</Text>
+                <View style={[styles.bookingFooter, { borderTopColor: colors.border }]}>
+                    <Text style={[styles.price, { color: colors.primary }]}>{formatPrice(item.total_price)}</Text>
                 </View>
             </TouchableOpacity>
         ),
-        [router]
+        [colors.border, colors.card, colors.cardBorder, colors.primary, colors.text, colors.textSecondary, router]
     );
 
     const keyExtractor = useCallback((item: any) => item.id, []);
 
     return (
-        <SafeAreaView style={styles.container} edges={['top']}>
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
             {/* Header */}
-            <View style={styles.header}>
+            <View style={[styles.header, { borderBottomColor: colors.border, backgroundColor: colors.background }]}>
                 <TouchableOpacity
-                    style={styles.backButton}
-                    onPress={() => router.back()}
+                    style={[
+                        styles.backButton,
+                        { backgroundColor: isDark ? colors.backgroundTertiary : colors.backgroundSecondary },
+                    ]}
+                    onPress={() => goBackOrFallback(router)}
                 >
-                    <ArrowLeft size={24} color={Colors.text.primary} />
+                    <ArrowLeft size={24} color={colors.text} />
                 </TouchableOpacity>
-                <Text style={styles.title}>Réservations</Text>
+                <Text style={[styles.title, { color: colors.text }]}>Réservations</Text>
                 <View style={styles.placeholder} />
             </View>
 
             {/* Filter Tabs */}
-            <View style={styles.filterContainer}>
+            <View style={[styles.filterContainer, { borderBottomColor: colors.border }]}>
                 <FlatList
                     data={FILTER_OPTIONS}
                     horizontal
@@ -170,13 +176,20 @@ export default function ProviderBookingsScreen() {
                         <TouchableOpacity
                             style={[
                                 styles.filterTab,
+                                {
+                                    backgroundColor: isDark
+                                        ? colors.backgroundTertiary
+                                        : colors.backgroundSecondary,
+                                },
                                 statusFilter === item.value && styles.filterTabActive,
+                                statusFilter === item.value && { backgroundColor: colors.primary },
                             ]}
                             onPress={() => setStatusFilter(item.value)}
                         >
                             <Text
                                 style={[
                                     styles.filterTabText,
+                                    { color: colors.textSecondary },
                                     statusFilter === item.value && styles.filterTabTextActive,
                                 ]}
                             >
@@ -203,7 +216,7 @@ export default function ProviderBookingsScreen() {
                 />
             ) : (
                 <EmptyState
-                    icon="📅"
+                    icon={<Calendar size={32} color={colors.primary} />}
                     title="Aucune réservation"
                     description={
                         statusFilter
@@ -219,7 +232,6 @@ export default function ProviderBookingsScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: Colors.background.primary,
     },
     header: {
         flexDirection: 'row',
@@ -228,7 +240,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: Layout.spacing.lg,
         paddingVertical: Layout.spacing.md,
         borderBottomWidth: 1,
-        borderBottomColor: Colors.gray[100],
     },
     backButton: {
         width: 40,
@@ -240,14 +251,12 @@ const styles = StyleSheet.create({
     title: {
         fontSize: Layout.fontSize['xl'],
         fontWeight: '700',
-        color: Colors.text.primary,
     },
     placeholder: {
         width: 40,
     },
     filterContainer: {
         borderBottomWidth: 1,
-        borderBottomColor: Colors.gray[100],
     },
     filterList: {
         paddingHorizontal: Layout.spacing.lg,
@@ -258,19 +267,16 @@ const styles = StyleSheet.create({
         paddingHorizontal: Layout.spacing.md,
         paddingVertical: Layout.spacing.sm,
         borderRadius: Layout.radius.full,
-        backgroundColor: Colors.gray[100],
         marginRight: Layout.spacing.sm,
     },
     filterTabActive: {
-        backgroundColor: Colors.primary.DEFAULT,
     },
     filterTabText: {
         fontSize: Layout.fontSize.sm,
         fontWeight: '500',
-        color: Colors.text.secondary,
     },
     filterTabTextActive: {
-        color: Colors.white,
+        color: '#FFFFFF',
     },
     list: {
         padding: Layout.spacing.lg,
@@ -279,11 +285,9 @@ const styles = StyleSheet.create({
         height: Layout.spacing.md,
     },
     bookingCard: {
-        backgroundColor: Colors.white,
         borderRadius: Layout.radius.lg,
         padding: Layout.spacing.md,
         borderWidth: 1,
-        borderColor: Colors.gray[200],
     },
     bookingHeader: {
         flexDirection: 'row',
@@ -303,18 +307,15 @@ const styles = StyleSheet.create({
     clientName: {
         fontSize: Layout.fontSize.md,
         fontWeight: '600',
-        color: Colors.text.primary,
     },
     serviceName: {
         fontSize: Layout.fontSize.sm,
-        color: Colors.text.secondary,
         marginTop: 2,
     },
     bookingDetails: {
         gap: Layout.spacing.xs,
         paddingTop: Layout.spacing.sm,
         borderTopWidth: 1,
-        borderTopColor: Colors.gray[100],
     },
     detailRow: {
         flexDirection: 'row',
@@ -323,18 +324,15 @@ const styles = StyleSheet.create({
     },
     detailText: {
         fontSize: Layout.fontSize.sm,
-        color: Colors.text.secondary,
     },
     bookingFooter: {
         marginTop: Layout.spacing.md,
         paddingTop: Layout.spacing.sm,
         borderTopWidth: 1,
-        borderTopColor: Colors.gray[100],
         alignItems: 'flex-end',
     },
     price: {
         fontSize: Layout.fontSize.lg,
         fontWeight: '700',
-        color: Colors.primary.DEFAULT,
     },
 });

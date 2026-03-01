@@ -1,7 +1,9 @@
 /**
  * Carte d'inspiration pour le feed Pinterest-style (Phase 9)
+ * Avec support double-tap pour like
  */
 
+import { DoubleTapLike } from '@/components/ui/DoubleTapLike';
 import { PressableScale } from '@/components/ui/PressableScale';
 import { Animations } from '@/constants/Animations';
 import { Colors } from '@/constants/Colors';
@@ -15,7 +17,7 @@ import {
 } from '@/types/inspiration';
 import { Image } from 'expo-image';
 import { Heart } from 'lucide-react-native';
-import React, { memo } from 'react';
+import React, { memo, useCallback } from 'react';
 import { Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
@@ -50,36 +52,50 @@ export const InspirationCard = memo(function InspirationCard({
   // Limiter la hauteur entre 120 et 280
   const clampedHeight = Math.max(120, Math.min(280, imageHeight));
 
-  const handleFavoritePress = () => {
+  const handleFavoritePress = useCallback(() => {
     if (!isLoading) {
       toggleFavorite(inspiration.id);
     }
-  };
+  }, [isLoading, toggleFavorite, inspiration.id]);
+
+  // Double-tap ajoute aux favoris si pas déjà favori
+  const handleDoubleTap = useCallback(() => {
+    if (!isInspFavorite && !isLoading) {
+      toggleFavorite(inspiration.id);
+    }
+  }, [isInspFavorite, isLoading, toggleFavorite, inspiration.id]);
 
   const delay = (index % 10) * Animations.stagger.normal;
 
   return (
     <Animated.View
-      entering={FadeInDown.delay(delay).springify().damping(15)}
+      entering={FadeInDown.delay(delay).duration(260)}
       style={[styles.container, { width: CARD_WIDTH }, style]}
     >
-      <PressableScale
-        onPress={onPress}
-        scale={Animations.scale.pressedSubtle}
-        haptic="light"
-        style={[styles.card, { backgroundColor: colors.card }]}
-      >
+      <View style={[styles.card, { backgroundColor: colors.card }]}>
         {/* Image principale avec titre en overlay */}
         <View style={[styles.imageContainer, { height: clampedHeight }]}>
-          <Image
-            source={{ uri: mainImage?.thumbnail_url || mainImage?.image_url }}
-            style={styles.image}
-            contentFit="cover"
-            transition={200}
-            placeholder={colors.backgroundTertiary}
-          />
+          {/* Gestures only on the content (avoid stealing taps from the favorite button) */}
+          <DoubleTapLike onDoubleTap={handleDoubleTap} onSingleTap={onPress}>
+            <View style={{ width: CARD_WIDTH, height: clampedHeight }}>
+              <Image
+                source={{ uri: mainImage?.thumbnail_url || mainImage?.image_url }}
+                style={[styles.image, { width: CARD_WIDTH, height: clampedHeight }]}
+                contentFit="cover"
+                transition={200}
+                placeholder={colors.backgroundTertiary}
+              />
 
-          {/* Bouton favori */}
+              {/* Titre en overlay sur l'image */}
+              {inspiration.title && (
+                <Text style={styles.title} numberOfLines={1}>
+                  {inspiration.title}
+                </Text>
+              )}
+            </View>
+          </DoubleTapLike>
+
+          {/* Bouton favori (au-dessus du GestureDetector) */}
           <Pressable
             onPress={handleFavoritePress}
             style={styles.favoriteButton}
@@ -94,15 +110,8 @@ export const InspirationCard = memo(function InspirationCard({
               />
             </Animated.View>
           </Pressable>
-
-          {/* Titre en overlay sur l'image */}
-          {inspiration.title && (
-            <Text style={styles.title} numberOfLines={1}>
-              {inspiration.title}
-            </Text>
-          )}
         </View>
-      </PressableScale>
+      </View>
     </Animated.View>
   );
 });
@@ -119,7 +128,7 @@ export function InspirationCardSkeleton({ index = 0 }: { index?: number }) {
 
   return (
     <Animated.View
-      entering={FadeInDown.delay(delay).springify().damping(15)}
+      entering={FadeInDown.delay(delay).duration(260)}
       style={[styles.container, { width: CARD_WIDTH }]}
     >
       <View style={[styles.card, styles.skeleton, { backgroundColor: isDark ? colors.backgroundTertiary : Colors.gray[100] }]}>
@@ -181,4 +190,3 @@ const styles = StyleSheet.create({
 });
 
 export { CARD_GAP, CARD_WIDTH };
-

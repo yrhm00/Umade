@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
+import { useColors } from '@/hooks/useColors';
 
 interface DateSeparatorProps {
   date: string;
@@ -34,11 +34,13 @@ function formatDateLabel(dateString: string): string {
 export const DateSeparator = React.memo(function DateSeparator({
   date,
 }: DateSeparatorProps) {
+  const colors = useColors();
+
   return (
     <View style={styles.container}>
-      <View style={styles.line} />
-      <Text style={styles.text}>{formatDateLabel(date)}</Text>
-      <View style={styles.line} />
+      <View style={[styles.line, { backgroundColor: colors.border }]} />
+      <Text style={[styles.text, { color: colors.textTertiary }]}>{formatDateLabel(date)}</Text>
+      <View style={[styles.line, { backgroundColor: colors.border }]} />
     </View>
   );
 });
@@ -53,11 +55,9 @@ const styles = StyleSheet.create({
   line: {
     flex: 1,
     height: 1,
-    backgroundColor: Colors.gray[200],
   },
   text: {
     fontSize: Layout.fontSize.xs,
-    color: Colors.text.tertiary,
     paddingHorizontal: Layout.spacing.md,
     textTransform: 'capitalize',
   },

@@ -8,7 +8,7 @@ import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { useUserEvents } from '@/hooks/useEvents';
 import { EventWithBookings } from '@/types';
 import { useRouter } from 'expo-router';
-import { Plus } from 'lucide-react-native';
+import { Calendar, ClipboardList, Plus } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import {
   FlatList,
@@ -184,15 +184,16 @@ export default function EventsScreen() {
             showsVerticalScrollIndicator={false}
             refreshControl={
               <RefreshControl
-                refreshing={false}
+                refreshing={eventsLoading}
                 onRefresh={handleRefresh}
                 tintColor={colors.primary}
+                colors={[colors.primary]}
               />
             }
           />
         ) : (
           <EmptyState
-            icon={filter === 'upcoming' ? '📅' : '📋'}
+            icon={filter === 'upcoming' ? <Calendar size={32} color={colors.primary} /> : <ClipboardList size={32} color={colors.primary} />}
             title={
               filter === 'upcoming'
                 ? 'Aucun événement à venir'
@@ -222,15 +223,16 @@ export default function EventsScreen() {
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
-              refreshing={false}
+              refreshing={bookingsLoading}
               onRefresh={handleRefresh}
               tintColor={colors.primary}
+              colors={[colors.primary]}
             />
           }
         />
       ) : (
         <EmptyState
-          icon={filter === 'upcoming' ? '📅' : '📋'}
+          icon={filter === 'upcoming' ? <Calendar size={32} color={colors.primary} /> : <ClipboardList size={32} color={colors.primary} />}
           title={
             filter === 'upcoming'
               ? 'Aucune réservation à venir'

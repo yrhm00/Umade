@@ -5,8 +5,9 @@ import { ArrowLeft } from 'lucide-react-native';
 import { Avatar } from '@/components/ui/Avatar';
 import { useConversation } from '@/hooks/useConversations';
 import { useAuth } from '@/hooks/useAuth';
-import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
+import { goBackOrFallback } from '@/lib/navigation';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 
 interface ChatHeaderProps {
   conversationId: string;
@@ -17,6 +18,8 @@ export const ChatHeader = React.memo(function ChatHeader({
 }: ChatHeaderProps) {
   const router = useRouter();
   const { userId } = useAuth();
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
   const { data: conversation } = useConversation(conversationId);
 
   const isClient = conversation?.client_id === userId;
@@ -30,13 +33,16 @@ export const ChatHeader = React.memo(function ChatHeader({
   const providerId = conversation?.provider?.id;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
       <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => router.back()}
+        style={[
+          styles.backButton,
+          { backgroundColor: isDark ? colors.backgroundTertiary : colors.backgroundSecondary },
+        ]}
+        onPress={() => goBackOrFallback(router)}
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
       >
-        <ArrowLeft size={24} color={Colors.text.primary} />
+        <ArrowLeft size={24} color={colors.text} />
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -51,7 +57,7 @@ export const ChatHeader = React.memo(function ChatHeader({
       >
         <Avatar source={avatarUrl} name={displayName} size="md" />
         <View style={styles.textContainer}>
-          <Text style={styles.name} numberOfLines={1}>
+          <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
             {displayName}
           </Text>
         </View>
@@ -66,16 +72,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: Layout.spacing.md,
     paddingVertical: Layout.spacing.sm,
-    backgroundColor: Colors.white,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.gray[200],
     gap: Layout.spacing.sm,
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: Layout.radius.md,
-    backgroundColor: Colors.gray[100],
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -91,6 +94,5 @@ const styles = StyleSheet.create({
   name: {
     fontSize: Layout.fontSize.lg,
     fontWeight: '600',
-    color: Colors.text.primary,
   },
 });

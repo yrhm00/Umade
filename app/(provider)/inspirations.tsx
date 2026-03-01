@@ -20,6 +20,7 @@ import {
   Trash2,
   Eye,
   Heart,
+  Palette,
 } from 'lucide-react-native';
 import { Image } from 'expo-image';
 import { Colors } from '@/constants/Colors';
@@ -31,6 +32,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { useMyInspirations, useDeleteInspiration } from '@/hooks/useCreateInspiration';
 import { InspirationWithProvider, getEventTypeLabel } from '@/types/inspiration';
+import { goBackOrFallback } from '@/lib/navigation';
 
 export default function ProviderInspirationsScreen() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -39,7 +41,7 @@ export default function ProviderInspirationsScreen() {
   const { mutateAsync: deleteInspiration, isPending: isDeleting } = useDeleteInspiration();
 
   const handleBack = useCallback(() => {
-    router.back();
+    goBackOrFallback(router);
   }, []);
 
   const handleCreate = useCallback(() => {
@@ -73,6 +75,10 @@ export default function ProviderInspirationsScreen() {
     [deleteInspiration]
   );
 
+  const handleEdit = useCallback((inspiration: InspirationWithProvider) => {
+    router.push(`/(provider)/edit-inspiration/${inspiration.id}` as any);
+  }, []);
+
   const handleView = useCallback((inspiration: InspirationWithProvider) => {
     router.push(`/inspiration/${inspiration.id}` as any);
   }, []);
@@ -80,7 +86,7 @@ export default function ProviderInspirationsScreen() {
   const renderItem = useCallback(
     ({ item, index }: { item: InspirationWithProvider; index: number }) => (
       <Animated.View
-        entering={FadeInDown.delay(index * 50).springify()}
+        entering={FadeInDown.delay(index * 50).duration(260)}
         style={styles.card}
       >
         <Pressable onPress={() => handleView(item)} style={styles.cardContent}>
@@ -182,10 +188,10 @@ export default function ProviderInspirationsScreen() {
         onRefresh={refetch}
         ListEmptyComponent={
           <EmptyState
-            icon="🎨"
+            icon={<Palette size={32} color={Colors.primary.DEFAULT} />}
             title="Aucune inspiration"
-            description="Partagez vos plus belles realisations pour inspirer vos futurs clients."
-            actionLabel="Creer une inspiration"
+            description="Partagez vos plus belles réalisations pour inspirer vos futurs clients."
+            actionLabel="Créer une inspiration"
             onAction={handleCreate}
           />
         }

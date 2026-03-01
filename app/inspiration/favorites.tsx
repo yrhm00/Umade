@@ -11,10 +11,11 @@ import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { useUserFavoriteInspirations } from '@/hooks/useInspirationFavorites';
 import { InspirationWithProvider } from '@/types/inspiration';
 import { router } from 'expo-router';
-import { ChevronLeft } from 'lucide-react-native';
+import { ChevronLeft, Heart } from 'lucide-react-native';
 import React, { useCallback, useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { goBackOrFallback } from '@/lib/navigation';
 
 export default function InspirationFavoritesScreen() {
   const colors = useColors();
@@ -33,7 +34,7 @@ export default function InspirationFavoritesScreen() {
   }, [refetch]);
 
   const handleBack = useCallback(() => {
-    router.back();
+    goBackOrFallback(router);
   }, []);
 
   const handleExplore = useCallback(() => {
@@ -64,9 +65,9 @@ export default function InspirationFavoritesScreen() {
         isRefreshing={isRefetching}
         ListEmptyComponent={
           <EmptyState
-            icon="❤️"
+            icon={<Heart size={32} color={colors.primary} />}
             title="Aucun favori"
-            description="Vous n'avez pas encore enregistre d'inspirations en favoris. Explorez le feed pour en ajouter!"
+            description="Vous n'avez pas encore enregistré d'inspirations favorites. Explorez le feed pour en ajouter."
             actionLabel="Explorer"
             onAction={handleExplore}
           />

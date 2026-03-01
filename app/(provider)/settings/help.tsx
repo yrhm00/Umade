@@ -1,5 +1,6 @@
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, ChevronDown, ChevronUp, Mail, MessageCircle } from 'lucide-react-native';
 import React, { useState } from 'react';
@@ -13,6 +14,7 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { goBackOrFallback } from '@/lib/navigation';
 
 /* FAQ Data */
 const faqData = [
@@ -36,6 +38,8 @@ const faqData = [
 
 export default function ProviderHelpScreen() {
     const router = useRouter();
+    const colors = useColors();
+    const isDark = useIsDarkTheme();
     const [openQuestionIndex, setOpenQuestionIndex] = useState<number | null>(null);
 
     const toggleQuestion = (index: number) => {
@@ -61,12 +65,18 @@ export default function ProviderHelpScreen() {
     };
 
     return (
-        <SafeAreaView style={styles.container} edges={['top']}>
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                    <ArrowLeft size={24} color={Colors.text.primary} />
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+            <View style={[styles.header, { borderBottomColor: colors.border, backgroundColor: colors.background }]}>
+                <TouchableOpacity
+                    onPress={() => goBackOrFallback(router)}
+                    style={[
+                        styles.backButton,
+                        { backgroundColor: isDark ? colors.backgroundTertiary : colors.backgroundSecondary },
+                    ]}
+                >
+                    <ArrowLeft size={24} color={colors.text} />
                 </TouchableOpacity>
-                <Text style={styles.title}>Aide & Support</Text>
+                <Text style={[styles.title, { color: colors.text }]}>Aide & Support</Text>
                 <View style={{ width: 40 }} />
             </View>
 
@@ -74,16 +84,18 @@ export default function ProviderHelpScreen() {
 
                 {/* Contact Section */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Besoin d'aide immédiate ?</Text>
-                    <View style={styles.contactCard}>
-                        <View style={styles.contactIcon}>
-                            <MessageCircle size={32} color={Colors.primary.DEFAULT} />
+                    <Text style={[styles.sectionTitle, { color: colors.text }]}>Besoin d'aide immédiate ?</Text>
+                    <View style={[styles.contactCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+                        <View style={[styles.contactIcon, { backgroundColor: `${colors.primary}22` }]}>
+                            <MessageCircle size={32} color={colors.primary} />
                         </View>
                         <View style={styles.contactInfo}>
-                            <Text style={styles.contactTitle}>Service Client Pro</Text>
-                            <Text style={styles.contactSubtitle}>Notre équipe est là pour vous aider du lundi au samedi, de 9h à 19h.</Text>
+                            <Text style={[styles.contactTitle, { color: colors.text }]}>Service Client Pro</Text>
+                            <Text style={[styles.contactSubtitle, { color: colors.textSecondary }]}>
+                                Notre équipe est là pour vous aider du lundi au samedi, de 9h à 19h.
+                            </Text>
                         </View>
-                        <TouchableOpacity style={styles.contactButton} onPress={handleContactSupport}>
+                        <TouchableOpacity style={[styles.contactButton, { backgroundColor: colors.primary }]} onPress={handleContactSupport}>
                             <Mail size={20} color={Colors.white} />
                             <Text style={styles.contactButtonText}>Nous contacter</Text>
                         </TouchableOpacity>
@@ -92,26 +104,39 @@ export default function ProviderHelpScreen() {
 
                 {/* FAQ Section */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Questions Fréquentes</Text>
-                    <View style={styles.faqList}>
+                    <Text style={[styles.sectionTitle, { color: colors.text }]}>Questions Fréquentes</Text>
+                    <View style={[styles.faqList, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
                         {faqData.map((item, index) => (
                             <TouchableOpacity
                                 key={index}
-                                style={[styles.faqItem, index === faqData.length - 1 && { borderBottomWidth: 0 }]}
+                                style={[
+                                    styles.faqItem,
+                                    { borderBottomColor: colors.border },
+                                    index === faqData.length - 1 && { borderBottomWidth: 0 },
+                                ]}
                                 onPress={() => toggleQuestion(index)}
                                 activeOpacity={0.7}
                             >
                                 <View style={styles.faqHeader}>
-                                    <Text style={styles.faqQuestion}>{item.question}</Text>
+                                    <Text style={[styles.faqQuestion, { color: colors.text }]}>{item.question}</Text>
                                     {openQuestionIndex === index ? (
-                                        <ChevronUp size={20} color={Colors.primary.DEFAULT} />
+                                        <ChevronUp size={20} color={colors.primary} />
                                     ) : (
-                                        <ChevronDown size={20} color={Colors.gray[400]} />
+                                        <ChevronDown size={20} color={colors.textTertiary} />
                                     )}
                                 </View>
                                 {openQuestionIndex === index && (
-                                    <View style={styles.faqAnswerContainer}>
-                                        <Text style={styles.faqAnswer}>{item.answer}</Text>
+                                    <View
+                                        style={[
+                                            styles.faqAnswerContainer,
+                                            {
+                                                backgroundColor: isDark
+                                                    ? colors.backgroundTertiary
+                                                    : colors.backgroundSecondary,
+                                            },
+                                        ]}
+                                    >
+                                        <Text style={[styles.faqAnswer, { color: colors.textSecondary }]}>{item.answer}</Text>
                                     </View>
                                 )}
                             </TouchableOpacity>
@@ -122,7 +147,7 @@ export default function ProviderHelpScreen() {
                 {/* Additional Links */}
                 <View style={styles.footerLinks}>
                     <TouchableOpacity onPress={() => Linking.openURL('https://umade.fr/guides')}>
-                        <Text style={styles.linkText}>Consulter nos guides {'>'} </Text>
+                        <Text style={[styles.linkText, { color: colors.primary }]}>Consulter nos guides {'>'} </Text>
                     </TouchableOpacity>
                 </View>
 
@@ -134,7 +159,6 @@ export default function ProviderHelpScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: Colors.background.primary,
     },
     header: {
         flexDirection: 'row',
@@ -143,15 +167,17 @@ const styles = StyleSheet.create({
         paddingHorizontal: Layout.spacing.lg,
         paddingVertical: Layout.spacing.md,
         borderBottomWidth: 1,
-        borderBottomColor: Colors.gray[200],
     },
     backButton: {
-        padding: Layout.spacing.xs,
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     title: {
         fontSize: Layout.fontSize.lg,
         fontWeight: '700',
-        color: Colors.text.primary,
     },
     content: {
         padding: Layout.spacing.lg,
@@ -163,12 +189,11 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: Layout.fontSize.md,
         fontWeight: '700',
-        color: Colors.text.primary,
         marginBottom: Layout.spacing.md,
     },
     contactCard: {
-        backgroundColor: Colors.white,
         borderRadius: Layout.radius.lg,
+        borderWidth: 1,
         padding: Layout.spacing.lg,
         alignItems: 'center',
         shadowColor: '#000',
@@ -181,7 +206,6 @@ const styles = StyleSheet.create({
         width: 64,
         height: 64,
         borderRadius: 32,
-        backgroundColor: Colors.primary.light,
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: Layout.spacing.md,
@@ -193,12 +217,10 @@ const styles = StyleSheet.create({
     contactTitle: {
         fontSize: Layout.fontSize.lg,
         fontWeight: '700',
-        color: Colors.text.primary,
         marginBottom: Layout.spacing.xs,
     },
     contactSubtitle: {
         fontSize: Layout.fontSize.sm,
-        color: Colors.text.secondary,
         textAlign: 'center',
         lineHeight: 20,
     },
@@ -217,15 +239,12 @@ const styles = StyleSheet.create({
         fontSize: Layout.fontSize.md,
     },
     faqList: {
-        backgroundColor: Colors.white,
         borderRadius: Layout.radius.lg,
         overflow: 'hidden',
         borderWidth: 1,
-        borderColor: Colors.gray[200],
     },
     faqItem: {
         borderBottomWidth: 1,
-        borderBottomColor: Colors.gray[200],
     },
     faqHeader: {
         flexDirection: 'row',
@@ -236,18 +255,15 @@ const styles = StyleSheet.create({
     faqQuestion: {
         fontSize: Layout.fontSize.md,
         fontWeight: '500',
-        color: Colors.text.primary,
         flex: 1,
         marginRight: 8,
     },
     faqAnswerContainer: {
         paddingHorizontal: Layout.spacing.md,
         paddingBottom: Layout.spacing.md,
-        backgroundColor: Colors.gray[50],
     },
     faqAnswer: {
         fontSize: Layout.fontSize.sm,
-        color: Colors.text.secondary,
         lineHeight: 20,
     },
     footerLinks: {
@@ -255,7 +271,6 @@ const styles = StyleSheet.create({
         marginTop: Layout.spacing.md,
     },
     linkText: {
-        color: Colors.primary.DEFAULT,
         fontWeight: '600',
     },
 });

@@ -4,15 +4,20 @@
  */
 
 import { RatingStars } from '@/components/common/RatingStars';
-import { InspirationCard } from '@/components/inspirations/InspirationCard';
+import { PortfolioViewer } from '@/components/providers/PortfolioViewer';
+import { TrustIndicators } from '@/components/providers/TrustIndicators';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
+import { useAuth } from '@/hooks/useAuth';
 import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { useFavoriteIds, useToggleFavorite } from '@/hooks/useFavorites';
+import { useFollowingIds, useToggleFollow } from '@/hooks/useFollows';
+import { useInspirationFavoriteActions } from '@/hooks/useInspirationFavorites';
 import { useProviderInspirations } from '@/hooks/useInspirations';
+import { useProviderPublicStats } from '@/hooks/useProviderPublicStats';
 import { useProviderDetail } from '@/hooks/useProviders';
 import { formatPrice } from '@/lib/utils';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
@@ -34,6 +39,7 @@ import {
   Dimensions,
   FlatList,
   Image,
+  Pressable,
   ScrollView,
   Share,
   StyleSheet,
@@ -41,7 +47,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { goBackOrFallback } from '@/lib/navigation';
 
 const { width } = Dimensions.get('window');
 const GALLERY_IMAGE_HEIGHT = 300;
@@ -50,20 +57,39 @@ export default function ProviderDetailScreen() {
   const router = useRouter();
   const colors = useColors();
   const isDark = useIsDarkTheme();
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
 
+  const { userId } = useAuth();
   const { data: provider, isLoading, error } = useProviderDetail(id);
+  const { data: publicStats } = useProviderPublicStats(id);
   const { data: inspirationsData } = useProviderInspirations(id);
   const { data: favoriteIds = [] } = useFavoriteIds();
   const { mutate: toggleFavorite, isPending: isFavoriteLoading } = useToggleFavorite();
+  const { data: followingIds } = useFollowingIds();
+  const { mutate: toggleFollow } = useToggleFollow();
+  const {
+    isFavorite: isInspirationFavorite,
+    toggleFavorite: toggleInspirationFavorite,
+    isLoading: isInspirationFavoriteLoading,
+  } = useInspirationFavoriteActions();
 
   const inspirations = inspirationsData?.pages.flatMap((page) => page) ?? [];
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [isGalleryViewerOpen, setIsGalleryViewerOpen] = useState(false);
+  const [galleryViewerIndex, setGalleryViewerIndex] = useState(0);
 
   const isFavorite = favoriteIds.includes(id || '');
+  const headerButtonStyle = [
+    styles.headerButton,
+    {
+      backgroundColor: isDark ? colors.card : 'rgba(255,255,255,0.9)',
+    },
+  ];
+  const headerIconColor = isDark ? colors.text : Colors.black;
 
-  const handleBack = () => router.back();
+  const handleBack = () => goBackOrFallback(router);
 
   const handleFavoritePress = () => {
     if (!isFavoriteLoading && id) {
@@ -91,7 +117,29 @@ export default function ProviderDetailScreen() {
   };
 
   if (isLoading) {
-    return <LoadingSpinner fullScreen message="Chargement..." />;
+    return (
+      <View style={[styles.screen, { backgroundColor: colors.background }]}>
+        <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
+          <Skeleton.ProviderDetail />
+        </ScrollView>
+        {/* Back button visible pendant le loading */}
+        <View
+          pointerEvents="box-none"
+          style={[
+            styles.floatingHeader,
+            { top: insets.top + 10, left: Layout.spacing.md, right: Layout.spacing.md },
+          ]}
+        >
+          <TouchableOpacity
+            style={[headerButtonStyle, styles.floatingButtonShadow]}
+            onPress={handleBack}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <ArrowLeft size={24} color={headerIconColor} />
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
   }
 
   if (error || !provider) {
@@ -115,101 +163,114 @@ export default function ProviderDetailScreen() {
   const serviceCardBg = isDark ? colors.card : '#F9FAFB';
   const reviewCardBg = isDark ? colors.card : '#F9FAFB';
 
+  const openGalleryViewer = (index: number) => {
+    setGalleryViewerIndex(index);
+    setIsGalleryViewerOpen(true);
+  };
+
+  const closeGalleryViewer = () => {
+    setIsGalleryViewerOpen(false);
+  };
+
   return (
     <>
       <Stack.Screen
         options={{
-          headerShown: true,
-          headerTransparent: true,
-          headerTitle: '',
-          headerLeft: () => (
-            <TouchableOpacity style={styles.headerButton} onPress={handleBack}>
-              <ArrowLeft size={24} color={Colors.white} />
-            </TouchableOpacity>
-          ),
-          headerRight: () => (
-            <View style={styles.headerRightButtons}>
-              <TouchableOpacity
-                style={styles.headerButton}
-                onPress={handleShare}
-              >
-                <Share2 size={22} color={Colors.white} />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.headerButton}
-                onPress={handleFavoritePress}
-              >
-                <Heart
-                  size={22}
-                  color={isFavorite ? colors.error : Colors.white}
-                  fill={isFavorite ? colors.error : 'transparent'}
-                />
-              </TouchableOpacity>
-            </View>
-          ),
+          // Hide native header: on iOS it groups right buttons into a capsule (liquid glass),
+          // which looks like a "button inside a button".
+          headerShown: false,
         }}
       />
 
-      <ScrollView
-        style={[styles.container, { backgroundColor: colors.background }]}
-        showsVerticalScrollIndicator={false}
-        bounces={false}
-      >
-        {/* Gallery */}
-        <View style={[styles.galleryContainer, { backgroundColor: colors.backgroundTertiary }]}>
-          {images.length > 0 ? (
-            <>
-              <FlatList
-                data={images}
-                keyExtractor={(item) => item.id}
-                horizontal
-                pagingEnabled
-                showsHorizontalScrollIndicator={false}
-                onMomentumScrollEnd={(e) => {
-                  const index = Math.round(
-                    e.nativeEvent.contentOffset.x / width
-                  );
-                  setActiveImageIndex(index);
-                }}
-                renderItem={({ item }) => (
-                  <Image
-                    source={{ uri: item.image_url }}
-                    style={styles.galleryImage}
-                    resizeMode="cover"
-                  />
+      <View style={[styles.screen, { backgroundColor: colors.background }]}>
+        <ScrollView
+          style={[styles.container, { backgroundColor: colors.background }]}
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+        >
+          {/* Gallery */}
+          <View style={[styles.galleryContainer, { backgroundColor: colors.backgroundTertiary }]}>
+            {images.length > 0 ? (
+              <>
+                <FlatList
+                  data={images}
+                  keyExtractor={(item) => item.id}
+                  horizontal
+                  pagingEnabled
+                  showsHorizontalScrollIndicator={false}
+                  onMomentumScrollEnd={(e) => {
+                    const index = Math.round(
+                      e.nativeEvent.contentOffset.x / width
+                    );
+                    setActiveImageIndex(index);
+                  }}
+                  renderItem={({ item, index }) => (
+                    <Pressable onPress={() => openGalleryViewer(index)}>
+                      <Image
+                        source={{ uri: item.image_url }}
+                        style={styles.galleryImage}
+                        resizeMode="cover"
+                      />
+                    </Pressable>
+                  )}
+                />
+                {images.length > 1 && (
+                  <View style={styles.paginationDots}>
+                    {images.map((_, index) => (
+                      <View
+                        key={index}
+                        style={[
+                          styles.dot,
+                          activeImageIndex === index && styles.dotActive,
+                        ]}
+                      />
+                    ))}
+                  </View>
                 )}
-              />
-              {images.length > 1 && (
-                <View style={styles.paginationDots}>
-                  {images.map((_, index) => (
-                    <View
-                      key={index}
-                      style={[
-                        styles.dot,
-                        activeImageIndex === index && styles.dotActive,
-                      ]}
-                    />
-                  ))}
-                </View>
-              )}
-            </>
-          ) : (
-            <View style={styles.placeholderImage}>
-              <Text style={styles.placeholderEmoji}>📸</Text>
-              <Text style={[styles.placeholderText, { color: colors.textSecondary }]}>Pas de photos</Text>
-            </View>
-          )}
-        </View>
+              </>
+            ) : (
+              <View style={styles.placeholderImage}>
+                <Text style={styles.placeholderEmoji}>📸</Text>
+                <Text style={[styles.placeholderText, { color: colors.textSecondary }]}>Pas de photos</Text>
+              </View>
+            )}
+          </View>
 
-        {/* Main Info */}
-        <View style={styles.content}>
-          <View style={styles.mainInfo}>
-            <Text style={[styles.businessName, { color: colors.text }]}>{provider.business_name}</Text>
+          {/* Main Info */}
+          <View style={styles.content}>
+            <View style={styles.mainInfo}>
+              <Text style={[styles.businessName, { color: colors.text }]}>{provider.business_name}</Text>
 
-            <View style={[styles.categoryBadge, { backgroundColor: categoryBadgeBg }]}>
-              <Text style={[styles.categoryText, { color: colors.primary }]}>
-                {provider.category?.name || 'Prestataire'}
-              </Text>
+            <View style={styles.categoryFollowRow}>
+              <View style={[styles.categoryBadge, { backgroundColor: categoryBadgeBg }]}>
+                <Text style={[styles.categoryText, { color: colors.primary }]}>
+                  {provider.category?.name || 'Prestataire'}
+                </Text>
+              </View>
+
+              {/* Follow button */}
+              {provider.user_id && provider.user_id !== userId && (() => {
+                const isFollowing = followingIds?.has(provider.user_id) || false;
+                return (
+                  <TouchableOpacity
+                    style={[
+                      styles.followBadge,
+                      {
+                        backgroundColor: isFollowing ? 'transparent' : colors.primary,
+                        borderColor: isFollowing ? colors.border : colors.primary,
+                      },
+                    ]}
+                    onPress={() => toggleFollow({ targetUserId: provider.user_id, isCurrentlyFollowing: isFollowing })}
+                  >
+                    <Text style={[
+                      styles.followBadgeText,
+                      { color: isFollowing ? colors.textSecondary : '#FFFFFF' },
+                    ]}>
+                      {isFollowing ? 'Suivi' : 'Suivre'}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })()}
             </View>
 
             {/* Rating & Location */}
@@ -232,6 +293,9 @@ export default function ProviderDetailScreen() {
                 </Text>
               </View>
             )}
+
+            {/* Trust indicators */}
+            <TrustIndicators stats={publicStats} />
 
             {/* Contact info */}
             <View style={styles.contactInfo}>
@@ -385,55 +449,155 @@ export default function ProviderDetailScreen() {
                 )}
               </View>
               <View style={styles.inspirationsGrid}>
-                {inspirations.slice(0, 4).map((inspiration, index) => (
-                  <View key={inspiration.id} style={styles.inspirationItem}>
-                    <InspirationCard
-                      inspiration={inspiration}
-                      index={index}
-                      showProvider={false}
+                {inspirations.slice(0, 6).map((inspiration) => {
+                  const coverImage =
+                    inspiration.inspiration_images?.[0]?.thumbnail_url ||
+                    inspiration.inspiration_images?.[0]?.image_url;
+                  const inspirationIsFavorite = isInspirationFavorite(inspiration.id);
+
+                  return (
+                    <Pressable
+                      key={inspiration.id}
+                      style={[
+                        styles.inspirationCard,
+                        { backgroundColor: isDark ? colors.card : '#F9FAFB' },
+                      ]}
                       onPress={() => router.push(`/inspiration/${inspiration.id}` as any)}
-                    />
-                  </View>
-                ))}
+                    >
+                      {coverImage ? (
+                        <Image
+                          source={{ uri: coverImage }}
+                          style={styles.inspirationCardImage}
+                          resizeMode="cover"
+                        />
+                      ) : (
+                        <View
+                          style={[
+                            styles.inspirationCardPlaceholder,
+                            { backgroundColor: colors.backgroundTertiary },
+                          ]}
+                        >
+                          <Sparkles size={24} color={colors.primary} />
+                        </View>
+                      )}
+
+                      <Pressable
+                        onPress={(event) => {
+                          event.stopPropagation();
+                          if (!isInspirationFavoriteLoading) {
+                            toggleInspirationFavorite(inspiration.id);
+                          }
+                        }}
+                        style={styles.inspirationFavoriteButton}
+                        hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
+                      >
+                        <Heart
+                          size={18}
+                          color={inspirationIsFavorite ? colors.error : Colors.white}
+                          fill={inspirationIsFavorite ? colors.error : 'transparent'}
+                        />
+                      </Pressable>
+
+                      <View style={styles.inspirationCardFooter}>
+                        <Text
+                          style={styles.inspirationCardTitle}
+                          numberOfLines={1}
+                        >
+                          {inspiration.title || 'Inspiration'}
+                        </Text>
+                      </View>
+                    </Pressable>
+                  );
+                })}
               </View>
             </View>
           )}
 
-          {/* Spacer for bottom buttons */}
-          <View style={{ height: 100 }} />
-        </View>
-      </ScrollView>
+            {/* Spacer for bottom buttons */}
+            <View style={{ height: 100 }} />
+          </View>
+        </ScrollView>
 
-      {/* Bottom CTA */}
-      <SafeAreaView edges={['bottom']} style={[styles.bottomBar, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
-        <View style={styles.bottomContent}>
-          {minPrice && (
-            <View style={styles.priceContainer}>
-              <Text style={[styles.priceLabel, { color: colors.textSecondary }]}>À partir de</Text>
-              <Text style={[styles.priceValue, { color: colors.text }]}>{formatPrice(minPrice)}</Text>
+        {/* Bottom CTA */}
+        <SafeAreaView edges={['bottom']} style={[styles.bottomBar, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
+          <View style={styles.bottomContent}>
+            {minPrice && (
+              <View style={styles.priceContainer}>
+                <Text style={[styles.priceLabel, { color: colors.textSecondary }]}>À partir de</Text>
+                <Text style={[styles.priceValue, { color: colors.text }]}>{formatPrice(minPrice)}</Text>
+              </View>
+            )}
+            <View style={styles.bottomButtons}>
+              <TouchableOpacity
+                style={[styles.contactButton, { borderColor: colors.primary }]}
+                onPress={handleContact}
+              >
+                <MessageCircle size={20} color={colors.primary} />
+              </TouchableOpacity>
+              <Button
+                title="Réserver"
+                onPress={handleBook}
+                size="lg"
+                style={styles.bookButton}
+              />
             </View>
-          )}
-          <View style={styles.bottomButtons}>
+          </View>
+        </SafeAreaView>
+
+        {/* Floating buttons (Back / Share / Favorite) */}
+        <View
+          pointerEvents="box-none"
+          style={[
+            styles.floatingHeader,
+            { top: insets.top + 10, left: Layout.spacing.md, right: Layout.spacing.md },
+          ]}
+        >
+          <TouchableOpacity
+            style={[headerButtonStyle, styles.floatingButtonShadow]}
+            onPress={handleBack}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <ArrowLeft size={24} color={headerIconColor} />
+          </TouchableOpacity>
+
+          <View style={styles.floatingHeaderRight} pointerEvents="box-none">
             <TouchableOpacity
-              style={[styles.contactButton, { borderColor: colors.primary }]}
-              onPress={handleContact}
+              style={[headerButtonStyle, styles.floatingButtonShadow]}
+              onPress={handleShare}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-              <MessageCircle size={20} color={colors.primary} />
+              <Share2 size={22} color={headerIconColor} />
             </TouchableOpacity>
-            <Button
-              title="Réserver"
-              onPress={handleBook}
-              size="lg"
-              style={styles.bookButton}
-            />
+            <TouchableOpacity
+              style={[headerButtonStyle, styles.floatingButtonShadow]}
+              onPress={handleFavoritePress}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Heart
+                size={22}
+                color={isFavorite ? colors.error : headerIconColor}
+                fill={isFavorite ? colors.error : 'transparent'}
+              />
+            </TouchableOpacity>
           </View>
         </View>
-      </SafeAreaView>
+      </View>
+
+      <PortfolioViewer
+        visible={isGalleryViewerOpen}
+        images={images}
+        initialIndex={galleryViewerIndex}
+        onClose={closeGalleryViewer}
+        onContact={handleContact}
+      />
     </>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+  },
   container: {
     flex: 1,
   },
@@ -453,13 +617,30 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.3)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerRightButtons: {
     flexDirection: 'row',
     gap: Layout.spacing.sm,
+  },
+  floatingHeader: {
+    position: 'absolute',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    zIndex: 50,
+  },
+  floatingHeaderRight: {
+    flexDirection: 'row',
+    gap: Layout.spacing.sm,
+  },
+  floatingButtonShadow: {
+    shadowColor: '#000',
+    shadowOpacity: 0.18,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
   },
 
   // Gallery
@@ -514,12 +695,26 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginBottom: Layout.spacing.sm,
   },
+  categoryFollowRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Layout.spacing.sm,
+    marginBottom: Layout.spacing.md,
+  },
   categoryBadge: {
-    alignSelf: 'flex-start',
     paddingVertical: Layout.spacing.xs,
     paddingHorizontal: Layout.spacing.md,
     borderRadius: Layout.radius.full,
-    marginBottom: Layout.spacing.md,
+  },
+  followBadge: {
+    paddingVertical: Layout.spacing.xs,
+    paddingHorizontal: 14,
+    borderRadius: Layout.radius.full,
+    borderWidth: 1,
+  },
+  followBadgeText: {
+    fontSize: Layout.fontSize.sm,
+    fontWeight: '600',
   },
   categoryText: {
     fontSize: Layout.fontSize.sm,
@@ -716,10 +911,50 @@ const styles = StyleSheet.create({
   inspirationsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginHorizontal: -Layout.spacing.xs,
+    justifyContent: 'space-between',
+    gap: Layout.spacing.sm,
   },
-  inspirationItem: {
-    width: '50%',
-    paddingHorizontal: Layout.spacing.xs,
+  inspirationCard: {
+    width: '48.5%',
+    borderRadius: Layout.radius.md,
+    overflow: 'hidden',
+    marginBottom: Layout.spacing.sm,
+  },
+  inspirationCardImage: {
+    width: '100%',
+    aspectRatio: 0.86,
+  },
+  inspirationCardPlaceholder: {
+    width: '100%',
+    aspectRatio: 0.86,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  inspirationFavoriteButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  inspirationCardFooter: {
+    position: 'absolute',
+    left: 8,
+    right: 8,
+    bottom: 8,
+  },
+  inspirationCardTitle: {
+    color: Colors.white,
+    fontSize: Layout.fontSize.sm,
+    fontWeight: '500',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(0,0,0,0.35)',
   },
 });

@@ -8,25 +8,31 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
-  Image,
   Dimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Heart, MapPin, Star } from 'lucide-react-native';
+import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
+import Animated, { FadeInUp } from 'react-native-reanimated';
+import { Camera, Heart, MapPin, Scale, Star } from 'lucide-react-native';
+import { PressableScale } from '@/components/ui/PressableScale';
+import { useToast } from '@/components/ui/Toast';
 import { useFavoriteIds, useToggleFavorite } from '@/hooks/useFavorites';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { ProviderListItem } from '@/types';
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
+import { useCompareStore } from '@/stores/compareStore';
 
 const { width } = Dimensions.get('window');
-const CARD_WIDTH = (width - Layout.spacing.lg * 2 - Layout.spacing.md) / 2;
+export const CARD_WIDTH = (width - Layout.spacing.lg * 2 - Layout.spacing.md) / 2;
 
 interface ProviderCardProps {
   provider: ProviderListItem;
   variant?: 'grid' | 'list';
   onPress?: () => void;
   showFavorite?: boolean;
+  index?: number;
 }
 
 export function ProviderCard({
@@ -34,12 +40,28 @@ export function ProviderCard({
   variant = 'grid',
   onPress,
   showFavorite = true,
+  index = 0,
 }: ProviderCardProps) {
   const router = useRouter();
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
   const { data: favoriteIds = [] } = useFavoriteIds();
   const { mutate: toggleFavorite, isPending: isFavoriteLoading } = useToggleFavorite();
+  const compareIds = useCompareStore((state) => state.compareIds);
+  const addToCompare = useCompareStore((state) => state.addToCompare);
+  const removeFromCompare = useCompareStore((state) => state.removeFromCompare);
+  const { warning, ToastComponent } = useToast();
 
   const isFavorite = favoriteIds.includes(provider.id);
+  const isCompared = compareIds.includes(provider.id);
+  const cardBackground = isDark ? colors.card : Colors.white;
+  const cardBorderColor = isDark ? colors.cardBorder : Colors.gray[200];
+  const secondaryTextColor = colors.textSecondary;
+  const tertiaryTextColor = colors.textTertiary;
+  const categoryBadgeBg = isDark ? `${colors.primary}22` : Colors.primary[50];
+  const categoryTextColor = isDark ? colors.primaryLight : Colors.primary.DEFAULT;
+  const ratingBadgeBg = isDark ? 'rgba(13,11,18,0.88)' : Colors.white;
+  const favoriteInactiveColor = isDark ? colors.textTertiary : Colors.gray[400];
 
   const handlePress = () => {
     if (onPress) {
@@ -49,10 +71,23 @@ export function ProviderCard({
     }
   };
 
-  const handleFavoritePress = (e: any) => {
-    e.stopPropagation();
+  const handleFavoritePress = () => {
     if (!isFavoriteLoading) {
       toggleFavorite(provider.id);
+    }
+  };
+
+  const handleComparePress = () => {
+    if (isCompared) {
+      removeFromCompare(provider.id);
+      return;
+    }
+
+    const result = addToCompare(provider.id);
+    if (!result.ok && result.reason === 'limit') {
+      warning('Maximum 3 prestataires', {
+        message: 'Retire un prestataire avant d’en ajouter un nouveau.',
+      });
     }
   };
 
@@ -67,173 +102,223 @@ export function ProviderCard({
     }).format(price);
   };
 
+  const renderPlaceholder = (style: any) => (
+    <LinearGradient
+      colors={isDark ? [colors.backgroundTertiary, colors.backgroundSecondary] : [Colors.gray[200], Colors.gray[100]]}
+      style={[style, styles.placeholderImage]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+    >
+      <Camera size={24} color={colors.textTertiary} />
+    </LinearGradient>
+  );
+
   if (variant === 'list') {
     return (
-      <TouchableOpacity
-        style={styles.listContainer}
-        onPress={handlePress}
-        activeOpacity={0.7}
-      >
-        {/* Image */}
-        <View style={styles.listImageContainer}>
-          {provider.portfolio_image ? (
-            <Image
-              source={{ uri: provider.portfolio_image }}
-              style={styles.listImage}
-              resizeMode="cover"
-            />
-          ) : (
-            <View style={[styles.listImage, styles.placeholderImage]}>
-              <Text style={styles.placeholderEmoji}>📸</Text>
-            </View>
-          )}
-        </View>
-
-        {/* Content */}
-        <View style={styles.listContent}>
-          <View style={styles.listHeader}>
-            <Text style={styles.businessName} numberOfLines={1}>
-              {provider.business_name}
-            </Text>
-            {showFavorite && (
-              <TouchableOpacity
-                style={styles.favoriteButton}
-                onPress={handleFavoritePress}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <Heart
-                  size={20}
-                  color={isFavorite ? Colors.error.DEFAULT : Colors.gray[400]}
-                  fill={isFavorite ? Colors.error.DEFAULT : 'transparent'}
-                />
-              </TouchableOpacity>
+      <Animated.View entering={FadeInUp.delay(index * 50).duration(260)}>
+        <PressableScale
+          scale={0.97}
+          haptic="light"
+          onPress={handlePress}
+          style={[
+            styles.listContainer,
+            { backgroundColor: cardBackground, borderColor: cardBorderColor, borderWidth: 1 },
+          ]}
+        >
+          {/* Image */}
+          <View style={styles.listImageContainer}>
+            {provider.portfolio_image ? (
+              <Image
+                source={{ uri: provider.portfolio_image }}
+                style={styles.listImage}
+                contentFit="cover"
+                transition={300}
+              />
+            ) : (
+              renderPlaceholder(styles.listImage)
             )}
           </View>
 
-          <View style={styles.categoryBadge}>
-            <Text style={styles.categoryText} numberOfLines={1}>
-              {provider.category_name}
-            </Text>
-          </View>
-
-          {provider.city && (
-            <View style={styles.locationRow}>
-              <MapPin size={14} color={Colors.text.secondary} />
-              <Text style={styles.locationText} numberOfLines={1}>
-                {provider.city}
+          {/* Content */}
+          <View style={styles.listContent}>
+            <View style={styles.listHeader}>
+              <Text style={[styles.businessName, { color: colors.text }]} numberOfLines={1}>
+                {provider.business_name}
               </Text>
-            </View>
-          )}
-
-          <View style={styles.listFooter}>
-            {provider.average_rating ? (
-              <View style={styles.ratingContainer}>
-                <Star
-                  size={14}
-                  color={Colors.warning.DEFAULT}
-                  fill={Colors.warning.DEFAULT}
-                />
-                <Text style={styles.ratingText}>
-                  {provider.average_rating.toFixed(1)}
-                </Text>
-                {provider.review_count && provider.review_count > 0 && (
-                  <Text style={styles.reviewCount}>
-                    ({provider.review_count})
-                  </Text>
+              <View style={styles.trailingActions}>
+                <PressableScale
+                  scale={0.9}
+                  haptic="selection"
+                  onPress={handleComparePress}
+                  style={[
+                    styles.compareButton,
+                    isCompared && { backgroundColor: `${colors.primary}1F`, borderColor: colors.primary },
+                  ]}
+                >
+                  <Scale size={17} color={isCompared ? colors.primary : colors.textTertiary} />
+                </PressableScale>
+                {showFavorite && (
+                  <PressableScale
+                    scale={0.85}
+                    haptic="selection"
+                    onPress={handleFavoritePress}
+                    style={styles.favoriteButton}
+                  >
+                    <Heart
+                      size={20}
+                      color={isFavorite ? Colors.error.DEFAULT : favoriteInactiveColor}
+                      fill={isFavorite ? Colors.error.DEFAULT : 'transparent'}
+                    />
+                  </PressableScale>
                 )}
               </View>
-            ) : (
-              <Text style={styles.newBadge}>Nouveau</Text>
+            </View>
+
+            <View style={[styles.categoryBadge, { backgroundColor: categoryBadgeBg }]}>
+              <Text style={[styles.categoryText, { color: categoryTextColor }]} numberOfLines={1}>
+                {provider.category_name}
+              </Text>
+            </View>
+
+            {provider.city && (
+              <View style={styles.locationRow}>
+                <MapPin size={14} color={tertiaryTextColor} />
+                <Text style={[styles.locationText, { color: secondaryTextColor }]} numberOfLines={1}>
+                  {provider.city}
+                </Text>
+              </View>
             )}
 
-            {provider.min_price && (
-              <Text style={styles.price}>
-                Dès {formatPrice(provider.min_price)}
-              </Text>
-            )}
+            <View style={styles.listFooter}>
+              {provider.average_rating ? (
+                <View style={styles.ratingContainer}>
+                  <Star
+                    size={14}
+                    color={Colors.warning.DEFAULT}
+                    fill={Colors.warning.DEFAULT}
+                  />
+                  <Text style={[styles.ratingText, { color: colors.text }]}>
+                    {provider.average_rating.toFixed(1)}
+                  </Text>
+                  {provider.review_count && provider.review_count > 0 && (
+                    <Text style={[styles.reviewCount, { color: tertiaryTextColor }]}>
+                      ({provider.review_count})
+                    </Text>
+                  )}
+                </View>
+              ) : (
+                <Text style={[styles.newBadge, { color: colors.primary }]}>Nouveau</Text>
+              )}
+
+              {provider.min_price && (
+                <Text style={[styles.price, { color: colors.primary }]}>
+                  Dès {formatPrice(provider.min_price)}
+                </Text>
+              )}
+            </View>
           </View>
-        </View>
-      </TouchableOpacity>
+        </PressableScale>
+        <ToastComponent />
+      </Animated.View>
     );
   }
 
   // Grid variant (default)
   return (
-    <TouchableOpacity
-      style={styles.gridContainer}
-      onPress={handlePress}
-      activeOpacity={0.7}
-    >
-      {/* Image */}
-      <View style={styles.gridImageContainer}>
-        {provider.portfolio_image ? (
-          <Image
-            source={{ uri: provider.portfolio_image }}
-            style={styles.gridImage}
-            resizeMode="cover"
-          />
-        ) : (
-          <View style={[styles.gridImage, styles.placeholderImage]}>
-            <Text style={styles.placeholderEmoji}>📸</Text>
-          </View>
-        )}
+    <Animated.View entering={FadeInUp.delay(index * 50).duration(260)}>
+      <PressableScale
+        scale={0.97}
+        haptic="light"
+        onPress={handlePress}
+        style={[
+          styles.gridContainer,
+          { backgroundColor: cardBackground, borderColor: cardBorderColor, borderWidth: 1 },
+        ]}
+      >
+        {/* Image */}
+        <View style={styles.gridImageContainer}>
+          {provider.portfolio_image ? (
+            <Image
+              source={{ uri: provider.portfolio_image }}
+              style={styles.gridImage}
+              contentFit="cover"
+              transition={300}
+            />
+          ) : (
+            renderPlaceholder(styles.gridImage)
+          )}
 
-        {/* Favorite button */}
-        {showFavorite && (
-          <TouchableOpacity
-            style={styles.gridFavoriteButton}
-            onPress={handleFavoritePress}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          <PressableScale
+            scale={0.85}
+            haptic="selection"
+            onPress={handleComparePress}
+            style={[
+              styles.gridCompareButton,
+              isCompared && { backgroundColor: `${colors.primary}95` },
+            ]}
           >
-            <Heart
-              size={18}
-              color={isFavorite ? Colors.error.DEFAULT : Colors.white}
-              fill={isFavorite ? Colors.error.DEFAULT : 'transparent'}
-            />
-          </TouchableOpacity>
-        )}
+            <Scale size={15} color={Colors.white} />
+          </PressableScale>
 
-        {/* Rating badge */}
-        {provider.average_rating && (
-          <View style={styles.ratingBadge}>
-            <Star
-              size={12}
-              color={Colors.warning.DEFAULT}
-              fill={Colors.warning.DEFAULT}
-            />
-            <Text style={styles.ratingBadgeText}>
-              {provider.average_rating.toFixed(1)}
-            </Text>
-          </View>
-        )}
-      </View>
+          {/* Favorite button */}
+          {showFavorite && (
+            <PressableScale
+              scale={0.85}
+              haptic="selection"
+              onPress={handleFavoritePress}
+              style={styles.gridFavoriteButton}
+            >
+              <Heart
+                size={18}
+                color={isFavorite ? Colors.error.DEFAULT : Colors.white}
+                fill={isFavorite ? Colors.error.DEFAULT : 'transparent'}
+              />
+            </PressableScale>
+          )}
 
-      {/* Content */}
-      <View style={styles.gridContent}>
-        <Text style={styles.businessName} numberOfLines={1}>
-          {provider.business_name}
-        </Text>
+          {/* Rating badge */}
+          {provider.average_rating && (
+            <View style={[styles.ratingBadge, { backgroundColor: ratingBadgeBg }]}>
+              <Star
+                size={12}
+                color={Colors.warning.DEFAULT}
+                fill={Colors.warning.DEFAULT}
+              />
+              <Text style={[styles.ratingBadgeText, { color: colors.text }]}>
+                {provider.average_rating.toFixed(1)}
+              </Text>
+            </View>
+          )}
+        </View>
 
-        <Text style={styles.categoryName} numberOfLines={1}>
-          {provider.category_name}
-        </Text>
-
-        {provider.city && (
-          <View style={styles.locationRowSmall}>
-            <MapPin size={12} color={Colors.text.tertiary} />
-            <Text style={styles.locationTextSmall} numberOfLines={1}>
-              {provider.city}
-            </Text>
-          </View>
-        )}
-
-        {provider.min_price && (
-          <Text style={styles.priceSmall}>
-            Dès {formatPrice(provider.min_price)}
+        {/* Content */}
+        <View style={styles.gridContent}>
+          <Text style={[styles.businessName, { color: colors.text }]} numberOfLines={1}>
+            {provider.business_name}
           </Text>
-        )}
-      </View>
-    </TouchableOpacity>
+
+          <Text style={[styles.categoryName, { color: secondaryTextColor }]} numberOfLines={1}>
+            {provider.category_name}
+          </Text>
+
+          {provider.city && (
+            <View style={styles.locationRowSmall}>
+              <MapPin size={12} color={tertiaryTextColor} />
+              <Text style={[styles.locationTextSmall, { color: tertiaryTextColor }]} numberOfLines={1}>
+                {provider.city}
+              </Text>
+            </View>
+          )}
+
+          {provider.min_price && (
+            <Text style={[styles.priceSmall, { color: colors.primary }]}>
+              Dès {formatPrice(provider.min_price)}
+            </Text>
+          )}
+        </View>
+      </PressableScale>
+      <ToastComponent />
+    </Animated.View>
   );
 }
 
@@ -241,7 +326,6 @@ const styles = StyleSheet.create({
   // Grid variant
   gridContainer: {
     width: CARD_WIDTH,
-    backgroundColor: Colors.white,
     borderRadius: Layout.radius.lg,
     overflow: 'hidden',
     shadowColor: Colors.black,
@@ -268,11 +352,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  gridCompareButton: {
+    position: 'absolute',
+    top: Layout.spacing.sm,
+    left: Layout.spacing.sm,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   ratingBadge: {
     position: 'absolute',
     bottom: Layout.spacing.sm,
     left: Layout.spacing.sm,
-    backgroundColor: Colors.white,
     paddingHorizontal: Layout.spacing.sm,
     paddingVertical: Layout.spacing.xs,
     borderRadius: Layout.radius.sm,
@@ -283,7 +377,6 @@ const styles = StyleSheet.create({
   ratingBadgeText: {
     fontSize: Layout.fontSize.xs,
     fontWeight: '600',
-    color: Colors.text.primary,
   },
   gridContent: {
     padding: Layout.spacing.md,
@@ -293,7 +386,6 @@ const styles = StyleSheet.create({
   // List variant
   listContainer: {
     flexDirection: 'row',
-    backgroundColor: Colors.white,
     borderRadius: Layout.radius.lg,
     overflow: 'hidden',
     shadowColor: Colors.black,
@@ -319,6 +411,20 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
   },
+  trailingActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Layout.spacing.xs,
+  },
+  compareButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: Colors.gray[300],
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   favoriteButton: {
     padding: Layout.spacing.xs,
   },
@@ -333,24 +439,20 @@ const styles = StyleSheet.create({
   businessName: {
     fontSize: Layout.fontSize.md,
     fontWeight: '600',
-    color: Colors.text.primary,
     flex: 1,
   },
   categoryBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: Colors.primary[50],
     paddingVertical: 2,
     paddingHorizontal: Layout.spacing.sm,
     borderRadius: Layout.radius.full,
   },
   categoryText: {
     fontSize: Layout.fontSize.xs,
-    color: Colors.primary.DEFAULT,
     fontWeight: '500',
   },
   categoryName: {
     fontSize: Layout.fontSize.xs,
-    color: Colors.text.secondary,
   },
   locationRow: {
     flexDirection: 'row',
@@ -359,7 +461,6 @@ const styles = StyleSheet.create({
   },
   locationText: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
     flex: 1,
   },
   locationRowSmall: {
@@ -369,7 +470,6 @@ const styles = StyleSheet.create({
   },
   locationTextSmall: {
     fontSize: Layout.fontSize.xs,
-    color: Colors.text.tertiary,
     flex: 1,
   },
   ratingContainer: {
@@ -380,34 +480,25 @@ const styles = StyleSheet.create({
   ratingText: {
     fontSize: Layout.fontSize.sm,
     fontWeight: '600',
-    color: Colors.text.primary,
   },
   reviewCount: {
     fontSize: Layout.fontSize.xs,
-    color: Colors.text.secondary,
   },
   newBadge: {
     fontSize: Layout.fontSize.xs,
-    color: Colors.primary.DEFAULT,
     fontWeight: '500',
   },
   price: {
     fontSize: Layout.fontSize.sm,
     fontWeight: '700',
-    color: Colors.primary.DEFAULT,
   },
   priceSmall: {
     fontSize: Layout.fontSize.sm,
     fontWeight: '700',
-    color: Colors.primary.DEFAULT,
     marginTop: 4,
   },
   placeholderImage: {
-    backgroundColor: Colors.gray[200],
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  placeholderEmoji: {
-    fontSize: 32,
   },
 });

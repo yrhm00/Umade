@@ -5,7 +5,7 @@ import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export function TopEdgeGradient() {
-    const segments = useSegments();
+    const segments = useSegments() as string[];
     const insets = useSafeAreaInsets();
     const colors = useColors();
 

@@ -1,13 +1,15 @@
-import { Colors } from '@/constants/Colors';
+import { useColors } from '@/hooks/useColors';
 import { Stack } from 'expo-router';
 
 export default function ProviderLayout() {
+  const colors = useColors();
+
   return (
     <Stack
       screenOptions={{
         headerShown: false,
         contentStyle: {
-          backgroundColor: Colors.background.primary,
+          backgroundColor: colors.background,
         },
         animation: 'slide_from_right',
       }}

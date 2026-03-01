@@ -8,9 +8,9 @@ import { Layout } from '@/constants/Layout';
 import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { useThemeStore, type ThemeMode } from '@/stores/themeStore';
 import { Stack } from 'expo-router';
-import { Check, Moon, Smartphone, Sun } from 'lucide-react-native';
+import { Check, Moon, Smartphone, Sun, Zap } from 'lucide-react-native';
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface ThemeOptionProps {
@@ -69,6 +69,12 @@ export default function AppearanceSettingsScreen() {
             icon: <Moon size={24} color={colors.primary} />,
         },
         {
+            mode: 'oled',
+            label: 'OLED (Noir pur)',
+            description: "Économise la batterie sur écrans OLED",
+            icon: <Zap size={24} color="#00D084" />,
+        },
+        {
             mode: 'system',
             label: 'Système',
             description: "S'adapte aux réglages de votre appareil",
@@ -77,19 +83,20 @@ export default function AppearanceSettingsScreen() {
     ];
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom']}>
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
             <Stack.Screen
                 options={{
-                    title: 'Apparence',
-                    headerBackTitle: 'Retour',
+                    headerShown: false,
                 }}
             />
 
-            <View style={styles.content}>
-                <Text style={[styles.sectionTitle, { color: colors.text }]}>Thème</Text>
-                <Text style={[styles.sectionDescription, { color: colors.textSecondary }]}>
-                    Choisissez le thème de l'application
-                </Text>
+            <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+                <View style={styles.hero}>
+                    <Text style={[styles.heroTitle, { color: colors.text }]}>Thème de l'app</Text>
+                    <Text style={[styles.heroDescription, { color: colors.textSecondary }]}>
+                        Choisissez le style visuel qui vous convient le mieux.
+                    </Text>
+                </View>
 
                 <Card variant="outlined" padding="none" style={styles.optionsCard}>
                     {options.map((option, index) => (
@@ -105,7 +112,15 @@ export default function AppearanceSettingsScreen() {
                         </React.Fragment>
                     ))}
                 </Card>
-            </View>
+
+                <View style={[styles.tipCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+                    <Text style={[styles.tipTitle, { color: colors.text }]}>Conseil</Text>
+                    <Text style={[styles.tipText, { color: colors.textSecondary }]}>
+                        Le mode <Text style={{ color: colors.text, fontWeight: '700' }}>Système</Text> applique automatiquement
+                        le thème de votre téléphone.
+                    </Text>
+                </View>
+            </ScrollView>
         </SafeAreaView>
     );
 }
@@ -114,26 +129,34 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
-    content: {
+    scroll: {
         flex: 1,
-        padding: Layout.spacing.lg,
     },
-    sectionTitle: {
+    content: {
+        padding: Layout.spacing.lg,
+        paddingTop: Layout.spacing.md,
+        paddingBottom: Layout.spacing.xxl,
+        gap: Layout.spacing.lg,
+    },
+    hero: {
+        gap: 4,
+    },
+    heroTitle: {
         fontSize: Layout.fontSize.xl,
         fontWeight: '700',
-        marginBottom: Layout.spacing.xs,
     },
-    sectionDescription: {
+    heroDescription: {
         fontSize: Layout.fontSize.sm,
-        marginBottom: Layout.spacing.lg,
+        lineHeight: 20,
     },
     optionsCard: {
         overflow: 'hidden',
     },
     option: {
         flexDirection: 'row',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         padding: Layout.spacing.md,
+        minHeight: 76,
     },
     optionIcon: {
         width: 44,
@@ -149,16 +172,33 @@ const styles = StyleSheet.create({
     optionLabel: {
         fontSize: Layout.fontSize.md,
         fontWeight: '600',
-        marginBottom: 2,
+        marginBottom: 3,
     },
     optionDescription: {
         fontSize: Layout.fontSize.sm,
+        lineHeight: 18,
     },
     checkIcon: {
         marginLeft: Layout.spacing.sm,
+        paddingTop: 10,
     },
     divider: {
         height: 1,
         marginLeft: 44 + Layout.spacing.md * 2,
+    },
+    tipCard: {
+        borderWidth: 1,
+        borderRadius: Layout.radius.lg,
+        paddingHorizontal: Layout.spacing.md,
+        paddingVertical: Layout.spacing.sm,
+        gap: 4,
+    },
+    tipTitle: {
+        fontSize: Layout.fontSize.sm,
+        fontWeight: '700',
+    },
+    tipText: {
+        fontSize: Layout.fontSize.sm,
+        lineHeight: 19,
     },
 });
