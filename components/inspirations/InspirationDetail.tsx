@@ -27,7 +27,6 @@ import {
 } from 'lucide-react-native';
 import React, { useCallback, useRef, useState } from 'react';
 import {
-  Alert,
   Dimensions,
   FlatList,
   Pressable,
@@ -37,6 +36,7 @@ import {
   View,
   ViewToken,
 } from 'react-native';
+import { toast } from '@/lib/toast';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { goBackOrFallback } from '@/lib/navigation';
@@ -104,12 +104,12 @@ export function InspirationDetail({
 
   const handleContactProvider = async () => {
     if (!isAuthenticated || !userId) {
-      Alert.alert('Connexion requise', 'Veuillez vous connecter pour contacter ce prestataire.');
+      toast.warning('Veuillez vous connecter pour contacter ce prestataire.');
       return;
     }
 
     if (!inspiration.providers?.id) {
-      Alert.alert('Erreur', 'Impossible de contacter ce prestataire.');
+      toast.error('Impossible de contacter ce prestataire.');
       return;
     }
 
@@ -136,7 +136,7 @@ export function InspirationDetail({
       } as any);
     } catch (error) {
       console.error('Error contacting provider:', error);
-      Alert.alert('Erreur', 'Impossible de démarrer la conversation. Veuillez réessayer.');
+      toast.error('Impossible de démarrer la conversation. Veuillez réessayer.');
     } finally {
       setIsContacting(false);
     }

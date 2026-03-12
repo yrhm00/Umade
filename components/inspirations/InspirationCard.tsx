@@ -83,7 +83,7 @@ export const InspirationCard = memo(function InspirationCard({
                 style={[styles.image, { width: CARD_WIDTH, height: clampedHeight }]}
                 contentFit="cover"
                 transition={200}
-                placeholder={colors.backgroundTertiary}
+                placeholder={{ blurhash: 'L6Pj0^jE.AyE_3t7t7R**0o#DgR4' }}
               />
 
               {/* Titre en overlay sur l'image */}

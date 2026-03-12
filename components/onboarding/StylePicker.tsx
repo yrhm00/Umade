@@ -114,6 +114,7 @@ function StyleCard({
             style={styles.image}
             contentFit="cover"
             transition={200}
+            placeholder={{ blurhash: 'L6Pj0^jE.AyE_3t7t7R**0o#DgR4' }}
           />
 
           {/* Overlay when selected */}

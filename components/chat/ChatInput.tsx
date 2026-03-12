@@ -15,7 +15,6 @@ import { Camera, ImageIcon, Send, Sparkles, X, Zap } from 'lucide-react-native';
 import React, { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   StyleSheet,
   Text,
@@ -23,6 +22,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { toast } from '@/lib/toast';
 import { InspirationContextData } from './InspirationContextCard';
 import { QuickReplySheet } from './QuickReplySheet';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
@@ -101,10 +101,7 @@ export function ChatInput({
         clearDraft(conversationId);
         setPendingImage(null);
       } catch {
-        Alert.alert(
-          'Envoi impossible',
-          "L'image n'a pas pu être envoyée. Réessaie dans quelques instants."
-        );
+        toast.error("L'image n'a pas pu être envoyée. Réessaie dans quelques instants.");
       } finally {
         setIsUploading(false);
       }

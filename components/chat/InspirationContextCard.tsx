@@ -5,6 +5,7 @@
 
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
+import { fontFamily } from '@/constants/Typography';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { ExternalLink, Sparkles } from 'lucide-react-native';
@@ -50,6 +51,7 @@ export function InspirationContextCard({ data, isOwn }: InspirationContextCardPr
                     style={styles.image}
                     contentFit="cover"
                     transition={200}
+                    placeholder={{ blurhash: 'L6Pj0^jE.AyE_3t7t7R**0o#DgR4' }}
                 />
 
                 {/* Contenu */}
@@ -126,14 +128,14 @@ const styles = StyleSheet.create({
     },
     label: {
         fontSize: 10,
-        fontWeight: '600',
+        fontFamily: fontFamily.semiBold,
         color: Colors.primary.DEFAULT,
         textTransform: 'uppercase',
         letterSpacing: 0.3,
     },
     title: {
         fontSize: 13,
-        fontWeight: '600',
+        fontFamily: fontFamily.semiBold,
         color: Colors.text.primary,
         lineHeight: 17,
     },
@@ -147,7 +149,7 @@ const styles = StyleSheet.create({
     viewLinkText: {
         fontSize: 11,
         color: Colors.primary.DEFAULT,
-        fontWeight: '500',
+        fontFamily: fontFamily.medium,
         flexShrink: 1,
     },
     messageBubble: {

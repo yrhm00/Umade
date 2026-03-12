@@ -1,6 +1,7 @@
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
 import { Shadows } from '@/constants/Shadows';
+import { fontFamily } from '@/constants/Typography';
 import { useIsDarkTheme } from '@/hooks/useColors';
 import { useHaptics } from '@/hooks/useHaptics';
 import {
@@ -97,6 +98,8 @@ export function Toast({
     <Animated.View
       entering={SlideInUp.duration(260)}
       exiting={SlideOutUp.duration(260)}
+      accessibilityRole="alert"
+      accessibilityLiveRegion="assertive"
       style={[
         styles.container,
         { marginTop: insets.top + Layout.spacing.sm },
@@ -231,10 +234,11 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: Layout.fontSize.md,
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
   },
   message: {
     fontSize: Layout.fontSize.sm,
+    fontFamily: fontFamily.regular,
     marginTop: 2,
   },
   actionButton: {
@@ -244,7 +248,7 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontSize: Layout.fontSize.sm,
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
   },
   closeButton: {
     padding: Layout.spacing.xs,

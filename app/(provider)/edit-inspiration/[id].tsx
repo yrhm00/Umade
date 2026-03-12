@@ -12,6 +12,7 @@ import {
   Pressable,
   Alert,
 } from 'react-native';
+import { toast } from '@/lib/toast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Image } from 'expo-image';
@@ -90,10 +91,7 @@ export default function EditInspirationScreen() {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (!permissionResult.granted) {
-      Alert.alert(
-        'Permission requise',
-        "L'acces a la galerie est necessaire pour ajouter des photos."
-      );
+      toast.warning("L'acces a la galerie est necessaire pour ajouter des photos.");
       return;
     }
 
@@ -101,7 +99,7 @@ export default function EditInspirationScreen() {
     const remaining = 10 - currentCount;
 
     if (remaining <= 0) {
-      Alert.alert('Limite atteinte', 'Vous ne pouvez pas ajouter plus de 10 photos.');
+      toast.warning('Vous ne pouvez pas ajouter plus de 10 photos.');
       return;
     }
 

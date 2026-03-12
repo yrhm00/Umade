@@ -29,6 +29,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { toast } from '@/lib/toast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { goBackOrFallback } from '@/lib/navigation';
 
@@ -112,10 +113,10 @@ export default function ServicesScreen() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['provider', 'services'] });
             closeModal();
-            Alert.alert('Succès', 'Service ajouté avec succès');
+            toast.success('Service ajouté avec succès');
         },
         onError: (error) => {
-            Alert.alert('Erreur', "Impossible d'ajouter le service");
+            toast.error("Impossible d'ajouter le service");
             console.error(error);
         },
     });
@@ -136,10 +137,10 @@ export default function ServicesScreen() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['provider', 'services'] });
             closeModal();
-            Alert.alert('Succès', 'Service mis à jour avec succès');
+            toast.success('Service mis à jour avec succès');
         },
         onError: (error) => {
-            Alert.alert('Erreur', "Impossible de mettre à jour le service");
+            toast.error("Impossible de mettre à jour le service");
             console.error(error);
         },
     });
@@ -155,17 +156,17 @@ export default function ServicesScreen() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['provider', 'services'] });
-            Alert.alert('Succès', 'Service supprimé');
+            toast.success('Service supprimé');
         },
         onError: (error) => {
-            Alert.alert('Erreur', "Impossible de supprimer le service");
+            toast.error("Impossible de supprimer le service");
             console.error(error);
         },
     });
 
     const handleSave = () => {
         if (!formData.name || !formData.price || !formData.duration) {
-            Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires');
+            toast.error('Veuillez remplir tous les champs obligatoires');
             return;
         }
 

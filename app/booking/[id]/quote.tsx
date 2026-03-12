@@ -13,6 +13,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { toast } from '@/lib/toast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Avatar } from '@/components/ui/Avatar';
@@ -200,29 +201,29 @@ export default function BookingQuoteScreen() {
     const balanceDueDate = normalizeDateInput(balanceDueDateInput);
 
     if (quoteAmount <= 0) {
-      Alert.alert('Montant invalide', 'Le devis doit être supérieur à 0.');
+      toast.error('Le devis doit être supérieur à 0.');
       return null;
     }
 
     if (depositAmount < 0 || depositAmount > quoteAmount) {
-      Alert.alert('Acompte invalide', "L'acompte doit être entre 0 et le montant du devis.");
+      toast.error("L'acompte doit être entre 0 et le montant du devis.");
       return null;
     }
 
     if (depositDueDateInput.trim() && !depositDueDate) {
-      Alert.alert('Date invalide', 'Utilise le format AAAA-MM-JJ pour la date acompte.');
+      toast.error('Utilise le format AAAA-MM-JJ pour la date acompte.');
       return null;
     }
 
     if (balanceDueDateInput.trim() && !balanceDueDate) {
-      Alert.alert('Date invalide', 'Utilise le format AAAA-MM-JJ pour la date solde.');
+      toast.error('Utilise le format AAAA-MM-JJ pour la date solde.');
       return null;
     }
 
     if (depositDueDate) {
       const parsed = parseIsoDateToDate(depositDueDate);
       if (!parsed || parsed < minimumSelectableDate) {
-        Alert.alert('Date invalide', "L'échéance acompte ne peut pas être dans le passé.");
+        toast.error("L'échéance acompte ne peut pas être dans le passé.");
         return null;
       }
     }
@@ -230,7 +231,7 @@ export default function BookingQuoteScreen() {
     if (balanceDueDate) {
       const parsed = parseIsoDateToDate(balanceDueDate);
       if (!parsed || parsed < minimumSelectableDate) {
-        Alert.alert('Date invalide', "L'échéance solde ne peut pas être dans le passé.");
+        toast.error("L'échéance solde ne peut pas être dans le passé.");
         return null;
       }
     }
@@ -268,10 +269,7 @@ export default function BookingQuoteScreen() {
   const handleSaveQuote = () => {
     if (!id || !isProvider) return;
     if (isQuoteLocked) {
-      Alert.alert(
-        'Devis verrouillé',
-        'La réservation est déjà confirmée. Le devis ne peut plus être modifié.'
-      );
+      toast.warning('La réservation est déjà confirmée. Le devis ne peut plus être modifié.');
       return;
     }
 
@@ -281,10 +279,10 @@ export default function BookingQuoteScreen() {
     (async () => {
       try {
         await saveQuoteDraft(validated);
-        Alert.alert('Devis enregistré', 'Le devis a bien été enregistré en brouillon.');
+        toast.success('Le devis a bien été enregistré en brouillon.');
       } catch (error) {
-        const message = error instanceof Error ? error.message : 'Impossible d’enregistrer le devis.';
-        Alert.alert('Erreur', message);
+        const message = error instanceof Error ? error.message : 'Impossible d\'enregistrer le devis.';
+        toast.error(message);
       }
     })();
   };
@@ -292,10 +290,7 @@ export default function BookingQuoteScreen() {
   const handleConfirmQuote = () => {
     if (!id || !isProvider || !booking || !finance) return;
     if (isQuoteLocked) {
-      Alert.alert(
-        'Devis verrouillé',
-        'La réservation est déjà confirmée. Le devis ne peut plus être modifié.'
-      );
+      toast.warning('La réservation est déjà confirmée. Le devis ne peut plus être modifié.');
       return;
     }
 
@@ -341,7 +336,7 @@ export default function BookingQuoteScreen() {
                 );
               } catch (error) {
                 const message = error instanceof Error ? error.message : 'Impossible de confirmer le devis.';
-                Alert.alert('Erreur', message);
+                toast.error(message);
               }
             })();
           },

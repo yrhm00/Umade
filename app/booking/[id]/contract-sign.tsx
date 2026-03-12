@@ -34,6 +34,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { toast } from '@/lib/toast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 
@@ -89,7 +90,7 @@ export default function ContractSignScreen() {
     }
 
     if (!isProvider && !isClient) {
-      Alert.alert('Accès refusé', 'Vous devez être participant à cette réservation pour signer.');
+      toast.error('Vous devez être participant à cette réservation pour signer.');
       return;
     }
 
@@ -105,9 +106,9 @@ export default function ContractSignScreen() {
               { bookingId: id },
               {
                 onSuccess: () => {
-                  Alert.alert('Contrat signé', 'Votre signature électronique a été enregistrée.');
+                  toast.success('Votre signature électronique a été enregistrée.');
                 },
-                onError: (error) => Alert.alert('Erreur', error.message),
+                onError: (error) => toast.error(error.message),
               }
             );
           },
@@ -119,14 +120,14 @@ export default function ContractSignScreen() {
   const handleDownloadPdf = async () => {
     if (!contract || !booking) return;
     if (!finance) {
-      Alert.alert('Devis indisponible', 'Le devis n’est pas encore disponible pour cette réservation.');
+      toast.warning('Le devis n\'est pas encore disponible pour cette reservation.');
       return;
     }
     setIsDownloading(true);
     try {
       await shareContractPdf(contract, booking, finance);
     } catch {
-      Alert.alert('Erreur', 'Impossible de générer le PDF. Réessayez.');
+      toast.error('Impossible de générer le PDF. Réessayez.');
     } finally {
       setIsDownloading(false);
     }

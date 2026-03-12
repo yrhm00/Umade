@@ -30,6 +30,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { toast } from '@/lib/toast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { goBackOrFallback } from '@/lib/navigation';
 
@@ -119,7 +120,7 @@ export default function ProviderSettingsScreen() {
                     icon: CreditCard,
                     label: 'Paiements',
                     description: 'Coordonnées bancaires et historique',
-                    onPress: () => Alert.alert('Bientôt disponible', 'Cette fonctionnalité arrive bientôt !'),
+                    onPress: () => toast.info('Cette fonctionnalité arrive bientôt !'),
                     showChevron: true,
                 },
             ],

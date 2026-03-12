@@ -7,7 +7,6 @@ import { useRouter } from 'expo-router';
 import { ArrowLeft, Mail } from 'lucide-react-native';
 import { useState } from 'react';
 import {
-    Alert,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -18,6 +17,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { goBackOrFallback } from '@/lib/navigation';
+import { toast } from '@/lib/toast';
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
@@ -52,21 +52,10 @@ export default function ForgotPasswordScreen() {
       if (error) throw error;
 
       setEmailSent(true);
-      Alert.alert(
-        'Email envoyé',
-        'Un lien de réinitialisation a été envoyé à votre adresse email.',
-        [
-          {
-            text: 'OK',
-            onPress: () => goBackOrFallback(router),
-          },
-        ]
-      );
+      toast.success('Un lien de réinitialisation a été envoyé à votre adresse email.');
+      goBackOrFallback(router);
     } catch (err: any) {
-      Alert.alert(
-        'Erreur',
-        err.message || 'Une erreur est survenue. Veuillez réessayer.'
-      );
+      toast.error(err.message || 'Une erreur est survenue. Veuillez réessayer.');
     } finally {
       setIsLoading(false);
     }

@@ -18,13 +18,13 @@ import { Camera, ChevronLeft, Image as ImageIcon, X } from 'lucide-react-native'
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
+import { toast } from '@/lib/toast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as FileSystem from 'expo-file-system';
 import { decode } from 'base64-arraybuffer';
@@ -62,7 +62,7 @@ export default function CreateStoryScreen() {
   const takePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission requise', 'Autorisez l\'accès à la caméra pour prendre une photo.');
+      toast.warning('Autorisez l\'accès à la caméra pour prendre une photo.');
       return;
     }
 
@@ -105,7 +105,7 @@ export default function CreateStoryScreen() {
 
   const handlePublish = async () => {
     if (!selectedImage) {
-      Alert.alert('Erreur', 'Sélectionnez une image pour votre story.');
+      toast.error('Sélectionnez une image pour votre story.');
       return;
     }
 
@@ -123,12 +123,11 @@ export default function CreateStoryScreen() {
         duration_seconds: 5,
       });
 
-      Alert.alert('Succès', 'Votre story a été publiée !', [
-        { text: 'OK', onPress: () => goBackOrFallback(router) },
-      ]);
+      toast.success('Votre story a été publiée !');
+      goBackOrFallback(router);
     } catch (error) {
       console.error('Error creating story:', error);
-      Alert.alert('Erreur', 'Impossible de publier la story. Réessayez.');
+      toast.error('Impossible de publier la story. Réessayez.');
     } finally {
       setIsUploading(false);
     }

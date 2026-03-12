@@ -93,6 +93,7 @@ export function PressableScale({
       onPressOut={handlePressOut}
       onPress={handlePress}
       disabled={disabled}
+      accessibilityRole={props.accessibilityRole || 'button'}
       {...props}
     >
       {children}

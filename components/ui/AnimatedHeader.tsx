@@ -12,6 +12,7 @@ import { ChevronLeft } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
+import { fontFamily } from '@/constants/Typography';
 import { goBackOrFallback } from '@/lib/navigation';
 
 interface AnimatedHeaderProps {
@@ -192,7 +193,7 @@ const styles = StyleSheet.create({
   collapsedTitle: {
     flex: 1,
     fontSize: Layout.fontSize.lg,
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
     color: Colors.text.primary,
     textAlign: 'center',
   },
@@ -213,7 +214,7 @@ const styles = StyleSheet.create({
   },
   expandedTitle: {
     fontSize: Layout.fontSize['3xl'],
-    fontWeight: '700',
+    fontFamily: fontFamily.bold,
     color: Colors.text.primary,
   },
   subtitle: {

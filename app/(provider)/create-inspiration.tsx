@@ -3,7 +3,8 @@
  */
 
 import React, { useCallback } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { toast } from '@/lib/toast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
@@ -26,17 +27,11 @@ export default function CreateInspirationScreen() {
     async (inspiration: CreateInspirationInput, images: InspirationImageInput[]) => {
       try {
         await createInspiration({ inspiration, images });
-        Alert.alert(
-          'Inspiration publiee !',
-          'Votre inspiration est maintenant visible par tous les utilisateurs.',
-          [{ text: 'OK', onPress: () => goBackOrFallback(router) }]
-        );
+        toast.success('Votre inspiration est maintenant visible par tous les utilisateurs.');
+        goBackOrFallback(router);
       } catch (error) {
         console.error('Error creating inspiration:', error);
-        Alert.alert(
-          'Erreur',
-          "Impossible de publier l'inspiration. Veuillez reessayer."
-        );
+        toast.error("Impossible de publier l'inspiration. Veuillez reessayer.");
       }
     },
     [createInspiration]

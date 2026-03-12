@@ -61,6 +61,7 @@ import {
   GUEST_STATUS_LABELS,
   GUEST_CATEGORIES,
 } from '@/types/eventFeatures';
+import { toast } from '@/lib/toast';
 import * as Haptics from 'expo-haptics';
 import * as Clipboard from 'expo-clipboard';
 import {
@@ -138,14 +139,14 @@ export default function GuestsScreen() {
 
   const handleAddGroup = useCallback(() => {
     if (!newGroup.name.trim()) {
-      Alert.alert('Erreur', 'Veuillez entrer un nom pour le groupe/famille.');
+      toast.error('Veuillez entrer un nom pour le groupe/famille.');
       return;
     }
 
     const effectiveCount = Math.max(newGroup.member_count, newMembers.length);
 
     if (effectiveCount < 1) {
-      Alert.alert('Erreur', 'Le groupe doit avoir au moins 1 personne.');
+      toast.error('Le groupe doit avoir au moins 1 personne.');
       return;
     }
 
@@ -214,7 +215,7 @@ export default function GuestsScreen() {
     const { deepLink, webLink } = getInviteLinks(token);
     await Clipboard.setStringAsync(preferWeb ? webLink : deepLink);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    Alert.alert('Lien copié', preferWeb ? webLink : deepLink);
+    toast.success('Lien copié');
   }, [getInviteLinks]);
 
   const handleShareInviteLink = useCallback(async (groupName: string, token: string) => {
@@ -254,7 +255,7 @@ export default function GuestsScreen() {
           );
         },
         onError: (error: any) => {
-          Alert.alert('Erreur', error?.message || 'Impossible de créer le lien RSVP.');
+          toast.error(error?.message || 'Impossible de créer le lien RSVP.');
         },
       }
     );

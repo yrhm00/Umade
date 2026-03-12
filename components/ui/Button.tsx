@@ -1,6 +1,5 @@
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
-import { AppHaptics } from '@/lib/haptics';
 import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import React, { useCallback } from 'react';
 import {
@@ -9,9 +8,10 @@ import {
   StyleSheet,
   Text,
   TextStyle,
-  TouchableOpacity,
   ViewStyle,
 } from 'react-native';
+import { PressableScale } from './PressableScale';
+import { fontFamily } from '@/constants/Typography';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost';
 type ButtonSize = 'sm' | 'md' | 'lg';
@@ -48,7 +48,6 @@ export function Button({
   const isDisabled = disabled || loading;
 
   const handlePress = useCallback(() => {
-    AppHaptics.buttonPress();
     onPress();
   }, [onPress]);
 
@@ -102,11 +101,15 @@ export function Button({
   ];
 
   return (
-    <TouchableOpacity
+    <PressableScale
       style={buttonStyles}
       onPress={handlePress}
       disabled={isDisabled}
-      activeOpacity={0.7}
+      scale={0.97}
+      haptic={isDisabled ? 'none' : 'light'}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityState={{ disabled: isDisabled, busy: loading }}
     >
       {loading ? (
         <ActivityIndicator
@@ -120,7 +123,7 @@ export function Button({
           {icon && iconPosition === 'right' && icon}
         </>
       )}
-    </TouchableOpacity>
+    </PressableScale>
   );
 }
 
@@ -157,7 +160,7 @@ const styles = StyleSheet.create({
 
   // Text
   text: {
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
   },
   text_sm: {
     fontSize: Layout.fontSize.sm,

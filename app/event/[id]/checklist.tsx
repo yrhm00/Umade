@@ -47,6 +47,7 @@ import {
   ChecklistItemStatus,
   CHECKLIST_PRIORITIES,
 } from '@/types/eventFeatures';
+import { toast } from '@/lib/toast';
 import * as Haptics from 'expo-haptics';
 
 const STATUS_CONFIG: Record<ChecklistItemStatus, { label: string; color: string; icon: any }> = {
@@ -79,7 +80,7 @@ export default function ChecklistScreen() {
 
   const handleAddItem = useCallback(() => {
     if (!newItem.title) {
-      Alert.alert('Erreur', 'Veuillez entrer un titre.');
+      toast.error('Veuillez entrer un titre.');
       return;
     }
 

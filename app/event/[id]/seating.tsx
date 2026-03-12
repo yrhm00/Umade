@@ -71,6 +71,7 @@ import {
   SeatingLayoutPresetId,
   SEATING_LAYOUT_PRESETS,
 } from '@/types/eventFeatures';
+import { toast } from '@/lib/toast';
 import * as Haptics from 'expo-haptics';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -692,28 +693,22 @@ export default function SeatingScreen() {
       });
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-      Alert.alert(
-        'Plan de salle mis a jour',
-        `${Math.round(savedLayout.width_m * savedLayout.height_m)} m2 · ${autoLayoutResult.moved}/${autoLayoutResult.total} table(s) repositionnee(s).`
-      );
+      toast.success(`Plan de salle mis a jour — ${Math.round(savedLayout.width_m * savedLayout.height_m)} m2 · ${autoLayoutResult.moved}/${autoLayoutResult.total} table(s) repositionnee(s).`);
       setShowLayoutEditor(false);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Impossible de mettre a jour le plan de salle.';
       if (message.includes('ROOM_LAYOUT_TABLE_MISSING')) {
-        Alert.alert(
-          'Migration Supabase requise',
-          "La table event_room_layouts est absente. Lance la migration pour activer les plans par surface."
-        );
+        toast.error("Migration Supabase requise — La table event_room_layouts est absente.");
         return;
       }
-      Alert.alert('Erreur', 'Impossible de mettre a jour le plan de salle.');
+      toast.error('Impossible de mettre a jour le plan de salle.');
     }
   }, [eventId, layoutDraft, saveRoomLayout, autoLayoutTables]);
 
   const handleCreateTable = useCallback(() => {
     if (!newTable.name) {
-      Alert.alert('Erreur', 'Veuillez donner un nom à la table.');
+      toast.error('Veuillez donner un nom à la table.');
       return;
     }
 
@@ -776,7 +771,7 @@ export default function SeatingScreen() {
 
     const trimmedName = tableNameDraft.trim();
     if (!trimmedName) {
-      Alert.alert('Erreur', 'Le nom de la table ne peut pas etre vide.');
+      toast.error('Le nom de la table ne peut pas etre vide.');
       return;
     }
 
@@ -797,7 +792,7 @@ export default function SeatingScreen() {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
         },
         onError: () => {
-          Alert.alert('Erreur', 'Impossible de renommer cette table.');
+          toast.error('Impossible de renommer cette table.');
         },
       }
     );
@@ -818,10 +813,7 @@ export default function SeatingScreen() {
                 onSuccess: (result) => {
                   Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
                   if (result.reason === 'no_guests') {
-                    Alert.alert(
-                      'Aucun invité à placer',
-                      "Ajoutez des invités ou confirmez des groupes pour lancer l'auto-assignation."
-                    );
+                    toast.warning("Ajoutez des invités ou confirmez des groupes pour lancer l'auto-assignation.");
                     return;
                   }
 
@@ -833,7 +825,7 @@ export default function SeatingScreen() {
                     parts.push(`${result.generatedGuests} invité(s) généré(s) depuis les groupes`);
                   }
 
-                  Alert.alert('Succès', `${parts.join(' · ')}.`);
+                  toast.success(`${parts.join(' · ')}.`);
                 },
               }
             );

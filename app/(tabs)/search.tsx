@@ -16,6 +16,7 @@ import { VoiceSearchButton } from '@/components/ui/VoiceSearchButton';
 import { Colors } from '@/constants/Colors';
 import { Config } from '@/constants/Config';
 import { Layout } from '@/constants/Layout';
+import { fontFamily } from '@/constants/Typography';
 import { useAuth } from '@/hooks/useAuth';
 import { useCategories } from '@/hooks/useCategories';
 import { useColors, useIsDarkTheme } from '@/hooks/useColors';
@@ -565,7 +566,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: Layout.fontSize['2xl'],
-    fontWeight: '700',
+    fontFamily: fontFamily.bold,
   },
   homeHeader: {
     flexDirection: 'row',
@@ -582,7 +583,7 @@ const styles = StyleSheet.create({
   },
   userName: {
     fontSize: Layout.fontSize['2xl'],
-    fontWeight: '700',
+    fontFamily: fontFamily.bold,
   },
   headerRight: {
     flexDirection: 'row',
@@ -663,7 +664,7 @@ const styles = StyleSheet.create({
   },
   filterBadgeText: {
     fontSize: 10,
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
     color: '#FFFFFF',
   },
   section: {
@@ -678,13 +679,13 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: Layout.fontSize.lg,
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
     paddingHorizontal: Layout.spacing.lg,
     marginBottom: Layout.spacing.md,
   },
   sectionTitleNoMargin: {
     fontSize: Layout.fontSize.lg,
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
   },
   seeAllButton: {
     flexDirection: 'row',
@@ -693,7 +694,7 @@ const styles = StyleSheet.create({
   },
   seeAllText: {
     fontSize: Layout.fontSize.sm,
-    fontWeight: '500',
+    fontFamily: fontFamily.medium,
   },
   categoriesContainer: {
     paddingHorizontal: Layout.spacing.lg,
@@ -747,7 +748,7 @@ const styles = StyleSheet.create({
   },
   categoryGridName: {
     fontSize: Layout.fontSize.xs,
-    fontWeight: '500',
+    fontFamily: fontFamily.medium,
     textAlign: 'center',
   },
   resultsHeader: {

@@ -24,7 +24,6 @@ import {
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -34,6 +33,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { goBackOrFallback } from '@/lib/navigation';
+import { toast } from '@/lib/toast';
 
 interface SelectedImage {
   uri: string;
@@ -72,7 +72,7 @@ export default function CreateSocialPostScreen() {
   const takePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission requise', "Autorisez l'accès à la caméra.");
+      toast.warning("Autorisez l'accès à la caméra.");
       return;
     }
 
@@ -119,7 +119,7 @@ export default function CreateSocialPostScreen() {
 
   const handlePublish = async () => {
     if (images.length === 0 && !content.trim()) {
-      Alert.alert('Erreur', 'Ajoutez du contenu ou des images.');
+      toast.error('Ajoutez du contenu ou des images.');
       return;
     }
 
@@ -144,12 +144,11 @@ export default function CreateSocialPostScreen() {
         images: uploadedImages,
       });
 
-      Alert.alert('Succès', 'Votre publication a été partagée !', [
-        { text: 'OK', onPress: () => goBackOrFallback(router) },
-      ]);
+      toast.success('Votre publication a été partagée !');
+      goBackOrFallback(router);
     } catch (error) {
       console.error('Error creating post:', error);
-      Alert.alert('Erreur', 'Impossible de publier. Réessayez.');
+      toast.error('Impossible de publier. Réessayez.');
     } finally {
       setIsUploading(false);
     }

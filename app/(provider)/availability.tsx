@@ -11,7 +11,6 @@ import { useRouter } from 'expo-router';
 import { ArrowLeft, Calendar, Check, ChevronRight, Clock, Moon, Sun } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import {
-    Alert,
     ScrollView,
     StyleSheet,
     Switch,
@@ -19,6 +18,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { toast } from '@/lib/toast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { goBackOrFallback } from '@/lib/navigation';
 
@@ -152,12 +152,11 @@ export default function ProviderAvailabilityScreen() {
                 if (insertError) throw insertError;
             }
 
-            Alert.alert('Succès', 'Vos disponibilités ont été enregistrées et sont maintenant visibles pour les clients.', [
-                { text: 'OK', onPress: () => goBackOrFallback(router) },
-            ]);
+            toast.success('Vos disponibilités ont été enregistrées et sont maintenant visibles pour les clients.');
+            goBackOrFallback(router);
         } catch (error) {
             console.error('Error saving schedule:', error);
-            Alert.alert('Erreur', 'Impossible de sauvegarder les disponibilités dans la base de données.');
+            toast.error('Impossible de sauvegarder les disponibilités dans la base de données.');
         } finally {
             setIsSaving(false);
         }
@@ -264,7 +263,7 @@ export default function ProviderAvailabilityScreen() {
         });
 
         setSchedule(newSchedule);
-        Alert.alert('Appliqué', 'Les horaires ont été copiés sur tous les jours (sauf dimanche)');
+        toast.success('Les horaires ont été copiés sur tous les jours (sauf dimanche)');
     };
 
     const renderTimeSelector = (

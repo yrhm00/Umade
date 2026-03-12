@@ -17,6 +17,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { toast } from '@/lib/toast';
 import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { goBackOrFallback } from '@/lib/navigation';
@@ -118,11 +119,11 @@ export default function ProviderPortfolioScreen() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['portfolio'] });
-            Alert.alert('Succès', 'Photo ajoutée au portfolio');
+            toast.success('Photo ajoutée au portfolio');
         },
         onError: (error) => {
             console.error('Upload error:', error);
-            Alert.alert('Erreur', "Impossible de télécharger l'image (Vérifiez les permissions RLS)");
+            toast.error("Impossible de télécharger l'image (Vérifiez les permissions RLS)");
         },
         onSettled: () => {
             setIsUploading(false);
@@ -143,7 +144,7 @@ export default function ProviderPortfolioScreen() {
             queryClient.invalidateQueries({ queryKey: ['portfolio'] });
         },
         onError: () => {
-            Alert.alert('Erreur', 'Impossible de supprimer la photo');
+            toast.error('Impossible de supprimer la photo');
         },
     });
 
@@ -198,7 +199,7 @@ export default function ProviderPortfolioScreen() {
         } catch (error) {
             console.error("Reorder failed", error);
             queryClient.invalidateQueries({ queryKey: ['portfolio'] });
-            Alert.alert("Erreur", "Impossible de sauvegarder l'ordre");
+            toast.error("Impossible de sauvegarder l'ordre");
         }
     };
 
