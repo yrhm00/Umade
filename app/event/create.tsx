@@ -9,7 +9,8 @@ import { useCreateEvent } from '@/hooks/useEvents';
 import { CreateEventInput } from '@/types';
 import { Stack, useRouter } from 'expo-router';
 import React from 'react';
-import { Alert, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { toast } from '@/lib/toast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { goBackOrFallback } from '@/lib/navigation';
 
@@ -24,10 +25,7 @@ export default function CreateEventScreen() {
         goBackOrFallback(router);
       },
       onError: (error) => {
-        Alert.alert(
-          'Erreur',
-          error.message || 'Impossible de créer l\'événement'
-        );
+        toast.error(error.message || 'Impossible de créer l\'événement');
       },
     });
   };

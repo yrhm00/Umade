@@ -17,6 +17,7 @@ import { StoriesStrip } from '@/components/stories';
 import { PressableScale } from '@/components/ui/PressableScale';
 import { VoiceSearchButton } from '@/components/ui/VoiceSearchButton';
 import { Layout } from '@/constants/Layout';
+import { fontFamily } from '@/constants/Typography';
 import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { useInspirationFeed } from '@/hooks/useInspirations';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
@@ -457,7 +458,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: Layout.fontSize['2xl'],
-    fontWeight: '700',
+    fontFamily: fontFamily.bold,
   },
   headerActions: {
     flexDirection: 'row',
@@ -495,7 +496,7 @@ const styles = StyleSheet.create({
   },
   headerBadgeText: {
     fontSize: 9,
-    fontWeight: '700',
+    fontFamily: fontFamily.bold,
     color: '#FFFFFF',
   },
   searchContainer: {
@@ -557,7 +558,7 @@ const styles = StyleSheet.create({
   },
   filterBadgeText: {
     fontSize: 10,
-    fontWeight: '700',
+    fontFamily: fontFamily.bold,
     color: '#FFFFFF',
   },
   searchOverlay: {
@@ -581,7 +582,7 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     fontSize: Layout.fontSize.md,
-    fontWeight: '500',
+    fontFamily: fontFamily.medium,
   },
   sectionHeader: {
     paddingHorizontal: Layout.spacing.lg,
@@ -590,6 +591,6 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: Layout.fontSize.lg,
-    fontWeight: '700',
+    fontFamily: fontFamily.bold,
   },
 });

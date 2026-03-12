@@ -1,8 +1,9 @@
 import { Colors } from '@/constants/Colors';
+import { fontFamily } from '@/constants/Typography';
 import { useColors, useIsDarkTheme } from '@/hooks/useColors';
+import { Image } from 'expo-image';
 import React from 'react';
 import {
-  Image,
   StyleSheet,
   Text,
   View,
@@ -67,9 +68,15 @@ export function Avatar({
 
   if (source) {
     return (
-      <View style={[styles.container, containerStyle, style]}>
+      <View
+        style={[styles.container, containerStyle, style]}
+        accessibilityRole="image"
+        accessibilityLabel={name ? `Photo de ${name}` : 'Avatar'}
+      >
         <Image
           source={{ uri: source }}
+          placeholder={{ blurhash: 'L6Pj0^jE.AyE_3t7t7R**0o#DgR4' }}
+          transition={200}
           style={[styles.image, { borderRadius: dimension / 2 }]}
         />
       </View>
@@ -77,12 +84,16 @@ export function Avatar({
   }
 
   return (
-    <View style={[
-      styles.container,
-      containerStyle,
-      { backgroundColor: isDark ? colors.backgroundTertiary : Colors.primary[100] },
-      style
-    ]}>
+    <View
+      style={[
+        styles.container,
+        containerStyle,
+        { backgroundColor: isDark ? colors.backgroundTertiary : Colors.primary[100] },
+        style,
+      ]}
+      accessibilityRole="image"
+      accessibilityLabel={name ? `Photo de ${name}` : 'Avatar'}
+    >
       <Text style={[styles.initials, { fontSize, color: colors.primary }]}>
         {name ? getInitials(name) : '?'}
       </Text>
@@ -101,6 +112,6 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   initials: {
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
   },
 });

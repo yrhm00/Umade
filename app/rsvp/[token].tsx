@@ -9,7 +9,8 @@ import {
 } from '@/hooks/useGuestGroupInvites';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { toast } from '@/lib/toast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 type RsvpStatus = 'pending' | 'confirmed' | 'declined' | 'maybe';
@@ -57,15 +58,12 @@ export default function PublicRsvpScreen() {
     const childrenCount = Math.max(0, Math.floor(Number.parseInt(children || '0', 10) || 0));
 
     if (status === 'confirmed' && adultsCount + childrenCount <= 0) {
-      Alert.alert('Nombre invalide', 'Indique au moins 1 personne présente.');
+      toast.error('Indique au moins 1 personne présente.');
       return;
     }
 
     if (maxGuests > 0 && adultsCount + childrenCount > maxGuests) {
-      Alert.alert(
-        'Capacité dépassée',
-        `Le foyer contient ${maxGuests} personne(s). Ajuste le nombre de présents.`
-      );
+      toast.error(`Le foyer contient ${maxGuests} personne(s). Ajuste le nombre de présents.`);
       return;
     }
 
@@ -80,11 +78,11 @@ export default function PublicRsvpScreen() {
       },
       {
         onSuccess: () => {
-          Alert.alert('Merci', 'Votre réponse RSVP a bien été enregistrée.');
+          toast.success('Votre réponse RSVP a bien été enregistrée.');
           refetch();
         },
         onError: (error: any) => {
-          Alert.alert('Erreur', error?.message || "Impossible d'enregistrer votre réponse.");
+          toast.error(error?.message || "Impossible d'enregistrer votre réponse.");
         },
       }
     );

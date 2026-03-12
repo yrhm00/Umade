@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { PressableScale } from '@/components/ui/PressableScale';
 import { Layout } from '@/constants/Layout';
+import { fontFamily } from '@/constants/Typography';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserBadges } from '@/hooks/useBadges';
 import { useClientStats } from '@/hooks/useClientStats';
@@ -342,7 +343,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: Layout.fontSize['2xl'],
-    fontWeight: '700',
+    fontFamily: fontFamily.bold,
   },
   profileCard: {
     marginHorizontal: Layout.spacing.lg,
@@ -359,7 +360,7 @@ const styles = StyleSheet.create({
   },
   profileName: {
     fontSize: Layout.fontSize.xl,
-    fontWeight: '700',
+    fontFamily: fontFamily.bold,
   },
   profileEmail: {
     fontSize: Layout.fontSize.sm,
@@ -372,7 +373,7 @@ const styles = StyleSheet.create({
   },
   editButtonText: {
     fontSize: Layout.fontSize.sm,
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
   },
   statsContainer: {
     flexDirection: 'row',
@@ -387,7 +388,7 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: Layout.fontSize['2xl'],
-    fontWeight: '700',
+    fontFamily: fontFamily.bold,
     color: '#FFFFFF',
   },
   statLabel: {
@@ -405,7 +406,7 @@ const styles = StyleSheet.create({
   },
   menuSectionTitle: {
     fontSize: Layout.fontSize.sm,
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
     marginBottom: Layout.spacing.sm,
     textTransform: 'uppercase',
     letterSpacing: 0.5,

@@ -160,6 +160,7 @@ export function ImageViewerModal({
                   style={styles.image}
                   contentFit="contain"
                   transition={180}
+                  placeholder={{ blurhash: 'L6Pj0^jE.AyE_3t7t7R**0o#DgR4' }}
                 />
               </Animated.View>
             </GestureDetector>

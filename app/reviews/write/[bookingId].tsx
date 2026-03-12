@@ -9,7 +9,8 @@ import { useColors } from '@/hooks/useColors';
 import { useBookingForReview, useCreateReview } from '@/hooks/useReviews';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React from 'react';
-import { Alert, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { toast } from '@/lib/toast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function WriteReviewScreen() {
@@ -32,19 +33,11 @@ export default function WriteReviewScreen() {
       },
       {
         onSuccess: () => {
-          Alert.alert('Merci !', 'Votre avis a été publié.', [
-            {
-              text: 'OK',
-              onPress: () =>
-                router.replace(`/reviews/provider/${booking.provider_id}`),
-            },
-          ]);
+          toast.success('Votre avis a été publié.');
+          router.replace(`/reviews/provider/${booking.provider_id}`);
         },
         onError: (error) => {
-          Alert.alert(
-            'Erreur',
-            error.message || 'Une erreur est survenue lors de la publication.'
-          );
+          toast.error(error.message || 'Une erreur est survenue lors de la publication.');
         },
       }
     );

@@ -15,7 +15,8 @@ import {
 import * as Clipboard from 'expo-clipboard';
 import { CheckCircle2, Clock, Copy, CreditCard, Wallet } from 'lucide-react-native';
 import React, { forwardRef, useCallback, useMemo } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { toast } from '@/lib/toast';
 
 interface PaymentSummarySheetProps {
   finance: BookingFinanceSnapshot;
@@ -113,7 +114,7 @@ export const PaymentSummarySheet = forwardRef<BottomSheetModal, PaymentSummarySh
       }
 
       await Clipboard.setStringAsync(lines.join('\n'));
-      Alert.alert('Copié', 'Le résumé a été copié dans le presse-papier.');
+      toast.success('Le résumé a été copié dans le presse-papier.');
     };
 
     const paymentStatusLabel = useMemo(() => {

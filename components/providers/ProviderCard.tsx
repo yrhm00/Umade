@@ -22,8 +22,10 @@ import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { ProviderListItem } from '@/types';
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
+import { fontFamily } from '@/constants/Typography';
 import { useCompareStore } from '@/stores/compareStore';
 
+const DEFAULT_BLURHASH = 'L6Pj0^jE.AyE_3t7t7R**0o#DgR4';
 const { width } = Dimensions.get('window');
 export const CARD_WIDTH = (width - Layout.spacing.lg * 2 - Layout.spacing.md) / 2;
 
@@ -133,6 +135,7 @@ export function ProviderCard({
                 style={styles.listImage}
                 contentFit="cover"
                 transition={300}
+                placeholder={{ blurhash: DEFAULT_BLURHASH }}
               />
             ) : (
               renderPlaceholder(styles.listImage)
@@ -243,6 +246,7 @@ export function ProviderCard({
               style={styles.gridImage}
               contentFit="cover"
               transition={300}
+              placeholder={{ blurhash: DEFAULT_BLURHASH }}
             />
           ) : (
             renderPlaceholder(styles.gridImage)
@@ -376,7 +380,7 @@ const styles = StyleSheet.create({
   },
   ratingBadgeText: {
     fontSize: Layout.fontSize.xs,
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
   },
   gridContent: {
     padding: Layout.spacing.md,
@@ -438,7 +442,7 @@ const styles = StyleSheet.create({
   // Shared styles
   businessName: {
     fontSize: Layout.fontSize.md,
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
     flex: 1,
   },
   categoryBadge: {
@@ -449,7 +453,7 @@ const styles = StyleSheet.create({
   },
   categoryText: {
     fontSize: Layout.fontSize.xs,
-    fontWeight: '500',
+    fontFamily: fontFamily.medium,
   },
   categoryName: {
     fontSize: Layout.fontSize.xs,
@@ -479,22 +483,22 @@ const styles = StyleSheet.create({
   },
   ratingText: {
     fontSize: Layout.fontSize.sm,
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
   },
   reviewCount: {
     fontSize: Layout.fontSize.xs,
   },
   newBadge: {
     fontSize: Layout.fontSize.xs,
-    fontWeight: '500',
+    fontFamily: fontFamily.medium,
   },
   price: {
     fontSize: Layout.fontSize.sm,
-    fontWeight: '700',
+    fontFamily: fontFamily.bold,
   },
   priceSmall: {
     fontSize: Layout.fontSize.sm,
-    fontWeight: '700',
+    fontFamily: fontFamily.bold,
     marginTop: 4,
   },
   placeholderImage: {

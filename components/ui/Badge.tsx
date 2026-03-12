@@ -1,5 +1,6 @@
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
+import { fontFamily } from '@/constants/Typography';
 import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import React from 'react';
 import {
@@ -97,7 +98,7 @@ const styles = StyleSheet.create({
 
   // Text
   text: {
-    fontWeight: '500',
+    fontFamily: fontFamily.medium,
   },
   text_sm: {
     fontSize: Layout.fontSize.xs,

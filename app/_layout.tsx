@@ -13,6 +13,7 @@ import { ChevronLeft } from 'lucide-react-native';
 
 import { RealtimeProvider } from '@/components/providers/RealtimeProvider';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { GlobalToast } from '@/components/ui/GlobalToast';
 import { OfflineIndicator } from '@/components/ui/OfflineIndicator';
 import { goBackOrFallback } from '@/lib/navigation';
 import { queryClient } from '@/lib/queryClient';
@@ -24,7 +25,9 @@ SplashScreen.preventAutoHideAsync();
 const stackScreenOptions = {
   headerShown: false,
   animation: 'slide_from_right',
-  animationDuration: 250,
+  animationDuration: 300,
+  fullScreenGestureEnabled: true,
+  customAnimationOnGesture: true,
 } as const;
 
 const providerScreenOptions = {
@@ -61,6 +64,10 @@ export default function RootLayout() {
 
   const [fontsLoaded, fontError] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    'PlusJakartaSans-Regular': require('../assets/fonts/PlusJakartaSans-Regular.ttf'),
+    'PlusJakartaSans-Medium': require('../assets/fonts/PlusJakartaSans-Medium.ttf'),
+    'PlusJakartaSans-SemiBold': require('../assets/fonts/PlusJakartaSans-SemiBold.ttf'),
+    'PlusJakartaSans-Bold': require('../assets/fonts/PlusJakartaSans-Bold.ttf'),
   });
   const openingPlayer = useVideoPlayer(require('../assets/videos/opening.mp4'), (player) => {
     player.loop = false;
@@ -199,6 +206,7 @@ export default function RootLayout() {
                 </Stack>
                 </ErrorBoundary>
                 <OfflineIndicator floating />
+                <GlobalToast />
 
                 {showOpeningVideo && (
                   <Animated.View

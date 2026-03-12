@@ -122,10 +122,8 @@ export function ChatImageMessage({ data, message, isOwn }: ChatImageMessageProps
               transition={180}
               placeholder={
                 data.thumbnail_url
-                  ? {
-                      uri: data.thumbnail_url,
-                    }
-                  : undefined
+                  ? { uri: data.thumbnail_url }
+                  : { blurhash: 'L6Pj0^jE.AyE_3t7t7R**0o#DgR4' }
               }
               onLoadEnd={() => setIsLoaded(true)}
             />

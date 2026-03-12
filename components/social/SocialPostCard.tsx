@@ -11,8 +11,11 @@ import { useAuth } from '@/hooks/useAuth';
 import { useColors } from '@/hooks/useColors';
 import { useFollowingIds, useToggleFollow } from '@/hooks/useFollows';
 import { SocialPostWithDetails } from '@/types/social';
+import { fontFamily } from '@/constants/Typography';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
+
+const DEFAULT_BLURHASH = 'L6Pj0^jE.AyE_3t7t7R**0o#DgR4';
 import {
   Heart,
   MapPin,
@@ -179,6 +182,7 @@ export function SocialPostCard({
                   style={styles.image}
                   contentFit="cover"
                   transition={200}
+                  placeholder={{ blurhash: DEFAULT_BLURHASH }}
                 />
               ))}
             </Animated.ScrollView>
@@ -300,7 +304,7 @@ const styles = StyleSheet.create({
     marginLeft: Layout.spacing.sm,
   },
   userName: {
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
     fontSize: 14,
   },
   locationRow: {
@@ -321,7 +325,7 @@ const styles = StyleSheet.create({
   },
   followButtonText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
   },
   moreButton: {
     padding: Layout.spacing.xs,
@@ -372,7 +376,7 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   likesCount: {
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
     fontSize: 14,
     paddingHorizontal: Layout.spacing.md,
     marginBottom: Layout.spacing.xs,

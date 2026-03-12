@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/Button';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
+import { fontFamily } from '@/constants/Typography';
 import { useUpcomingProviderBookings } from '@/hooks/useBookings';
 import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import {
@@ -21,7 +22,6 @@ import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { Calendar, DollarSign, MessageSquare, Settings, Star, Wallet } from 'lucide-react-native';
 import {
-  Alert,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -29,6 +29,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { toast } from '@/lib/toast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface StatCard {
@@ -141,15 +142,12 @@ export default function ProviderDashboardScreen() {
     if (!canRequestPayout || isRequestingPayout) return;
     try {
       const result = await requestPayoutAsync({});
-      Alert.alert(
-        'Retrait lancé',
-        `Virement en cours (${formatPrice(result.amount)}). Le statut sera mis à jour automatiquement.`
-      );
+      toast.success(`Virement en cours (${formatPrice(result.amount)}). Le statut sera mis à jour automatiquement.`);
       await refetchWalletSummary();
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Impossible de lancer le retrait pour le moment.';
-      Alert.alert('Retrait indisponible', message);
+      toast.error(message);
     }
   };
 
@@ -180,7 +178,7 @@ export default function ProviderDashboardScreen() {
         error instanceof Error
           ? error.message
           : 'Impossible de lancer la configuration Stripe pour le moment.';
-      Alert.alert('Configuration Stripe indisponible', message);
+      toast.error(message);
     }
   };
 
@@ -606,7 +604,7 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: Layout.fontSize['2xl'],
-    fontWeight: '700',
+    fontFamily: fontFamily.bold,
     marginTop: Layout.spacing.xs,
   },
   settingsButton: {
@@ -622,7 +620,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: Layout.fontSize.lg,
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
     marginBottom: Layout.spacing.md,
   },
   statsGrid: {
@@ -647,7 +645,7 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: Layout.fontSize['2xl'],
-    fontWeight: '700',
+    fontFamily: fontFamily.bold,
     marginBottom: Layout.spacing.xs,
   },
   statTitle: {
@@ -676,14 +674,14 @@ const styles = StyleSheet.create({
   },
   walletPanelTitle: {
     fontSize: Layout.fontSize.lg,
-    fontWeight: '700',
+    fontFamily: fontFamily.bold,
   },
   walletPanelBody: {
     gap: Layout.spacing.xs,
   },
   walletMainAmount: {
     fontSize: Layout.fontSize['3xl'],
-    fontWeight: '700',
+    fontFamily: fontFamily.bold,
   },
   walletMainLabel: {
     fontSize: Layout.fontSize.sm,
@@ -716,7 +714,7 @@ const styles = StyleSheet.create({
   },
   seeAll: {
     fontSize: Layout.fontSize.sm,
-    fontWeight: '500',
+    fontFamily: fontFamily.medium,
   },
   emptyState: {
     padding: Layout.spacing.xl,
@@ -726,7 +724,7 @@ const styles = StyleSheet.create({
   },
   emptyStateText: {
     fontSize: Layout.fontSize.md,
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
     marginTop: Layout.spacing.md,
   },
   emptyStateSubtext: {
@@ -757,7 +755,7 @@ const styles = StyleSheet.create({
   },
   conversationName: {
     fontSize: Layout.fontSize.md,
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
     flex: 1,
   },
   conversationTime: {
@@ -776,7 +774,7 @@ const styles = StyleSheet.create({
   },
   unreadBadgeText: {
     fontSize: Layout.fontSize.xs,
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
     color: Colors.white,
   },
   quickActions: {
@@ -810,13 +808,13 @@ const styles = StyleSheet.create({
   },
   dateDay: {
     fontSize: Layout.fontSize.lg,
-    fontWeight: '700',
+    fontFamily: fontFamily.bold,
     color: Colors.primary.DEFAULT,
   },
   dateMonth: {
     fontSize: Layout.fontSize.xs,
     textTransform: 'uppercase',
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
     color: Colors.primary.DEFAULT,
   },
   bookingInfo: {
@@ -824,7 +822,7 @@ const styles = StyleSheet.create({
   },
   bookingService: {
     fontSize: Layout.fontSize.md,
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
   },
   bookingClient: {
     fontSize: Layout.fontSize.sm,
@@ -838,7 +836,7 @@ const styles = StyleSheet.create({
   timeText: {
     fontSize: Layout.fontSize.xs,
     color: Colors.text.tertiary,
-    fontWeight: '500',
+    fontFamily: fontFamily.medium,
   },
   statusBadge: {
     paddingHorizontal: 8,
@@ -847,7 +845,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 10,
-    fontWeight: '700',
+    fontFamily: fontFamily.bold,
     textTransform: 'uppercase',
   },
 });

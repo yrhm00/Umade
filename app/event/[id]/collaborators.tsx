@@ -44,6 +44,7 @@ import {
   useGenerateShareLink,
 } from '@/hooks/useCollaborators';
 import { Collaborator, CollaboratorRole, COLLABORATOR_ROLES } from '@/types/eventFeatures';
+import { toast } from '@/lib/toast';
 import * as Haptics from 'expo-haptics';
 import * as Clipboard from 'expo-clipboard';
 
@@ -78,12 +79,12 @@ export default function CollaboratorsScreen() {
 
   const handleInvite = useCallback(() => {
     if (!inviteEmail.trim()) {
-      Alert.alert('Erreur', 'Veuillez entrer une adresse email.');
+      toast.error('Veuillez entrer une adresse email.');
       return;
     }
 
     if (!inviteEmail.includes('@')) {
-      Alert.alert('Erreur', 'Adresse email invalide.');
+      toast.error('Adresse email invalide.');
       return;
     }
 
@@ -98,10 +99,10 @@ export default function CollaboratorsScreen() {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           setInviteEmail('');
           setShowInviteForm(false);
-          Alert.alert('Succès', 'Invitation envoyée !');
+          toast.success('Invitation envoyée !');
         },
         onError: (error: any) => {
-          Alert.alert('Erreur', error.message || "Impossible d'envoyer l'invitation.");
+          toast.error(error.message || "Impossible d'envoyer l'invitation.");
         },
       }
     );
@@ -116,7 +117,7 @@ export default function CollaboratorsScreen() {
           setShareLink(result.shareLink);
         },
         onError: () => {
-          Alert.alert('Erreur', 'Impossible de générer le lien.');
+          toast.error('Impossible de générer le lien.');
         },
       }
     );
@@ -126,7 +127,7 @@ export default function CollaboratorsScreen() {
     if (shareLink) {
       await Clipboard.setStringAsync(shareLink);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert('Copié !', 'Le lien a été copié dans le presse-papiers.');
+      toast.success('Le lien a été copié dans le presse-papiers.');
     }
   }, [shareLink]);
 

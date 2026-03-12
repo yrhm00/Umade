@@ -5,7 +5,6 @@ import { useRouter } from 'expo-router';
 import { ArrowLeft, ChevronDown, ChevronUp, Mail, MessageCircle } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
-    Alert,
     Linking,
     ScrollView,
     StyleSheet,
@@ -13,6 +12,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { toast } from '@/lib/toast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { goBackOrFallback } from '@/lib/navigation';
 
@@ -56,11 +56,7 @@ export default function ProviderHelpScreen() {
                 throw new Error('No mail app');
             }
         } catch (error) {
-            Alert.alert(
-                'Contact',
-                'Impossible d\'ouvrir l\'application mail. Écrivez-nous à : support@umade.fr',
-                [{ text: 'OK' }]
-            );
+            toast.info('Impossible d\'ouvrir l\'application mail. Écrivez-nous à : support@umade.fr');
         }
     };
 

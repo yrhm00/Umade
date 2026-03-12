@@ -32,6 +32,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { goBackOrFallback } from '@/lib/navigation';
+import { toast } from '@/lib/toast';
 
 interface FormData {
     full_name: string;
@@ -82,12 +83,11 @@ export default function ClientProfileEditScreen() {
         },
         onSuccess: () => {
             refreshProfile();
-            Alert.alert('Succès', 'Votre profil a été mis à jour', [
-                { text: 'OK', onPress: () => goBackOrFallback(router) },
-            ]);
+            toast.success('Votre profil a été mis à jour');
+            goBackOrFallback(router);
         },
         onError: (error) => {
-            Alert.alert('Erreur', 'Impossible de mettre à jour le profil');
+            toast.error('Impossible de mettre à jour le profil');
             console.error('Update error:', error);
         },
     });
@@ -108,7 +108,7 @@ export default function ClientProfileEditScreen() {
     const handleTakePhoto = async () => {
         const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
         if (!permissionResult.granted) {
-            Alert.alert('Permission requise', 'Veuillez autoriser l\'accès à la caméra');
+            toast.warning('Veuillez autoriser l\'accès à la caméra');
             return;
         }
 
@@ -127,7 +127,7 @@ export default function ClientProfileEditScreen() {
     const handleChooseFromLibrary = async () => {
         const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (!permissionResult.granted) {
-            Alert.alert('Permission requise', 'Veuillez autoriser l\'accès à la galerie photo');
+            toast.warning('Veuillez autoriser l\'accès à la galerie photo');
             return;
         }
 
@@ -172,7 +172,7 @@ export default function ClientProfileEditScreen() {
             setFormData((prev) => ({ ...prev, avatar_url: publicUrl }));
         } catch (error) {
             console.error('Upload error:', error);
-            Alert.alert('Erreur', 'Impossible de télécharger l\'image');
+            toast.error('Impossible de télécharger l\'image');
         } finally {
             setIsUploading(false);
         }
@@ -180,7 +180,7 @@ export default function ClientProfileEditScreen() {
 
     const handleSave = () => {
         if (!formData.full_name.trim()) {
-            Alert.alert('Erreur', 'Le nom est requis');
+            toast.error('Le nom est requis');
             return;
         }
         updateMutation.mutate(formData);

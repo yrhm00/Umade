@@ -20,6 +20,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { toast } from '@/lib/toast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { goBackOrFallback } from '@/lib/navigation';
 
@@ -41,7 +42,7 @@ export default function BlockedDatesScreen() {
 
     const handleAddPeriod = async () => {
         if (!startDate) {
-            Alert.alert('Erreur', 'Veuillez sélectionner au moins une date');
+            toast.error('Veuillez sélectionner au moins une date');
             return;
         }
 
@@ -57,7 +58,7 @@ export default function BlockedDatesScreen() {
             resetForm();
         } catch (error) {
             console.error('Error adding blocked period:', error);
-            Alert.alert('Erreur', "Impossible d'ajouter la période");
+            toast.error("Impossible d'ajouter la période");
         }
     };
 
@@ -80,7 +81,7 @@ export default function BlockedDatesScreen() {
                             await deleteMutation.mutateAsync(period);
                         } catch (error) {
                             console.error('Error deleting blocked period:', error);
-                            Alert.alert('Erreur', 'Impossible de supprimer la période');
+                            toast.error('Impossible de supprimer la période');
                         }
                     },
                 },

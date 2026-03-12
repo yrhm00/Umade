@@ -12,6 +12,7 @@ import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
 import { Shadows } from '@/constants/Shadows';
 import { Animations } from '@/constants/Animations';
+import { fontFamily } from '@/constants/Typography';
 
 type GradientPreset = 'primary' | 'primaryReverse' | 'cream' | 'sunset';
 type ButtonSize = 'sm' | 'md' | 'lg';
@@ -126,7 +127,7 @@ const styles = StyleSheet.create({
   },
   text: {
     color: Colors.white,
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
   },
   textDark: {
     color: Colors.primary.DEFAULT,

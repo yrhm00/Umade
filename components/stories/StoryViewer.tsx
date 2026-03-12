@@ -227,6 +227,8 @@ export function StoryViewer({
                 source={{ uri: currentStory.media_url }}
                 style={styles.storyImage}
                 contentFit="cover"
+                placeholder={{ blurhash: 'L6Pj0^jE.AyE_3t7t7R**0o#DgR4' }}
+                transition={200}
               />
 
               {/* Overlay gradient */}

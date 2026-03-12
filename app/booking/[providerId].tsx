@@ -26,7 +26,6 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowLeft, ArrowRight, CalendarCheck2, Check } from 'lucide-react-native';
 import React, { useMemo, useRef, useState } from 'react';
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -36,6 +35,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { toast } from '@/lib/toast';
 import Animated, { FadeIn, FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { goBackOrFallback } from '@/lib/navigation';
@@ -146,10 +146,7 @@ export default function BookingFlowScreen() {
           setTimeout(() => setShowSuccess(true), 400);
         },
         onError: (error) => {
-          Alert.alert(
-            'Erreur',
-            error.message || 'Impossible de créer la réservation'
-          );
+          toast.error(error.message || 'Impossible de créer la réservation');
         },
       }
     );

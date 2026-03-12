@@ -42,6 +42,7 @@ import {
   TimelineItemType,
   TIMELINE_ITEM_TYPES,
 } from '@/types/eventFeatures';
+import { toast } from '@/lib/toast';
 import * as Haptics from 'expo-haptics';
 
 export default function TimelineScreen() {
@@ -66,7 +67,7 @@ export default function TimelineScreen() {
 
   const handleAddItem = useCallback(() => {
     if (!newItem.title || !newItem.start_time) {
-      Alert.alert('Erreur', 'Veuillez remplir le titre et l\'heure de début.');
+      toast.error('Veuillez remplir le titre et l\'heure de début.');
       return;
     }
 

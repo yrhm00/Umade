@@ -1,5 +1,6 @@
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
+import { fontFamily } from '@/constants/Typography';
 import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { Eye, EyeOff } from 'lucide-react-native';
 import React, { useCallback, useState } from 'react';
@@ -137,7 +138,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: Layout.fontSize.sm,
-    fontWeight: '500',
+    fontFamily: fontFamily.medium,
     marginBottom: Layout.spacing.xs,
   },
   inputContainer: {
@@ -159,6 +160,7 @@ const styles = StyleSheet.create({
     height: '100%',
     paddingHorizontal: Layout.spacing.md,
     fontSize: Layout.fontSize.md,
+    fontFamily: fontFamily.regular,
   },
   inputWithLeftIcon: {
     paddingLeft: 0,

@@ -38,6 +38,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { toast } from '@/lib/toast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { goBackOrFallback } from '@/lib/navigation';
 
@@ -62,7 +63,7 @@ export default function EventDetailScreen() {
             deleteEvent(id!, {
               onSuccess: () => goBackOrFallback(router),
               onError: (error) => {
-                Alert.alert('Erreur', error.message);
+                toast.error(error.message);
               },
             });
           },

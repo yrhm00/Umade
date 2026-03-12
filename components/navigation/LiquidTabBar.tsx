@@ -1,3 +1,4 @@
+import { fontFamily } from '@/constants/Typography';
 import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Canvas, Group, LinearGradient, RoundedRect, Shadow, vec } from "@shopify/react-native-skia";
@@ -315,7 +316,7 @@ const styles = StyleSheet.create({
     },
     label: {
         fontSize: 10,
-        fontWeight: '600',
+        fontFamily: fontFamily.semiBold,
         marginTop: 2,
         zIndex: 2,
     },
@@ -337,7 +338,7 @@ const styles = StyleSheet.create({
     badgeText: {
         color: '#FFFFFF',
         fontSize: 9,
-        fontWeight: 'bold',
+        fontFamily: fontFamily.bold,
         textAlign: 'center',
         lineHeight: 10,
     },

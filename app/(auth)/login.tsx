@@ -7,7 +7,6 @@ import { useRouter } from 'expo-router';
 import { ArrowLeft, Lock, Mail } from 'lucide-react-native';
 import { useState } from 'react';
 import {
-    Alert,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -18,6 +17,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { goBackOrFallback } from '@/lib/navigation';
+import { toast } from '@/lib/toast';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -51,17 +51,14 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     clearError();
-    
+
     if (!validate()) return;
 
     try {
       await signIn(email, password);
       // La redirection est gérée par AuthGuard
     } catch (err) {
-      Alert.alert(
-        'Erreur de connexion',
-        'Email ou mot de passe incorrect. Veuillez réessayer.'
-      );
+      toast.error('Email ou mot de passe incorrect. Veuillez réessayer.');
     }
   };
 

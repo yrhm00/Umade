@@ -1,6 +1,7 @@
 import { EmptyState } from '@/components/common/EmptyState';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Layout } from '@/constants/Layout';
+import { fontFamily } from '@/constants/Typography';
 import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { useConversations, useHideConversation, usePinConversation } from '@/hooks/useConversations';
 import { getChatMessageSearchableText } from '@/lib/chatMessagePreview';
@@ -170,7 +171,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: Layout.fontSize['2xl'],
-    fontWeight: '700',
+    fontFamily: fontFamily.bold,
   },
   searchContainer: {
     paddingHorizontal: Layout.spacing.md,

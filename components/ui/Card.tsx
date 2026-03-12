@@ -3,10 +3,10 @@ import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import React from 'react';
 import {
   StyleSheet,
-  TouchableOpacity,
   View,
   ViewStyle,
 } from 'react-native';
+import { PressableScale } from './PressableScale';
 
 interface CardProps {
   children: React.ReactNode;
@@ -62,13 +62,15 @@ export function Card({
 
   if (onPress) {
     return (
-      <TouchableOpacity
+      <PressableScale
         style={cardStyles}
         onPress={onPress}
-        activeOpacity={0.7}
+        scale={0.98}
+        haptic="light"
+        accessibilityRole="button"
       >
         {children}
-      </TouchableOpacity>
+      </PressableScale>
     );
   }
 

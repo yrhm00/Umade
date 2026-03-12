@@ -133,7 +133,7 @@ function ZoomableSlide({ uri }: { uri: string }) {
   return (
     <GestureDetector gesture={gesture}>
       <Animated.View style={[styles.slideInner, animatedStyle]}>
-        <Image source={{ uri }} style={styles.fullscreenImage} contentFit="contain" transition={180} />
+        <Image source={{ uri }} style={styles.fullscreenImage} contentFit="contain" transition={180} placeholder={{ blurhash: 'L6Pj0^jE.AyE_3t7t7R**0o#DgR4' }} />
       </Animated.View>
     </GestureDetector>
   );

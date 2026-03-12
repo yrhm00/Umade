@@ -10,6 +10,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Layout } from '@/constants/Layout';
+import { fontFamily } from '@/constants/Typography';
 import { useAuth } from '@/hooks/useAuth';
 import {
   useBookingContract,
@@ -34,6 +35,7 @@ import {
   buildIcsForBookings,
 } from '@/lib/calendarSync';
 import { goBackOrFallback } from '@/lib/navigation';
+import { toast } from '@/lib/toast';
 import { formatDate, formatPrice } from '@/lib/utils';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import * as ExpoLinking from 'expo-linking';
@@ -283,7 +285,7 @@ export default function BookingDetailsScreen() {
                   refetch();
                   refetchFinance();
                 },
-                onError: (error) => Alert.alert('Erreur', error.message),
+                onError: (error) => toast.error(error.message),
               }
             );
           },
@@ -1499,7 +1501,7 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     fontSize: Layout.fontSize.xs,
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
   },
@@ -1517,7 +1519,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: Layout.fontSize.md,
-    fontWeight: '700',
+    fontFamily: fontFamily.bold,
   },
   sectionTitleRow: {
     flexDirection: 'row',
@@ -1526,7 +1528,7 @@ const styles = StyleSheet.create({
   },
   subSectionTitle: {
     fontSize: Layout.fontSize.sm,
-    fontWeight: '700',
+    fontFamily: fontFamily.bold,
   },
   providerRow: {
     flexDirection: 'row',
@@ -1538,7 +1540,7 @@ const styles = StyleSheet.create({
   },
   providerName: {
     fontSize: Layout.fontSize.lg,
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
   },
   serviceName: {
     fontSize: Layout.fontSize.md,
@@ -1562,7 +1564,7 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: Layout.fontSize.xs,
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
   },
   detailText: {
     flex: 1,
@@ -1580,7 +1582,7 @@ const styles = StyleSheet.create({
   },
   responseLabel: {
     fontSize: Layout.fontSize.xs,
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
     marginBottom: Layout.spacing.xs,
   },
   responseText: {
@@ -1594,7 +1596,7 @@ const styles = StyleSheet.create({
   },
   cancelLabel: {
     fontSize: Layout.fontSize.xs,
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
     marginBottom: Layout.spacing.xs,
   },
   cancelText: {
@@ -1610,11 +1612,11 @@ const styles = StyleSheet.create({
   },
   priceLabel: {
     fontSize: Layout.fontSize.md,
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
   },
   priceValue: {
     fontSize: Layout.fontSize['2xl'],
-    fontWeight: '700',
+    fontFamily: fontFamily.bold,
   },
   sectionDivider: {
     height: 1,
@@ -1628,11 +1630,11 @@ const styles = StyleSheet.create({
   },
   financeLabel: {
     fontSize: Layout.fontSize.sm,
-    fontWeight: '500',
+    fontFamily: fontFamily.medium,
   },
   financeValue: {
     fontSize: Layout.fontSize.sm,
-    fontWeight: '700',
+    fontFamily: fontFamily.bold,
   },
   quoteBanner: {
     borderWidth: 1,
@@ -1644,7 +1646,7 @@ const styles = StyleSheet.create({
   },
   quoteBannerTitle: {
     fontSize: Layout.fontSize.sm,
-    fontWeight: '700',
+    fontFamily: fontFamily.bold,
   },
   quoteBannerText: {
     fontSize: Layout.fontSize.xs,
@@ -1659,7 +1661,7 @@ const styles = StyleSheet.create({
   switchLabel: {
     flex: 1,
     fontSize: Layout.fontSize.sm,
-    fontWeight: '500',
+    fontFamily: fontFamily.medium,
   },
   duoButtonsRow: {
     flexDirection: 'row',
@@ -1677,7 +1679,7 @@ const styles = StyleSheet.create({
   },
   paymentTitle: {
     fontSize: Layout.fontSize.sm,
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
     textTransform: 'capitalize',
   },
   paymentMeta: {
@@ -1685,7 +1687,7 @@ const styles = StyleSheet.create({
   },
   paymentAmount: {
     fontSize: Layout.fontSize.sm,
-    fontWeight: '700',
+    fontFamily: fontFamily.bold,
   },
   contractBodyInput: {
     minHeight: 140,
@@ -1693,7 +1695,7 @@ const styles = StyleSheet.create({
   },
   contractTitle: {
     fontSize: Layout.fontSize.md,
-    fontWeight: '700',
+    fontFamily: fontFamily.bold,
   },
   contractBodyPreview: {
     fontSize: Layout.fontSize.sm,
@@ -1704,11 +1706,11 @@ const styles = StyleSheet.create({
   },
   signatureLabel: {
     fontSize: Layout.fontSize.xs,
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
   },
   signatureValue: {
     fontSize: Layout.fontSize.sm,
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
   },
   infoText: {
     fontSize: Layout.fontSize.sm,
@@ -1722,7 +1724,7 @@ const styles = StyleSheet.create({
   },
   autoReminderTitle: {
     fontSize: Layout.fontSize.sm,
-    fontWeight: '700',
+    fontFamily: fontFamily.bold,
   },
   autoReminderText: {
     fontSize: Layout.fontSize.xs,
@@ -1731,7 +1733,7 @@ const styles = StyleSheet.create({
   autoReminderSendingText: {
     marginTop: Layout.spacing.xs,
     fontSize: Layout.fontSize.xs,
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
   },
   requestCard: {
     borderWidth: 1,
@@ -1741,7 +1743,7 @@ const styles = StyleSheet.create({
   },
   requestTitle: {
     fontSize: Layout.fontSize.sm,
-    fontWeight: '700',
+    fontFamily: fontFamily.bold,
   },
   requestMeta: {
     fontSize: Layout.fontSize.sm,
@@ -1757,7 +1759,7 @@ const styles = StyleSheet.create({
   },
   historyTitle: {
     fontSize: Layout.fontSize.sm,
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
   },
   historyMeta: {
     fontSize: Layout.fontSize.xs,
@@ -1780,7 +1782,7 @@ const styles = StyleSheet.create({
   },
   dateFieldLabel: {
     fontSize: Layout.fontSize.sm,
-    fontWeight: '500',
+    fontFamily: fontFamily.medium,
   },
   dateFieldPressable: {
     minHeight: Layout.inputHeight,
@@ -1793,7 +1795,7 @@ const styles = StyleSheet.create({
   },
   dateFieldValue: {
     fontSize: Layout.fontSize.md,
-    fontWeight: '500',
+    fontFamily: fontFamily.medium,
   },
   datePickerModalOverlay: {
     flex: 1,
@@ -1808,7 +1810,7 @@ const styles = StyleSheet.create({
   },
   datePickerModalTitle: {
     fontSize: Layout.fontSize.md,
-    fontWeight: '700',
+    fontFamily: fontFamily.bold,
     textAlign: 'center',
   },
   datePickerModalActions: {
@@ -1828,7 +1830,7 @@ const styles = StyleSheet.create({
   },
   contractSignedText: {
     fontSize: Layout.fontSize.xs,
-    fontWeight: '700',
+    fontFamily: fontFamily.bold,
     color: '#059669',
   },
   contractPartialBanner: {
@@ -1841,7 +1843,7 @@ const styles = StyleSheet.create({
   },
   contractPartialText: {
     fontSize: Layout.fontSize.xs,
-    fontWeight: '700',
+    fontFamily: fontFamily.bold,
   },
   contractDraftBanner: {
     flexDirection: 'row',
@@ -1853,7 +1855,7 @@ const styles = StyleSheet.create({
   },
   contractDraftText: {
     fontSize: Layout.fontSize.xs,
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
   },
   contractMetaRow: {
     paddingVertical: Layout.spacing.xs,
@@ -1882,7 +1884,7 @@ const styles = StyleSheet.create({
   },
   completionStatusTitle: {
     fontSize: Layout.fontSize.sm,
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
   },
   completionStatusText: {
     fontSize: Layout.fontSize.xs,
@@ -1897,7 +1899,7 @@ const styles = StyleSheet.create({
   },
   completionDoneText: {
     fontSize: Layout.fontSize.xs,
-    fontWeight: '700',
+    fontFamily: fontFamily.bold,
     color: '#059669',
   },
 });

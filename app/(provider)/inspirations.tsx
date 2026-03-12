@@ -11,6 +11,7 @@ import {
   Alert,
   Pressable,
 } from 'react-native';
+import { toast } from '@/lib/toast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -63,7 +64,7 @@ export default function ProviderInspirationsScreen() {
                 setDeletingId(inspiration.id);
                 await deleteInspiration(inspiration.id);
               } catch (error) {
-                Alert.alert('Erreur', 'Impossible de supprimer cette inspiration.');
+                toast.error('Impossible de supprimer cette inspiration.');
               } finally {
                 setDeletingId(null);
               }
@@ -97,6 +98,8 @@ export default function ProviderInspirationsScreen() {
                 source={{ uri: item.inspiration_images[0].thumbnail_url || item.inspiration_images[0].image_url }}
                 style={styles.image}
                 contentFit="cover"
+                placeholder={{ blurhash: 'L6Pj0^jE.AyE_3t7t7R**0o#DgR4' }}
+                transition={200}
               />
             ) : (
               <View style={styles.imagePlaceholder}>

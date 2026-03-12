@@ -8,7 +8,6 @@ import { useRouter } from 'expo-router';
 import { ArrowLeft, Briefcase, Lock, Mail, User, Users } from 'lucide-react-native';
 import { useState } from 'react';
 import {
-    Alert,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -19,6 +18,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { goBackOrFallback } from '@/lib/navigation';
+import { toast } from '@/lib/toast';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -70,10 +70,7 @@ export default function RegisterScreen() {
       await signUp(email, password, role, fullName);
       // La redirection est gérée par AuthGuard -> onboarding
     } catch (err: any) {
-      Alert.alert(
-        'Erreur d\'inscription',
-        err.message || 'Une erreur est survenue. Veuillez réessayer.'
-      );
+      toast.error(err.message || 'Une erreur est survenue. Veuillez réessayer.');
     }
   };
 

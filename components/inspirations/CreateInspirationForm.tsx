@@ -10,8 +10,8 @@ import {
   ScrollView,
   TextInput,
   Pressable,
-  Alert,
 } from 'react-native';
+import { toast } from '@/lib/toast';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -55,10 +55,7 @@ export function CreateInspirationForm({
       await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (!permissionResult.granted) {
-      Alert.alert(
-        'Permission requise',
-        "L'acces a la galerie est necessaire pour ajouter des photos."
-      );
+      toast.warning("L'acces a la galerie est necessaire pour ajouter des photos.");
       return;
     }
 
@@ -97,21 +94,15 @@ export function CreateInspirationForm({
 
   const handleSubmit = async () => {
     if (!title.trim()) {
-      Alert.alert('Titre requis', 'Veuillez ajouter un titre a votre inspiration.');
+      toast.error('Veuillez ajouter un titre a votre inspiration.');
       return;
     }
     if (!eventType) {
-      Alert.alert(
-        "Type d'evenement requis",
-        "Veuillez selectionner un type d'evenement."
-      );
+      toast.error("Veuillez selectionner un type d'evenement.");
       return;
     }
     if (images.length === 0) {
-      Alert.alert(
-        'Photos requises',
-        'Veuillez ajouter au moins une photo a votre inspiration.'
-      );
+      toast.error('Veuillez ajouter au moins une photo a votre inspiration.');
       return;
     }
 

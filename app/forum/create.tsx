@@ -12,7 +12,6 @@ import { ChevronDown, ChevronLeft, X } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -20,6 +19,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { toast } from '@/lib/toast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { goBackOrFallback } from '@/lib/navigation';
 
@@ -51,15 +51,15 @@ export default function CreateQuestionScreen() {
 
   const handleSubmit = async () => {
     if (!title.trim()) {
-      Alert.alert('Erreur', 'Entrez un titre pour votre question.');
+      toast.error('Entrez un titre pour votre question.');
       return;
     }
     if (!content.trim()) {
-      Alert.alert('Erreur', 'Décrivez votre question.');
+      toast.error('Décrivez votre question.');
       return;
     }
     if (!selectedCategory) {
-      Alert.alert('Erreur', 'Sélectionnez une catégorie.');
+      toast.error('Sélectionnez une catégorie.');
       return;
     }
 
@@ -71,15 +71,11 @@ export default function CreateQuestionScreen() {
         tags,
       });
 
-      Alert.alert('Succès', 'Votre question a été publiée !', [
-        {
-          text: 'Voir',
-          onPress: () => router.replace(`/forum/question/${question.id}` as any),
-        },
-      ]);
+      toast.success('Votre question a été publiée !');
+      router.replace(`/forum/question/${question.id}` as any);
     } catch (error) {
       console.error('Error creating question:', error);
-      Alert.alert('Erreur', 'Impossible de publier la question. Réessayez.');
+      toast.error('Impossible de publier la question. Réessayez.');
     }
   };
 

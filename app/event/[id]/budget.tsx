@@ -44,6 +44,7 @@ import {
   BudgetItem,
 } from '@/types/eventFeatures';
 import { formatPrice } from '@/lib/utils';
+import { toast } from '@/lib/toast';
 import * as Haptics from 'expo-haptics';
 
 export default function BudgetScreen() {
@@ -66,7 +67,7 @@ export default function BudgetScreen() {
 
   const handleAddItem = useCallback(() => {
     if (!newItem.name || !newItem.estimated_amount) {
-      Alert.alert('Erreur', 'Veuillez remplir le nom et le montant estimé.');
+      toast.error('Veuillez remplir le nom et le montant estimé.');
       return;
     }
 
@@ -85,7 +86,7 @@ export default function BudgetScreen() {
           setShowAddForm(false);
         },
         onError: () => {
-          Alert.alert('Erreur', "Impossible d'ajouter cet élément.");
+          toast.error("Impossible d'ajouter cet élément.");
         },
       }
     );
