@@ -23,7 +23,6 @@ import {
   TrendingDown,
   Check,
   Trash2,
-  ChevronDown,
 } from 'lucide-react-native';
 import { Layout } from '@/constants/Layout';
 import { useColors } from '@/hooks/useColors';
@@ -34,7 +33,6 @@ import {
   useBudgetItems,
   useBudgetSummary,
   useCreateBudgetItem,
-  useUpdateBudgetItem,
   useDeleteBudgetItem,
   useMarkBudgetItemPaid,
 } from '@/hooks/useBudget';
@@ -56,6 +54,8 @@ export default function BudgetScreen() {
   const { mutate: createItem, isPending: isCreating } = useCreateBudgetItem();
   const { mutate: deleteItem } = useDeleteBudgetItem();
   const { mutate: markPaid } = useMarkBudgetItemPaid();
+  const syncedItems = items.filter((item) => item.source_type === 'booking');
+  const customItems = items.filter((item) => item.source_type !== 'booking');
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [newItem, setNewItem] = useState({
@@ -93,6 +93,8 @@ export default function BudgetScreen() {
   }, [newItem, eventId, createItem]);
 
   const handleDelete = useCallback((item: BudgetItem) => {
+    if (item.auto_generated) return;
+
     Alert.alert(
       'Supprimer',
       `Supprimer "${item.name}" ?`,
@@ -111,6 +113,8 @@ export default function BudgetScreen() {
   }, [eventId, deleteItem]);
 
   const handleMarkPaid = useCallback((item: BudgetItem) => {
+    if (item.auto_generated) return;
+
     const amount = item.actual_amount || item.estimated_amount;
     markPaid(
       { id: item.id, eventId: eventId!, paidAmount: amount },
@@ -129,6 +133,87 @@ export default function BudgetScreen() {
   if (isLoading) {
     return <LoadingSpinner fullScreen message="Chargement du budget..." />;
   }
+
+  const renderBudgetItem = (item: BudgetItem, index: number) => {
+    const catInfo = BUDGET_CATEGORIES[item.category as BudgetCategory] || BUDGET_CATEGORIES.other;
+    const totalAmount = item.actual_amount || item.estimated_amount || 0;
+    const paidAmount = item.paid_amount || 0;
+    const remainingAmount = Math.max(totalAmount - paidAmount, 0);
+    const isBookingItem = item.source_type === 'booking';
+    const categoryLine = [
+      catInfo.label,
+      item.vendor_name || null,
+      isBookingItem ? 'Synchronisé' : null,
+    ]
+      .filter(Boolean)
+      .join(' • ');
+
+    return (
+      <Animated.View
+        key={item.id}
+        entering={FadeInDown.delay(200 + index * 50)}
+        style={[styles.itemCard, { backgroundColor: colors.card }]}
+      >
+        <View style={styles.itemHeader}>
+          <View style={styles.itemLeft}>
+            <Text style={styles.itemIcon}>{catInfo.icon}</Text>
+            <View style={styles.itemContent}>
+              <View style={styles.itemTitleRow}>
+                <Text style={[styles.itemName, { color: colors.text }]}>{item.name}</Text>
+                {isBookingItem && (
+                  <View style={[styles.sourceBadge, { backgroundColor: `${colors.primary}14` }]}>
+                    <Text style={[styles.sourceBadgeText, { color: colors.primary }]}>Prestataire</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={[styles.itemCategory, { color: colors.textSecondary }]}>
+                {categoryLine}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.itemRight}>
+            <Text style={[styles.itemAmount, { color: colors.text }]}>
+              {formatPrice(totalAmount)}
+            </Text>
+            {(paidAmount > 0 || isBookingItem) && (
+              <Text style={[styles.itemMetaAmount, { color: colors.textSecondary }]}>
+                Payé {formatPrice(paidAmount)}
+                {remainingAmount > 0 ? ` • Reste ${formatPrice(remainingAmount)}` : ''}
+              </Text>
+            )}
+            {item.is_paid && (
+              <View style={[styles.paidBadge, { backgroundColor: '#10B98120' }]}>
+                <Check size={12} color="#10B981" />
+                <Text style={styles.paidText}>Payé</Text>
+              </View>
+            )}
+          </View>
+        </View>
+
+        {!isBookingItem && (
+          <View style={styles.itemActions}>
+            {!item.is_paid && (
+              <PressableScale
+                onPress={() => handleMarkPaid(item)}
+                haptic="light"
+                style={[styles.actionButton, { backgroundColor: '#10B98120' }]}
+              >
+                <Check size={16} color="#10B981" />
+                <Text style={[styles.actionText, { color: '#10B981' }]}>Payé</Text>
+              </PressableScale>
+            )}
+            <PressableScale
+              onPress={() => handleDelete(item)}
+              haptic="light"
+              style={[styles.actionButton, { backgroundColor: `${colors.error}20` }]}
+            >
+              <Trash2 size={16} color={colors.error} />
+            </PressableScale>
+          </View>
+        )}
+      </Animated.View>
+    );
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
@@ -225,6 +310,14 @@ export default function BudgetScreen() {
           <Text style={styles.addButtonText}>Ajouter une dépense</Text>
         </PressableScale>
 
+        {syncedItems.length > 0 && (
+          <View style={[styles.syncHint, { backgroundColor: colors.card }]}>
+            <Text style={[styles.syncHintText, { color: colors.textSecondary }]}>
+              Les paiements déjà effectués pour vos prestataires sont ajoutés automatiquement ici.
+            </Text>
+          </View>
+        )}
+
         {/* Add Form */}
         {showAddForm && (
           <Animated.View
@@ -292,60 +385,19 @@ export default function BudgetScreen() {
 
         {/* Budget Items */}
         <View style={styles.itemsList}>
-          {items.map((item, index) => {
-            const catInfo = BUDGET_CATEGORIES[item.category as BudgetCategory] || BUDGET_CATEGORIES.other;
-            return (
-              <Animated.View
-                key={item.id}
-                entering={FadeInDown.delay(200 + index * 50)}
-                style={[styles.itemCard, { backgroundColor: colors.card }]}
-              >
-                <View style={styles.itemHeader}>
-                  <View style={styles.itemLeft}>
-                    <Text style={styles.itemIcon}>{catInfo.icon}</Text>
-                    <View>
-                      <Text style={[styles.itemName, { color: colors.text }]}>{item.name}</Text>
-                      <Text style={[styles.itemCategory, { color: colors.textSecondary }]}>
-                        {catInfo.label}
-                        {item.vendor_name && ` • ${item.vendor_name}`}
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={styles.itemRight}>
-                    <Text style={[styles.itemAmount, { color: colors.text }]}>
-                      {formatPrice(item.estimated_amount)}
-                    </Text>
-                    {item.is_paid && (
-                      <View style={[styles.paidBadge, { backgroundColor: '#10B98120' }]}>
-                        <Check size={12} color="#10B981" />
-                        <Text style={styles.paidText}>Payé</Text>
-                      </View>
-                    )}
-                  </View>
-                </View>
+          {syncedItems.length > 0 && (
+            <View style={styles.group}>
+              <Text style={[styles.groupTitle, { color: colors.text }]}>Prestataires payés</Text>
+              {syncedItems.map((item, index) => renderBudgetItem(item, index))}
+            </View>
+          )}
 
-                <View style={styles.itemActions}>
-                  {!item.is_paid && (
-                    <PressableScale
-                      onPress={() => handleMarkPaid(item)}
-                      haptic="light"
-                      style={[styles.actionButton, { backgroundColor: '#10B98120' }]}
-                    >
-                      <Check size={16} color="#10B981" />
-                      <Text style={[styles.actionText, { color: '#10B981' }]}>Payé</Text>
-                    </PressableScale>
-                  )}
-                  <PressableScale
-                    onPress={() => handleDelete(item)}
-                    haptic="light"
-                    style={[styles.actionButton, { backgroundColor: `${colors.error}20` }]}
-                  >
-                    <Trash2 size={16} color={colors.error} />
-                  </PressableScale>
-                </View>
-              </Animated.View>
-            );
-          })}
+          {customItems.length > 0 && (
+            <View style={styles.group}>
+              <Text style={[styles.groupTitle, { color: colors.text }]}>Autres dépenses</Text>
+              {customItems.map((item, index) => renderBudgetItem(item, syncedItems.length + index))}
+            </View>
+          )}
 
           {items.length === 0 && !showAddForm && (
             <View style={styles.emptyState}>
@@ -392,20 +444,44 @@ const styles = StyleSheet.create({
     marginBottom: Layout.spacing.lg,
   },
   addButtonText: { color: '#FFFFFF', fontSize: Layout.fontSize.md, fontWeight: '600' },
+  syncHint: {
+    paddingHorizontal: Layout.spacing.md,
+    paddingVertical: Layout.spacing.sm,
+    borderRadius: Layout.radius.lg,
+    marginBottom: Layout.spacing.lg,
+  },
+  syncHintText: {
+    fontSize: Layout.fontSize.sm,
+    lineHeight: 20,
+  },
   addForm: { padding: Layout.spacing.lg, borderRadius: Layout.radius.lg, marginBottom: Layout.spacing.lg, gap: Layout.spacing.md },
   input: { paddingHorizontal: Layout.spacing.md, paddingVertical: Layout.spacing.md, borderRadius: Layout.radius.md, borderWidth: 1, fontSize: Layout.fontSize.md },
   categoriesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Layout.spacing.sm },
   categoryChip: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: Layout.spacing.sm, paddingVertical: Layout.spacing.xs, borderRadius: Layout.radius.full, borderWidth: 1 },
   categoryChipText: { fontSize: Layout.fontSize.xs },
   itemsList: { gap: Layout.spacing.md },
+  group: { gap: Layout.spacing.md },
+  groupTitle: { fontSize: Layout.fontSize.md, fontWeight: '700' },
   itemCard: { padding: Layout.spacing.lg, borderRadius: Layout.radius.lg },
   itemHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: Layout.spacing.md },
   itemLeft: { flexDirection: 'row', alignItems: 'center', gap: Layout.spacing.md, flex: 1 },
+  itemContent: { flex: 1, gap: 4 },
+  itemTitleRow: { flexDirection: 'row', alignItems: 'center', gap: Layout.spacing.sm, flexWrap: 'wrap' },
   itemIcon: { fontSize: 24 },
   itemName: { fontSize: Layout.fontSize.md, fontWeight: '600' },
   itemCategory: { fontSize: Layout.fontSize.sm },
+  sourceBadge: {
+    paddingHorizontal: Layout.spacing.sm,
+    paddingVertical: 4,
+    borderRadius: Layout.radius.full,
+  },
+  sourceBadgeText: {
+    fontSize: Layout.fontSize.xs,
+    fontWeight: '700',
+  },
   itemRight: { alignItems: 'flex-end' },
   itemAmount: { fontSize: Layout.fontSize.lg, fontWeight: '700' },
+  itemMetaAmount: { fontSize: Layout.fontSize.xs, marginTop: 4 },
   paidBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: Layout.spacing.sm, paddingVertical: 2, borderRadius: Layout.radius.full, marginTop: 4 },
   paidText: { fontSize: Layout.fontSize.xs, color: '#10B981', fontWeight: '600' },
   itemActions: { flexDirection: 'row', gap: Layout.spacing.sm },

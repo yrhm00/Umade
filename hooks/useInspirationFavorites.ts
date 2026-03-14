@@ -17,6 +17,8 @@ import * as Haptics from 'expo-haptics';
 import { useEffect } from 'react';
 import { useAuth } from './useAuth';
 import { useIsOnline } from './useNetworkStatus';
+import { checkBadgesForUser } from './useGamification';
+import { useGamificationStore } from '@/stores/gamificationStore';
 
 // Helper: on force "any" pour eviter les SelectQueryError (selects imbriques/relations).
 const fromTable = (table: string) => (supabase as any).from(table);
@@ -253,7 +255,7 @@ export function useToggleInspirationFavorite() {
         );
       }
     },
-    onSettled: () => {
+    onSettled: async (result) => {
       // Refetch favorite data only (not feed to prevent reordering)
       queryClient.invalidateQueries({
         queryKey: [Config.cacheKeys.inspirations, 'favoriteIds'],
@@ -261,6 +263,15 @@ export function useToggleInspirationFavorite() {
       queryClient.invalidateQueries({
         queryKey: [Config.cacheKeys.inspirations, 'favorites'],
       });
+
+      // Gamification : vérifier le badge premier favori (seulement si ajouté)
+      if (result?.action === 'added' && userId) {
+        const badge = await checkBadgesForUser(userId, ['first_inspiration_fav']);
+        if (badge) {
+          useGamificationStore.getState().setPendingBadge(badge);
+          queryClient.invalidateQueries({ queryKey: [Config.cacheKeys.badges] });
+        }
+      }
     },
   });
 }

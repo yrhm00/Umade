@@ -8,6 +8,7 @@ import { EventStatusBadge } from '@/components/events/EventStatusBadge';
 import { Button } from '@/components/ui/Button';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Layout } from '@/constants/Layout';
+import { fontFamily } from '@/constants/Typography';
 import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { useDeleteEvent, useEventDetail } from '@/hooks/useEvents';
 import { formatDate, formatPrice } from '@/lib/utils';
@@ -20,15 +21,16 @@ import {
   FileText,
   Grid3X3,
   MapPin,
+  PartyPopper,
   Plus,
   Trash2,
   Users,
   UserPlus,
   Wallet,
 } from 'lucide-react-native';
-import Animated, { FadeInRight } from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeInRight, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 import { PressableScale } from '@/components/ui/PressableScale';
-import React from 'react';
+import React, { useEffect, useMemo } from 'react';
 import {
   Alert,
   RefreshControl,
@@ -89,6 +91,36 @@ export default function EventDetailScreen() {
 
   const bookings = event.bookings || [];
   const isPast = new Date(event.event_date) < new Date();
+
+  // Jour J — calculs
+  const jourJInfo = useMemo(() => {
+    if (!event?.event_date) return { show: false, isToday: false, daysUntil: 0 };
+    const eventDate = new Date(event.event_date);
+    const today = new Date();
+    eventDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    const diff = Math.ceil((eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    return {
+      show: diff >= 0 && diff <= 7,
+      isToday: diff === 0,
+      daysUntil: diff,
+    };
+  }, [event?.event_date]);
+
+  // LIVE pulse animation
+  const livePulse = useSharedValue(1);
+  useEffect(() => {
+    if (jourJInfo.isToday) {
+      livePulse.value = withRepeat(
+        withTiming(0.4, { duration: 1000 }),
+        -1,
+        true
+      );
+    }
+  }, [jourJInfo.isToday]);
+  const livePulseStyle = useAnimatedStyle(() => ({
+    opacity: livePulse.value,
+  }));
 
   return (
     <>
@@ -164,6 +196,44 @@ export default function EventDetailScreen() {
             </View>
           )}
         </View>
+
+        {/* Jour J Banner */}
+        {jourJInfo.show && (
+          <Animated.View entering={FadeInDown.duration(300)}>
+            <PressableScale
+              scale={0.98}
+              haptic="light"
+              onPress={() => router.push(`/event/${id}/jour-j` as any)}
+              style={[styles.jourJBanner, {
+                backgroundColor: jourJInfo.isToday ? colors.primary : isDark ? colors.card : '#FEF3C7',
+              }]}
+            >
+              <View style={styles.jourJLeft}>
+                <PartyPopper size={28} color={jourJInfo.isToday ? '#FFFFFF' : '#F59E0B'} />
+              </View>
+              <View style={styles.jourJCenter}>
+                <View style={styles.jourJTitleRow}>
+                  <Text style={[styles.jourJTitle, {
+                    color: jourJInfo.isToday ? '#FFFFFF' : colors.text,
+                  }]}>
+                    {jourJInfo.isToday ? 'Jour J — C\'est aujourd\'hui !' : `Jour J dans ${jourJInfo.daysUntil} jour${jourJInfo.daysUntil > 1 ? 's' : ''}`}
+                  </Text>
+                  {jourJInfo.isToday && (
+                    <Animated.View style={[styles.liveBadge, livePulseStyle]}>
+                      <Text style={styles.liveBadgeText}>LIVE</Text>
+                    </Animated.View>
+                  )}
+                </View>
+                <Text style={[styles.jourJSubtitle, {
+                  color: jourJInfo.isToday ? 'rgba(255,255,255,0.85)' : colors.textSecondary,
+                }]}>
+                  {jourJInfo.isToday ? 'Accéder au tableau de bord live' : 'Voir le programme de votre événement'}
+                </Text>
+              </View>
+              <ChevronRight size={20} color={jourJInfo.isToday ? '#FFFFFF' : colors.textTertiary} />
+            </PressableScale>
+          </Animated.View>
+        )}
 
         {/* Planning Tools Section */}
         <View style={styles.section}>
@@ -346,5 +416,50 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: Layout.fontSize.md,
     fontWeight: '600',
+  },
+  jourJBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Layout.spacing.md,
+    borderRadius: Layout.radius.lg,
+    marginBottom: Layout.spacing.xl,
+    gap: Layout.spacing.md,
+  },
+  jourJLeft: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  jourJCenter: {
+    flex: 1,
+  },
+  jourJTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Layout.spacing.sm,
+  },
+  jourJTitle: {
+    fontSize: Layout.fontSize.md,
+    fontFamily: fontFamily.bold,
+  },
+  jourJSubtitle: {
+    fontSize: Layout.fontSize.sm,
+    fontFamily: fontFamily.regular,
+    marginTop: 2,
+  },
+  liveBadge: {
+    backgroundColor: '#EF4444',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: Layout.radius.full,
+  },
+  liveBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontFamily: fontFamily.bold,
+    letterSpacing: 1,
   },
 });

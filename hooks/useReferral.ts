@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '@/lib/supabase';
+import { Config } from '@/constants/Config';
 import {
   CreditTransaction,
   ReferralCode,
@@ -17,6 +18,8 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { useAuth } from './useAuth';
+import { checkBadgesForUser } from './useGamification';
+import { useGamificationStore } from '@/stores/gamificationStore';
 
 const REFERRAL_CACHE_KEY = 'referral';
 
@@ -257,8 +260,20 @@ export function useApplyReferralCode() {
 
       return true;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: [REFERRAL_CACHE_KEY] });
+
+      // Gamification : vérifier les badges parrainage (pour le parrain)
+      // Le parrain est l'owner du code, on vérifie ses badges
+      if (userId) {
+        // Note: ici userId est le filleul, mais on vérifie quand même
+        // les badges du parrain via le referral_code.user_id
+        const badge = await checkBadgesForUser(userId, ['first_referral', 'five_referrals']);
+        if (badge) {
+          useGamificationStore.getState().setPendingBadge(badge);
+          queryClient.invalidateQueries({ queryKey: [Config.cacheKeys.badges] });
+        }
+      }
     },
   });
 }

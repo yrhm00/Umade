@@ -11,6 +11,7 @@ import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { ChevronLeft } from 'lucide-react-native';
 
+import { BadgeUnlockOverlay } from '@/components/gamification/BadgeUnlockOverlay';
 import { RealtimeProvider } from '@/components/providers/RealtimeProvider';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { GlobalToast } from '@/components/ui/GlobalToast';
@@ -207,6 +208,7 @@ export default function RootLayout() {
                 </ErrorBoundary>
                 <OfflineIndicator floating />
                 <GlobalToast />
+                <BadgeUnlockOverlay />
 
                 {showOpeningVideo && (
                   <Animated.View

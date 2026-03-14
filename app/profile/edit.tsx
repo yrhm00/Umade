@@ -7,7 +7,7 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/authStore';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import {
@@ -33,6 +33,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { goBackOrFallback } from '@/lib/navigation';
 import { toast } from '@/lib/toast';
+import { checkBadgesForUser } from '@/hooks/useGamification';
+import { useGamificationStore } from '@/stores/gamificationStore';
+import { Config } from '@/constants/Config';
 
 interface FormData {
     full_name: string;
@@ -43,6 +46,7 @@ interface FormData {
 export default function ClientProfileEditScreen() {
     const router = useRouter();
     const { profile, refreshProfile } = useAuthStore();
+    const queryClient = useQueryClient();
     const colors = useColors();
     const isDark = useIsDarkTheme();
     const [isUploading, setIsUploading] = useState(false);
@@ -81,10 +85,19 @@ export default function ClientProfileEditScreen() {
 
             if (error) throw error;
         },
-        onSuccess: () => {
+        onSuccess: async () => {
             refreshProfile();
             toast.success('Votre profil a été mis à jour');
             goBackOrFallback(router);
+
+            // Gamification : vérifier le badge profil complet
+            if (profile?.id) {
+                const badge = await checkBadgesForUser(profile.id, ['profile_complete']);
+                if (badge) {
+                    useGamificationStore.getState().setPendingBadge(badge);
+                    queryClient.invalidateQueries({ queryKey: [Config.cacheKeys.badges] });
+                }
+            }
         },
         onError: (error) => {
             toast.error('Impossible de mettre à jour le profil');

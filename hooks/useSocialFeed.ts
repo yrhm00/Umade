@@ -20,6 +20,8 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { useAuth } from './useAuth';
+import { checkBadgesForUser } from './useGamification';
+import { useGamificationStore } from '@/stores/gamificationStore';
 
 const PAGE_SIZE = 20;
 const SOCIAL_CACHE_KEY = 'socialFeed';
@@ -205,8 +207,17 @@ export function useCreateSocialPost() {
 
       return post as SocialPostWithDetails;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: [SOCIAL_CACHE_KEY] });
+
+      // Gamification : vérifier le badge papillon social
+      if (userId) {
+        const badge = await checkBadgesForUser(userId, ['social_butterfly']);
+        if (badge) {
+          useGamificationStore.getState().setPendingBadge(badge);
+          queryClient.invalidateQueries({ queryKey: [Config.cacheKeys.badges] });
+        }
+      }
     },
   });
 }

@@ -1,30 +1,52 @@
 /**
- * Écran détail d'un article éditorial
- * Cover image plein écran + contenu
+ * Écran détail d'un article éditorial enrichi
+ * Parallax header + bookmark + share + articles liés
  */
 
 import { Layout } from '@/constants/Layout';
+import { fontFamily } from '@/constants/Typography';
 import { useColors, useIsDarkTheme } from '@/hooks/useColors';
-import { useArticleDetail } from '@/hooks/useEditorialArticles';
-import { Skeleton } from '@/components/ui/Skeleton';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowLeft, Clock, Eye } from 'lucide-react-native';
-import React from 'react';
+import { useArticleDetail, useEditorialArticles } from '@/hooks/useEditorialArticles';
 import {
+  useIsArticleBookmarked,
+  useToggleArticleBookmark,
+} from '@/hooks/useArticleBookmarks';
+import { PressableScale } from '@/components/ui/PressableScale';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { EditorialArticle } from '@/types/editorial';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { ArrowLeft, Bookmark, BookOpen, Clock, Eye, Share2 } from 'lucide-react-native';
+import React, { useCallback, useMemo } from 'react';
+import {
+  Dimensions,
   Image,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import Animated, {
+  FadeInDown,
+  interpolate,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 import { goBackOrFallback } from '@/lib/navigation';
+import { toast } from '@/lib/toast';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const COVER_HEIGHT = 320;
 
 function estimateReadTime(content: string): number {
-  return Math.max(1, Math.ceil(content.length / 1000));
+  const words = content.split(/\s+/).length;
+  return Math.max(1, Math.ceil(words / 200));
 }
+
+const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 
 export default function ArticleDetailScreen() {
   const router = useRouter();
@@ -34,12 +56,86 @@ export default function ArticleDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const { data: article, isLoading, error } = useArticleDetail(id);
+  const isBookmarked = useIsArticleBookmarked(id || '');
+  const { mutate: toggleBookmark } = useToggleArticleBookmark();
+
+  // Parallax scroll
+  const scrollY = useSharedValue(0);
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
+
+  const coverAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      {
+        translateY: interpolate(
+          scrollY.value,
+          [-COVER_HEIGHT, 0, COVER_HEIGHT],
+          [-COVER_HEIGHT / 2, 0, COVER_HEIGHT * 0.4]
+        ),
+      },
+      {
+        scale: interpolate(
+          scrollY.value,
+          [-COVER_HEIGHT, 0],
+          [2, 1],
+          'clamp'
+        ),
+      },
+    ],
+  }));
+
+  const headerOpacityStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      scrollY.value,
+      [COVER_HEIGHT - 120, COVER_HEIGHT - 60],
+      [0, 1],
+      'clamp'
+    ),
+  }));
+
+  // Articles liés (même catégorie)
+  const { data: relatedData } = useEditorialArticles(article?.category || undefined);
+  const relatedArticles = useMemo(() => {
+    if (!relatedData || !article) return [];
+    return relatedData.pages
+      .flatMap((page) => page)
+      .filter((a) => a.id !== article.id)
+      .slice(0, 3);
+  }, [relatedData, article]);
+
+  const handleShare = useCallback(async () => {
+    if (!article) return;
+    try {
+      await Share.share({
+        title: article.title,
+        message: `${article.title}\n\nLire sur Umade`,
+      });
+    } catch {
+      // L'utilisateur a annulé le partage
+    }
+  }, [article]);
+
+  const handleBookmark = useCallback(() => {
+    if (!id) return;
+    toggleBookmark(id);
+    toast.success(isBookmarked ? 'Article retiré des favoris' : 'Article sauvegardé');
+  }, [id, toggleBookmark, isBookmarked]);
+
+  const handleRelatedPress = useCallback(
+    (articleItem: EditorialArticle) => {
+      router.push(`/editorial/${articleItem.id}` as any);
+    },
+    [router]
+  );
 
   if (isLoading) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <ScrollView bounces={false}>
-          <Skeleton height={280} width="100%" borderRadius={0} />
+          <Skeleton height={COVER_HEIGHT} width="100%" borderRadius={0} />
           <View style={{ padding: Layout.spacing.lg }}>
             <Skeleton height={12} width={80} borderRadius={Layout.radius.full} style={{ marginBottom: Layout.spacing.md }} />
             <Skeleton height={28} width="90%" style={{ marginBottom: Layout.spacing.sm }} />
@@ -52,7 +148,6 @@ export default function ArticleDetailScreen() {
             <Skeleton variant="text" lines={8} lineHeight={16} />
           </View>
         </ScrollView>
-        {/* Back button */}
         <TouchableOpacity
           style={[styles.backButton, { top: insets.top + 10, backgroundColor: isDark ? colors.card : 'rgba(255,255,255,0.9)' }]}
           onPress={() => goBackOrFallback(router)}
@@ -71,7 +166,7 @@ export default function ArticleDetailScreen() {
           Article non trouvé
         </Text>
         <TouchableOpacity onPress={() => goBackOrFallback(router)}>
-          <Text style={{ color: colors.primary, fontWeight: '600' }}>Retour</Text>
+          <Text style={{ color: colors.primary, fontFamily: fontFamily.semiBold }}>Retour</Text>
         </TouchableOpacity>
       </View>
     );
@@ -87,24 +182,33 @@ export default function ArticleDetailScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
-        {/* Cover image */}
-        {article.cover_image_url ? (
-          <Image
-            source={{ uri: article.cover_image_url }}
-            style={styles.coverImage}
-            resizeMode="cover"
-          />
-        ) : (
-          <View style={[styles.coverPlaceholder, { backgroundColor: colors.backgroundTertiary }]} />
-        )}
+      <AnimatedScrollView
+        bounces={false}
+        showsVerticalScrollIndicator={false}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
+      >
+        {/* Parallax Cover Image */}
+        <View style={styles.coverWrapper}>
+          {article.cover_image_url ? (
+            <Animated.Image
+              source={{ uri: article.cover_image_url }}
+              style={[styles.coverImage, coverAnimatedStyle]}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={[styles.coverPlaceholder, { backgroundColor: colors.backgroundTertiary }]}>
+              <BookOpen size={48} color={colors.textTertiary} />
+            </View>
+          )}
+        </View>
 
         {/* Content */}
         <Animated.View
           entering={FadeInDown.duration(300)}
           style={[styles.content, { backgroundColor: colors.background }]}
         >
-          {/* Category */}
+          {/* Category pill */}
           <View style={[styles.categoryPill, { backgroundColor: `${colors.primary}15` }]}>
             <Text style={[styles.categoryPillText, { color: colors.primary }]}>
               {article.category}
@@ -113,6 +217,14 @@ export default function ArticleDetailScreen() {
 
           {/* Title */}
           <Text style={[styles.title, { color: colors.text }]}>{article.title}</Text>
+
+          {/* Read time badge */}
+          <View style={[styles.readTimeBadge, { backgroundColor: isDark ? colors.backgroundTertiary : '#F3F4F6' }]}>
+            <Clock size={14} color={colors.textSecondary} />
+            <Text style={[styles.readTimeText, { color: colors.textSecondary }]}>
+              {estimateReadTime(article.content)} min de lecture
+            </Text>
+          </View>
 
           {/* Author & meta */}
           <View style={styles.metaRow}>
@@ -137,14 +249,9 @@ export default function ArticleDetailScreen() {
                   </Text>
                 )}
                 <View style={styles.metaDot} />
-                <Clock size={12} color={colors.textTertiary} />
-                <Text style={[styles.metaText, { color: colors.textTertiary }]}>
-                  {estimateReadTime(article.content)} min
-                </Text>
-                <View style={styles.metaDot} />
                 <Eye size={12} color={colors.textTertiary} />
                 <Text style={[styles.metaText, { color: colors.textTertiary }]}>
-                  {(article.view_count || 0) + 1}
+                  {(article.view_count || 0) + 1} vues
                 </Text>
               </View>
             </View>
@@ -174,10 +281,50 @@ export default function ArticleDetailScreen() {
             </View>
           )}
 
-          {/* Bottom spacer */}
-          <View style={{ height: Layout.spacing.xxl }} />
+          {/* Related articles */}
+          {relatedArticles.length > 0 && (
+            <View style={styles.relatedSection}>
+              <View style={[styles.separator, { backgroundColor: colors.border }]} />
+              <Text style={[styles.relatedTitle, { color: colors.text }]}>
+                À lire aussi
+              </Text>
+              {relatedArticles.map((related) => (
+                <PressableScale
+                  key={related.id}
+                  scale={0.98}
+                  haptic="selection"
+                  onPress={() => handleRelatedPress(related)}
+                  style={[styles.relatedCard, { backgroundColor: isDark ? colors.card : '#FFFFFF' }]}
+                >
+                  {related.cover_image_url ? (
+                    <Image
+                      source={{ uri: related.cover_image_url }}
+                      style={styles.relatedImage}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View style={[styles.relatedImage, { backgroundColor: colors.backgroundTertiary }]} />
+                  )}
+                  <View style={styles.relatedContent}>
+                    <Text style={[styles.relatedCategory, { color: colors.primary }]}>
+                      {related.category}
+                    </Text>
+                    <Text style={[styles.relatedArticleTitle, { color: colors.text }]} numberOfLines={2}>
+                      {related.title}
+                    </Text>
+                    <Text style={[styles.relatedMeta, { color: colors.textTertiary }]}>
+                      {estimateReadTime(related.content)} min
+                    </Text>
+                  </View>
+                </PressableScale>
+              ))}
+            </View>
+          )}
+
+          {/* Bottom spacer for floating bar */}
+          <View style={{ height: 100 }} />
         </Animated.View>
-      </ScrollView>
+      </AnimatedScrollView>
 
       {/* Floating back button */}
       <TouchableOpacity
@@ -193,6 +340,53 @@ export default function ArticleDetailScreen() {
       >
         <ArrowLeft size={24} color={colors.text} />
       </TouchableOpacity>
+
+      {/* Floating action bar — bookmark + share */}
+      <View style={[styles.floatingBar, { backgroundColor: isDark ? colors.card : '#FFFFFF', bottom: insets.bottom + 16 }]}>
+        <PressableScale
+          scale={0.92}
+          haptic="light"
+          onPress={handleBookmark}
+          style={styles.floatingBarButton}
+        >
+          <Bookmark
+            size={22}
+            color={isBookmarked ? colors.primary : colors.textSecondary}
+            fill={isBookmarked ? colors.primary : 'transparent'}
+          />
+          <Text style={[styles.floatingBarLabel, { color: isBookmarked ? colors.primary : colors.textSecondary }]}>
+            {isBookmarked ? 'Sauvegardé' : 'Sauvegarder'}
+          </Text>
+        </PressableScale>
+
+        <View style={[styles.floatingBarDivider, { backgroundColor: colors.border }]} />
+
+        <PressableScale
+          scale={0.92}
+          haptic="light"
+          onPress={handleShare}
+          style={styles.floatingBarButton}
+        >
+          <Share2 size={22} color={colors.textSecondary} />
+          <Text style={[styles.floatingBarLabel, { color: colors.textSecondary }]}>
+            Partager
+          </Text>
+        </PressableScale>
+      </View>
+
+      {/* Sticky header (appears on scroll) */}
+      <Animated.View
+        style={[
+          styles.stickyHeader,
+          headerOpacityStyle,
+          { backgroundColor: colors.background, paddingTop: insets.top },
+        ]}
+        pointerEvents="none"
+      >
+        <Text style={[styles.stickyTitle, { color: colors.text }]} numberOfLines={1}>
+          {article.title}
+        </Text>
+      </Animated.View>
     </View>
   );
 }
@@ -206,13 +400,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Layout.spacing.md,
   },
+  coverWrapper: {
+    height: COVER_HEIGHT,
+    overflow: 'hidden',
+  },
   coverImage: {
-    width: '100%',
-    height: 280,
+    width: SCREEN_WIDTH,
+    height: COVER_HEIGHT,
   },
   coverPlaceholder: {
-    width: '100%',
-    height: 280,
+    width: SCREEN_WIDTH,
+    height: COVER_HEIGHT,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   content: {
     marginTop: -Layout.radius.xl,
@@ -223,21 +423,35 @@ const styles = StyleSheet.create({
   },
   categoryPill: {
     alignSelf: 'flex-start',
-    paddingHorizontal: Layout.spacing.sm,
-    paddingVertical: 3,
+    paddingHorizontal: Layout.spacing.sm + 2,
+    paddingVertical: 4,
     borderRadius: Layout.radius.full,
     marginBottom: Layout.spacing.md,
   },
   categoryPillText: {
     fontSize: Layout.fontSize.xs,
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
     textTransform: 'capitalize',
   },
   title: {
-    fontSize: Layout.fontSize['3xl'],
-    fontWeight: '800',
-    lineHeight: 38,
+    fontSize: 28,
+    fontFamily: fontFamily.bold,
+    lineHeight: 36,
+    marginBottom: Layout.spacing.md,
+  },
+  readTimeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 6,
+    paddingHorizontal: Layout.spacing.md,
+    paddingVertical: 6,
+    borderRadius: Layout.radius.full,
     marginBottom: Layout.spacing.lg,
+  },
+  readTimeText: {
+    fontSize: Layout.fontSize.xs,
+    fontFamily: fontFamily.medium,
   },
   metaRow: {
     flexDirection: 'row',
@@ -255,7 +469,7 @@ const styles = StyleSheet.create({
   },
   authorName: {
     fontSize: Layout.fontSize.sm,
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
     marginBottom: 2,
   },
   metaDetails: {
@@ -265,6 +479,7 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: Layout.fontSize.xs,
+    fontFamily: fontFamily.regular,
   },
   metaDot: {
     width: 3,
@@ -279,6 +494,7 @@ const styles = StyleSheet.create({
   },
   body: {
     fontSize: Layout.fontSize.md,
+    fontFamily: fontFamily.regular,
     lineHeight: 28,
     marginBottom: Layout.spacing.xl,
   },
@@ -286,6 +502,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: Layout.spacing.sm,
+    marginBottom: Layout.spacing.xl,
   },
   tag: {
     paddingHorizontal: Layout.spacing.md,
@@ -294,10 +511,103 @@ const styles = StyleSheet.create({
   },
   tagText: {
     fontSize: Layout.fontSize.xs,
-    fontWeight: '500',
+    fontFamily: fontFamily.medium,
+  },
+  relatedSection: {
+    marginTop: Layout.spacing.md,
+  },
+  relatedTitle: {
+    fontSize: Layout.fontSize.xl,
+    fontFamily: fontFamily.bold,
+    marginBottom: Layout.spacing.md,
+  },
+  relatedCard: {
+    flexDirection: 'row',
+    borderRadius: Layout.radius.lg,
+    overflow: 'hidden',
+    marginBottom: Layout.spacing.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  relatedImage: {
+    width: 100,
+    height: 90,
+  },
+  relatedContent: {
+    flex: 1,
+    padding: Layout.spacing.md,
+    justifyContent: 'center',
+  },
+  relatedCategory: {
+    fontSize: 11,
+    fontFamily: fontFamily.semiBold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+  relatedArticleTitle: {
+    fontSize: Layout.fontSize.sm,
+    fontFamily: fontFamily.semiBold,
+    lineHeight: 20,
+    marginBottom: 4,
+  },
+  relatedMeta: {
+    fontSize: 11,
+    fontFamily: fontFamily.regular,
+  },
+  floatingBar: {
+    position: 'absolute',
+    left: Layout.spacing.lg,
+    right: Layout.spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: Layout.radius.xl,
+    paddingVertical: Layout.spacing.sm + 2,
+    paddingHorizontal: Layout.spacing.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  floatingBarButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 6,
+  },
+  floatingBarLabel: {
+    fontSize: Layout.fontSize.sm,
+    fontFamily: fontFamily.medium,
+  },
+  floatingBarDivider: {
+    width: 1,
+    height: 28,
+    marginHorizontal: 4,
+  },
+  stickyHeader: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 60,
+    paddingBottom: Layout.spacing.sm,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    minHeight: 50,
+  },
+  stickyTitle: {
+    fontSize: Layout.fontSize.md,
+    fontFamily: fontFamily.semiBold,
   },
   errorText: {
     fontSize: Layout.fontSize.lg,
+    fontFamily: fontFamily.regular,
   },
   backButton: {
     position: 'absolute',

@@ -18,6 +18,8 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { useAuth } from './useAuth';
+import { checkBadgesForUser } from './useGamification';
+import { useGamificationStore } from '@/stores/gamificationStore';
 
 const REVIEWS_PER_PAGE = 10;
 
@@ -281,7 +283,7 @@ export function useCreateReview() {
 
   return useMutation({
     mutationFn: (input: CreateReviewInput) => createReview(userId!, input),
-    onSuccess: (_, variables) => {
+    onSuccess: async (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: ['reviews', 'provider', variables.provider_id],
       });
@@ -297,6 +299,15 @@ export function useCreateReview() {
       queryClient.invalidateQueries({
         queryKey: [Config.cacheKeys.providers, 'detail', variables.provider_id],
       });
+
+      // Gamification : vérifier les badges avis
+      if (userId) {
+        const badge = await checkBadgesForUser(userId, ['first_review', 'five_reviews']);
+        if (badge) {
+          useGamificationStore.getState().setPendingBadge(badge);
+          queryClient.invalidateQueries({ queryKey: [Config.cacheKeys.badges] });
+        }
+      }
     },
   });
 }
