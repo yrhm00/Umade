@@ -7,7 +7,7 @@ import { PressableScale } from '@/components/ui/PressableScale';
 import { Layout } from '@/constants/Layout';
 import { fontFamily } from '@/constants/Typography';
 import { useAuth } from '@/hooks/useAuth';
-import { useUserBadges } from '@/hooks/useBadges';
+import { useUserBadges, useUnseenBadgeCount } from '@/hooks/useBadges';
 import { useClientStats } from '@/hooks/useClientStats';
 import { useCredits } from '@/hooks/useReferral';
 import { useColors, useIsDarkTheme } from '@/hooks/useColors';
@@ -16,6 +16,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import {
   Bell,
+  Bookmark,
   ChevronRight,
   FileText,
   Gift,
@@ -95,6 +96,7 @@ export default function ProfileScreen() {
   const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useClientStats();
   const { data: credits } = useCredits();
   const { data: userBadges = [] } = useUserBadges();
+  const { data: unseenBadgeCount = 0 } = useUnseenBadgeCount();
   const themeMode = useThemeStore((state) => state.mode);
 
   const handleSignOut = () => {
@@ -196,11 +198,18 @@ export default function ProfileScreen() {
         {/* Badges section */}
         {userBadges.length > 0 && (
           <Animated.View entering={FadeInDown.delay(150).duration(260)} style={styles.badgesSection}>
-            <SectionHeader
-              title="Mes badges"
-              actionLabel="Voir tous"
-              onAction={() => router.push('/badges' as any)}
-            />
+            <View style={styles.badgesSectionHeader}>
+              <SectionHeader
+                title="Mes badges"
+                actionLabel="Voir tous"
+                onAction={() => router.push('/badges' as any)}
+              />
+              {unseenBadgeCount > 0 && (
+                <View style={[styles.unseenDot, { backgroundColor: colors.error }]}>
+                  <Text style={styles.unseenDotText}>{unseenBadgeCount}</Text>
+                </View>
+              )}
+            </View>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -249,6 +258,14 @@ export default function ProfileScreen() {
               icon={<Star size={20} color={colors.primary} />}
               label="Mes avis"
               onPress={() => router.push('/reviews/user' as any)}
+              colors={colors}
+              isDark={isDark}
+            />
+            <View style={[styles.menuDivider, { backgroundColor: colors.border }]} />
+            <MenuItem
+              icon={<Bookmark size={20} color={colors.primary} />}
+              label="Articles sauvegardés"
+              onPress={() => router.push('/editorial/saved' as any)}
               colors={colors}
               isDark={isDark}
             />
@@ -439,6 +456,25 @@ const styles = StyleSheet.create({
   },
   badgesSection: {
     marginBottom: Layout.spacing.md,
+  },
+  badgesSectionHeader: {
+    position: 'relative',
+  },
+  unseenDot: {
+    position: 'absolute',
+    top: 2,
+    left: Layout.spacing.lg + 95,
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 5,
+  },
+  unseenDotText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontFamily: fontFamily.bold,
   },
   badgesList: {
     paddingHorizontal: Layout.spacing.lg,

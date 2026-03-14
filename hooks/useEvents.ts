@@ -12,6 +12,8 @@ import {
   CreateEventInput,
   BookingWithDetails,
 } from '@/types';
+import { checkBadgesForUser } from './useGamification';
+import { useGamificationStore } from '@/stores/gamificationStore';
 
 // === FETCH FUNCTIONS ===
 
@@ -125,10 +127,19 @@ export function useCreateEvent() {
       if (error) throw error;
       return data as Event;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       queryClient.invalidateQueries({
         queryKey: [Config.cacheKeys.events, userId],
       });
+
+      // Gamification : vérifier le badge premier événement
+      if (userId) {
+        const badge = await checkBadgesForUser(userId, ['first_event']);
+        if (badge) {
+          useGamificationStore.getState().setPendingBadge(badge);
+          queryClient.invalidateQueries({ queryKey: [Config.cacheKeys.badges] });
+        }
+      }
     },
   });
 }

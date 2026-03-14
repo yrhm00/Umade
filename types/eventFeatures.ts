@@ -48,6 +48,9 @@ export interface BudgetItem {
   is_paid: boolean;
   created_at: string;
   updated_at: string;
+  source_type?: 'manual' | 'booking';
+  source_booking_id?: string | null;
+  auto_generated?: boolean;
 }
 
 export interface BudgetSummary {

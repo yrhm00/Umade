@@ -7,6 +7,8 @@ import { Booking, BookingStatus, InsertTables, supabase } from '@/lib/supabase';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from './useAuth';
 import { useMyProviderId } from './useMyProviderId';
+import { checkBadgesForUser } from './useGamification';
+import { useGamificationStore } from '@/stores/gamificationStore';
 
 interface BookingWithDetails extends Booking {
   providers?: {
@@ -259,11 +261,26 @@ export function useUpdateBookingStatus() {
         .single();
 
       if (error) throw error;
-      return data;
+      return { data, status };
     },
-    onSuccess: () => {
+    onSuccess: async ({ data, status }) => {
       queryClient.invalidateQueries({ queryKey: [Config.cacheKeys.bookings] });
       queryClient.invalidateQueries({ queryKey: [Config.cacheKeys.events] });
+
+      // Gamification : vérifier les badges après complétion d'un booking
+      if (status === 'completed' && data?.client_id) {
+        const badge = await checkBadgesForUser(data.client_id, [
+          'first_booking',
+          'five_bookings',
+          'ten_bookings',
+          'early_bird',
+          'night_owl',
+        ]);
+        if (badge) {
+          useGamificationStore.getState().setPendingBadge(badge);
+          queryClient.invalidateQueries({ queryKey: [Config.cacheKeys.badges] });
+        }
+      }
     },
   });
 }
