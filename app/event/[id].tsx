@@ -52,6 +52,38 @@ export default function EventDetailScreen() {
   const { data: event, isLoading, refetch } = useEventDetail(id);
   const { mutate: deleteEvent, isPending: isDeleting } = useDeleteEvent();
 
+  // Jour J — calculs
+  const jourJInfo = useMemo(() => {
+    if (!event?.event_date) return { show: false, isToday: false, daysUntil: 0 };
+    const eventDate = new Date(event.event_date);
+    const today = new Date();
+    eventDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    const diff = Math.ceil((eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    return {
+      show: diff >= 0 && diff <= 7,
+      isToday: diff === 0,
+      daysUntil: diff,
+    };
+  }, [event?.event_date]);
+
+  // LIVE pulse animation
+  const livePulse = useSharedValue(1);
+  useEffect(() => {
+    if (jourJInfo.isToday) {
+      livePulse.value = withRepeat(
+        withTiming(0.4, { duration: 1000 }),
+        -1,
+        true
+      );
+    } else {
+      livePulse.value = 1;
+    }
+  }, [jourJInfo.isToday, livePulse]);
+  const livePulseStyle = useAnimatedStyle(() => ({
+    opacity: livePulse.value,
+  }));
+
   const handleDelete = () => {
     Alert.alert(
       'Supprimer l\'événement',
@@ -91,36 +123,6 @@ export default function EventDetailScreen() {
 
   const bookings = event.bookings || [];
   const isPast = new Date(event.event_date) < new Date();
-
-  // Jour J — calculs
-  const jourJInfo = useMemo(() => {
-    if (!event?.event_date) return { show: false, isToday: false, daysUntil: 0 };
-    const eventDate = new Date(event.event_date);
-    const today = new Date();
-    eventDate.setHours(0, 0, 0, 0);
-    today.setHours(0, 0, 0, 0);
-    const diff = Math.ceil((eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    return {
-      show: diff >= 0 && diff <= 7,
-      isToday: diff === 0,
-      daysUntil: diff,
-    };
-  }, [event?.event_date]);
-
-  // LIVE pulse animation
-  const livePulse = useSharedValue(1);
-  useEffect(() => {
-    if (jourJInfo.isToday) {
-      livePulse.value = withRepeat(
-        withTiming(0.4, { duration: 1000 }),
-        -1,
-        true
-      );
-    }
-  }, [jourJInfo.isToday]);
-  const livePulseStyle = useAnimatedStyle(() => ({
-    opacity: livePulse.value,
-  }));
 
   return (
     <>
