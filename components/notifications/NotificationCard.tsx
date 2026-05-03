@@ -3,18 +3,16 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
   Calendar,
-  CheckCircle,
-  XCircle,
-  Bell,
   MessageCircle,
   Star,
-  MessageSquare,
   Info,
 } from 'lucide-react-native';
 import { AppNotification, NotificationTypeDB } from '@/types';
 import { useMarkNotificationAsRead } from '@/hooks/useNotifications';
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
+import { fontFamily } from '@/constants/Typography';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { formatRelativeTime } from '@/lib/utils';
 
 interface NotificationCardProps {
@@ -22,28 +20,32 @@ interface NotificationCardProps {
 }
 
 // Map notification type to icon and colors
-const getNotificationConfig = (type: NotificationTypeDB) => {
+const getNotificationConfig = (
+  type: NotificationTypeDB,
+  isDark: boolean,
+  colors: ReturnType<typeof useColors>
+) => {
   switch (type) {
     case 'booking':
       return {
         icon: <Calendar size={22} color={Colors.warning.DEFAULT} />,
-        backgroundColor: Colors.warning.light,
+        backgroundColor: isDark ? 'rgba(245, 158, 11, 0.16)' : Colors.warning.light,
       };
     case 'message':
       return {
-        icon: <MessageCircle size={22} color={Colors.primary.DEFAULT} />,
-        backgroundColor: Colors.primary[50],
+        icon: <MessageCircle size={22} color={colors.primary} />,
+        backgroundColor: isDark ? 'rgba(143, 119, 184, 0.18)' : Colors.primary[50],
       };
     case 'review':
       return {
         icon: <Star size={22} color={Colors.warning.DEFAULT} />,
-        backgroundColor: Colors.warning.light,
+        backgroundColor: isDark ? 'rgba(245, 158, 11, 0.16)' : Colors.warning.light,
       };
     case 'system':
     default:
       return {
-        icon: <Info size={22} color={Colors.gray[500]} />,
-        backgroundColor: Colors.gray[100],
+        icon: <Info size={22} color={colors.textSecondary} />,
+        backgroundColor: isDark ? colors.backgroundTertiary : Colors.gray[100],
       };
   }
 };
@@ -52,9 +54,11 @@ export const NotificationCard = React.memo(function NotificationCard({
   notification,
 }: NotificationCardProps) {
   const router = useRouter();
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
   const { mutate: markAsRead } = useMarkNotificationAsRead();
 
-  const config = getNotificationConfig(notification.type);
+  const config = getNotificationConfig(notification.type, isDark, colors);
 
   const handlePress = () => {
     // Mark as read
@@ -79,7 +83,14 @@ export const NotificationCard = React.memo(function NotificationCard({
     <TouchableOpacity
       style={[
         styles.container,
-        !notification.is_read && styles.containerUnread,
+        {
+          backgroundColor: notification.is_read
+            ? colors.card
+            : isDark
+            ? 'rgba(143, 119, 184, 0.16)'
+            : Colors.primary[50],
+          borderColor: notification.is_read ? colors.cardBorder : colors.primary,
+        },
       ]}
       onPress={handlePress}
       activeOpacity={0.7}
@@ -95,21 +106,25 @@ export const NotificationCard = React.memo(function NotificationCard({
 
       <View style={styles.content}>
         <Text
-          style={[styles.title, !notification.is_read && styles.titleUnread]}
+          style={[
+            styles.title,
+            { color: colors.text },
+            !notification.is_read && styles.titleUnread,
+          ]}
         >
           {notification.title}
         </Text>
         {notification.body && (
-          <Text style={styles.body} numberOfLines={2}>
+          <Text style={[styles.body, { color: colors.textSecondary }]} numberOfLines={2}>
             {notification.body}
           </Text>
         )}
-        <Text style={styles.time}>
+        <Text style={[styles.time, { color: colors.textTertiary }]}>
           {formatRelativeTime(notification.created_at)}
         </Text>
       </View>
 
-      {!notification.is_read && <View style={styles.unreadDot} />}
+      {!notification.is_read && <View style={[styles.unreadDot, { backgroundColor: colors.primary }]} />}
     </TouchableOpacity>
   );
 });
@@ -117,19 +132,15 @@ export const NotificationCard = React.memo(function NotificationCard({
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     padding: Layout.spacing.md,
-    backgroundColor: Colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.gray[100],
-  },
-  containerUnread: {
-    backgroundColor: Colors.primary[50],
+    borderRadius: Layout.radius.sm,
+    borderWidth: 1,
   },
   iconContainer: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: Layout.radius.sm,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -140,26 +151,26 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: Layout.fontSize.md,
-    color: Colors.text.primary,
+    fontFamily: fontFamily.medium,
     marginBottom: 2,
   },
   titleUnread: {
-    fontWeight: '600',
+    fontFamily: fontFamily.bold,
   },
   body: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
+    fontFamily: fontFamily.regular,
     lineHeight: 18,
     marginBottom: 4,
   },
   time: {
     fontSize: Layout.fontSize.xs,
-    color: Colors.text.tertiary,
+    fontFamily: fontFamily.medium,
   },
   unreadDot: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: Colors.primary.DEFAULT,
+    marginTop: 6,
   },
 });

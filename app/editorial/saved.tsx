@@ -2,6 +2,7 @@
  * Écran des articles sauvegardés (bookmarks)
  */
 
+import { ClientHeader } from '@/components/client/ClientHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { PressableScale } from '@/components/ui/PressableScale';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -11,7 +12,7 @@ import { useArticleBookmarks, useToggleArticleBookmark } from '@/hooks/useArticl
 import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { EditorialArticle } from '@/types/editorial';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Bookmark, BookOpen, Clock, Trash2 } from 'lucide-react-native';
+import { ArrowLeft, Bookmark, BookOpen, Clock } from 'lucide-react-native';
 import React, { useCallback } from 'react';
 import {
   FlatList,
@@ -125,15 +126,17 @@ export default function SavedArticlesScreen() {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => goBackOrFallback(router)} hitSlop={10}>
-          <ArrowLeft size={24} color={colors.text} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Articles sauvegardés</Text>
-        <View style={{ width: 24 }} />
-      </View>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundSecondary }]} edges={['top']}>
+      <ClientHeader
+        eyebrow="Conseils"
+        title="Articles sauvegardés"
+        subtitle="Retrouve les lectures utiles pour ton événement."
+        colors={colors}
+        isDark={isDark}
+        leadingIcon={ArrowLeft}
+        leadingLabel="Retour"
+        onLeading={() => goBackOrFallback(router)}
+      />
 
       {isLoading ? (
         <View style={styles.loadingContainer}>
@@ -170,17 +173,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Layout.spacing.lg,
-    paddingVertical: Layout.spacing.md,
-  },
-  headerTitle: {
-    fontSize: Layout.fontSize.xl,
-    fontFamily: fontFamily.bold,
-  },
   loadingContainer: {
     padding: Layout.spacing.lg,
   },
@@ -190,7 +182,7 @@ const styles = StyleSheet.create({
   },
   card: {
     flexDirection: 'row',
-    borderRadius: Layout.radius.lg,
+    borderRadius: Layout.radius.sm,
     overflow: 'hidden',
     marginBottom: Layout.spacing.md,
     shadowColor: '#000',

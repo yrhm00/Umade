@@ -330,7 +330,7 @@ const styles = StyleSheet.create({
   // Grid variant
   gridContainer: {
     width: CARD_WIDTH,
-    borderRadius: Layout.radius.lg,
+    borderRadius: Layout.radius.sm,
     overflow: 'hidden',
     shadowColor: Colors.black,
     shadowOffset: { width: 0, height: 2 },
@@ -390,7 +390,7 @@ const styles = StyleSheet.create({
   // List variant
   listContainer: {
     flexDirection: 'row',
-    borderRadius: Layout.radius.lg,
+    borderRadius: Layout.radius.sm,
     overflow: 'hidden',
     shadowColor: Colors.black,
     shadowOffset: { width: 0, height: 2 },

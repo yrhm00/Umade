@@ -31,8 +31,9 @@ export const BookingCard = React.memo(function BookingCard({
         styles.container,
         {
           backgroundColor: colors.card,
-          shadowColor: isDark ? colors.primary : '#000000',
-          shadowOpacity: isDark ? 0.3 : 0.05,
+          borderColor: isDark ? colors.cardBorder : 'rgba(95, 74, 139, 0.12)',
+          shadowColor: isDark ? '#000000' : '#5F4A8B',
+          shadowOpacity: 0.05,
         },
       ]}
       onPress={() => router.push(`/booking/${booking.id}/details` as any)}
@@ -83,7 +84,8 @@ export const BookingCard = React.memo(function BookingCard({
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: Layout.radius.lg,
+    borderRadius: Layout.radius.sm,
+    borderWidth: 1,
     padding: Layout.spacing.md,
     marginBottom: Layout.spacing.md,
     shadowOffset: { width: 0, height: 2 },
@@ -107,7 +109,7 @@ const styles = StyleSheet.create({
     fontSize: Layout.fontSize.sm,
   },
   details: {
-    borderRadius: Layout.radius.md,
+    borderRadius: Layout.radius.sm,
     padding: Layout.spacing.md,
     gap: Layout.spacing.sm,
   },

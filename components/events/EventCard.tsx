@@ -27,7 +27,14 @@ export const EventCard = React.memo(function EventCard({ event }: EventCardProps
 
   return (
     <TouchableOpacity
-      style={[styles.container, { backgroundColor: colors.card }]}
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.card,
+          borderColor: isDark ? colors.cardBorder : 'rgba(95, 74, 139, 0.12)',
+          shadowColor: isDark ? '#000000' : '#5F4A8B',
+        },
+      ]}
       onPress={() => router.push(`/event/${event.id}` as any)}
       activeOpacity={0.7}
     >
@@ -75,10 +82,10 @@ export const EventCard = React.memo(function EventCard({ event }: EventCardProps
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: Layout.radius.lg,
+    borderRadius: Layout.radius.sm,
+    borderWidth: 1,
     padding: Layout.spacing.md,
     marginBottom: Layout.spacing.md,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,

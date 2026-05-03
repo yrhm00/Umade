@@ -1,11 +1,12 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ArrowLeft } from 'lucide-react-native';
+import { ArrowLeft, MessageCircle } from 'lucide-react-native';
 import { Avatar } from '@/components/ui/Avatar';
 import { useConversation } from '@/hooks/useConversations';
 import { useAuth } from '@/hooks/useAuth';
 import { Layout } from '@/constants/Layout';
+import { fontFamily } from '@/constants/Typography';
 import { goBackOrFallback } from '@/lib/navigation';
 import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 
@@ -26,6 +27,7 @@ export const ChatHeader = React.memo(function ChatHeader({
   const displayName = isClient
     ? conversation?.provider?.business_name || 'Prestataire'
     : conversation?.client?.full_name || 'Client';
+  const displayRole = isClient ? 'Conversation prestataire' : 'Conversation client';
   const avatarUrl = isClient
     ? undefined
     : conversation?.client?.avatar_url ?? undefined;
@@ -33,11 +35,14 @@ export const ChatHeader = React.memo(function ChatHeader({
   const providerId = conversation?.provider?.id;
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+    <View style={[styles.container, { backgroundColor: colors.backgroundSecondary, borderBottomColor: colors.border }]}>
       <TouchableOpacity
         style={[
           styles.backButton,
-          { backgroundColor: isDark ? colors.backgroundTertiary : colors.backgroundSecondary },
+          {
+            backgroundColor: isDark ? colors.backgroundTertiary : colors.card,
+            borderColor: colors.cardBorder,
+          },
         ]}
         onPress={() => goBackOrFallback(router)}
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -60,6 +65,12 @@ export const ChatHeader = React.memo(function ChatHeader({
           <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
             {displayName}
           </Text>
+          <View style={styles.metaRow}>
+            <MessageCircle size={12} color={colors.primary} />
+            <Text style={[styles.role, { color: colors.textSecondary }]} numberOfLines={1}>
+              {displayRole}
+            </Text>
+          </View>
         </View>
       </TouchableOpacity>
     </View>
@@ -70,15 +81,16 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Layout.spacing.md,
-    paddingVertical: Layout.spacing.sm,
+    paddingHorizontal: Layout.spacing.lg,
+    paddingVertical: Layout.spacing.md,
     borderBottomWidth: 1,
-    gap: Layout.spacing.sm,
+    gap: Layout.spacing.md,
   },
   backButton: {
     width: 40,
     height: 40,
-    borderRadius: Layout.radius.md,
+    borderRadius: Layout.radius.sm,
+    borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -93,6 +105,16 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: Layout.fontSize.lg,
-    fontWeight: '600',
+    fontFamily: fontFamily.bold,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 2,
+  },
+  role: {
+    fontSize: Layout.fontSize.xs,
+    fontFamily: fontFamily.medium,
   },
 });

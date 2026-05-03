@@ -6,6 +6,7 @@
 import { BookingConfirmation } from '@/components/booking/BookingConfirmation';
 import { DateTimePicker } from '@/components/booking/DateTimePicker';
 import { ServiceSelector } from '@/components/booking/ServiceSelector';
+import { ClientHeader } from '@/components/client/ClientHeader';
 import {
   ElegantCelebrationOverlay,
   ElegantCelebrationOverlayRef,
@@ -36,7 +37,7 @@ import {
   View,
 } from 'react-native';
 import { toast } from '@/lib/toast';
-import Animated, { FadeIn, FadeInDown, FadeInUp } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { goBackOrFallback } from '@/lib/navigation';
 
@@ -178,13 +179,21 @@ export default function BookingFlowScreen() {
     <>
       <Stack.Screen
         options={{
-          headerShown: true,
-          headerTitle: provider.business_name,
-          headerTintColor: colors.text,
-          headerStyle: { backgroundColor: colors.backgroundSecondary },
+          headerShown: false,
         }}
       />
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundSecondary }]} edges={['bottom']}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundSecondary }]} edges={['top', 'bottom']}>
+        <ClientHeader
+          eyebrow={`Étape ${currentStepIndex + 1} sur ${STEPS.length}`}
+          title="Réserver"
+          subtitle={provider.business_name}
+          colors={colors}
+          isDark={isDark}
+          leadingIcon={ArrowLeft}
+          leadingLabel="Retour"
+          onLeading={goBack}
+        />
+
         {/* Progress bar */}
         <View style={styles.progressContainer}>
           {STEPS.map((step, index) => (
@@ -200,10 +209,12 @@ export default function BookingFlowScreen() {
         </View>
 
         {/* Step title */}
-        <Text style={[styles.stepTitle, { color: colors.text }]}>{STEP_TITLES[currentStep]}</Text>
-        <Text style={[styles.stepSubtitle, { color: colors.textTertiary }]}>
-          Étape {currentStepIndex + 1} sur {STEPS.length}
-        </Text>
+        <View style={[styles.stepHeading, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+          <Text style={[styles.stepTitle, { color: colors.text }]}>{STEP_TITLES[currentStep]}</Text>
+          <Text style={[styles.stepSubtitle, { color: colors.textTertiary }]}>
+            Avance quand tu as les infos nécessaires.
+          </Text>
+        </View>
 
         {/* Step content */}
         <KeyboardAvoidingView
@@ -443,8 +454,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     gap: Layout.spacing.sm,
-    paddingVertical: Layout.spacing.md,
     paddingHorizontal: Layout.spacing.lg,
+    paddingBottom: Layout.spacing.md,
   },
   progressDot: {
     flex: 1,
@@ -454,12 +465,17 @@ const styles = StyleSheet.create({
   stepTitle: {
     fontSize: Layout.fontSize.xl,
     fontWeight: '700',
-    paddingHorizontal: Layout.spacing.lg,
   },
   stepSubtitle: {
     fontSize: Layout.fontSize.sm,
-    paddingHorizontal: Layout.spacing.lg,
+    marginTop: Layout.spacing.xs,
+  },
+  stepHeading: {
+    marginHorizontal: Layout.spacing.lg,
     marginBottom: Layout.spacing.md,
+    padding: Layout.spacing.md,
+    borderRadius: Layout.radius.sm,
+    borderWidth: 1,
   },
   stepContent: {
     padding: Layout.spacing.lg,

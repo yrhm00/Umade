@@ -1,4 +1,5 @@
 import { BadgeIcon } from '@/components/badges/BadgeIcon';
+import { ClientHeader } from '@/components/client/ClientHeader';
 import { SectionHeader } from '@/components/common/SectionHeader';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
@@ -12,7 +13,6 @@ import { useClientStats } from '@/hooks/useClientStats';
 import { useCredits } from '@/hooks/useReferral';
 import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { ThemeMode, useThemeStore } from '@/stores/themeStore';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import {
   Bell,
@@ -129,10 +129,16 @@ export default function ProfileScreen() {
           />
         }
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.text }]}>Profil</Text>
-        </View>
+        <ClientHeader
+          eyebrow="Compte"
+          title="Profil"
+          subtitle="Tes favoris, avis, préférences et réglages."
+          colors={colors}
+          isDark={isDark}
+          actionIcon={Settings}
+          actionLabel="Paramètres d’apparence"
+          onAction={() => router.push('/settings/appearance' as any)}
+        />
 
         {/* Profile Card */}
         <Animated.View entering={FadeInDown.delay(0).duration(260)}>
@@ -171,27 +177,39 @@ export default function ProfileScreen() {
         {/* Stats (for clients) */}
         {profile?.role === 'client' && (
           <Animated.View entering={FadeInDown.delay(100).duration(260)}>
-            <LinearGradient
-              colors={[colors.primary, colors.primaryDark]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.statsContainer}
+            <View
+              style={[
+                styles.statsContainer,
+                { backgroundColor: colors.card, borderColor: colors.cardBorder },
+              ]}
             >
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>{stats?.bookingsCount || 0}</Text>
-                <Text style={styles.statLabel}>Réservations</Text>
+                <Text style={[styles.statValue, { color: colors.text }]}>
+                  {stats?.bookingsCount || 0}
+                </Text>
+                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                  Réservations
+                </Text>
               </View>
-              <View style={styles.statDivider} />
+              <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>{stats?.favoritesCount || 0}</Text>
-                <Text style={styles.statLabel}>Favoris</Text>
+                <Text style={[styles.statValue, { color: colors.text }]}>
+                  {stats?.favoritesCount || 0}
+                </Text>
+                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                  Favoris
+                </Text>
               </View>
-              <View style={styles.statDivider} />
+              <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>{stats?.reviewsCount || 0}</Text>
-                <Text style={styles.statLabel}>Avis</Text>
+                <Text style={[styles.statValue, { color: colors.text }]}>
+                  {stats?.reviewsCount || 0}
+                </Text>
+                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                  Avis
+                </Text>
               </View>
-            </LinearGradient>
+            </View>
           </Animated.View>
         )}
 
@@ -354,17 +372,10 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 120,
   },
-  header: {
-    paddingHorizontal: Layout.spacing.lg,
-    paddingVertical: Layout.spacing.md,
-  },
-  title: {
-    fontSize: Layout.fontSize['2xl'],
-    fontFamily: fontFamily.bold,
-  },
   profileCard: {
     marginHorizontal: Layout.spacing.lg,
     marginBottom: Layout.spacing.lg,
+    borderRadius: Layout.radius.sm,
   },
   profileHeader: {
     flexDirection: 'row',
@@ -386,7 +397,7 @@ const styles = StyleSheet.create({
     marginTop: Layout.spacing.md,
     paddingVertical: Layout.spacing.sm,
     alignItems: 'center',
-    borderRadius: Layout.radius.md,
+    borderRadius: Layout.radius.sm,
   },
   editButtonText: {
     fontSize: Layout.fontSize.sm,
@@ -396,8 +407,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginHorizontal: Layout.spacing.lg,
     marginBottom: Layout.spacing.lg,
-    padding: Layout.spacing.lg,
-    borderRadius: Layout.radius.xl,
+    paddingVertical: Layout.spacing.md,
+    borderRadius: Layout.radius.sm,
+    borderWidth: 1,
   },
   statItem: {
     flex: 1,
@@ -406,16 +418,14 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: Layout.fontSize['2xl'],
     fontFamily: fontFamily.bold,
-    color: '#FFFFFF',
   },
   statLabel: {
     fontSize: Layout.fontSize.xs,
     marginTop: 2,
-    color: 'rgba(255,255,255,0.8)',
+    fontFamily: fontFamily.medium,
   },
   statDivider: {
     width: 1,
-    backgroundColor: 'rgba(255,255,255,0.2)',
   },
   menuSection: {
     marginHorizontal: Layout.spacing.lg,

@@ -1,8 +1,10 @@
 import { BookingCard } from '@/components/booking/BookingCard';
+import { ClientHeader } from '@/components/client/ClientHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { EventCard } from '@/components/events/EventCard';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Layout } from '@/constants/Layout';
+import { fontFamily } from '@/constants/Typography';
 import { useBookings } from '@/hooks/useBookings';
 import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { useUserEvents } from '@/hooks/useEvents';
@@ -83,24 +85,39 @@ export default function EventsScreen() {
   );
 
   // Theme-aware colors
-  const tabInactiveBg = isDark ? colors.backgroundTertiary : `${colors.primary}10`;
+  const surface = isDark ? colors.card : '#FFFFFF';
+  const softSurface = isDark ? colors.backgroundTertiary : '#F8F5F0';
+  const tabInactiveBg = isDark ? colors.backgroundTertiary : 'transparent';
   const tabActiveBg = colors.primary;
+  const visibleEventsCount = filteredEvents.length;
+  const visibleBookingsCount = filteredBookings.length;
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundSecondary }]} edges={['top']}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>Mes événements</Text>
-        <TouchableOpacity
-          style={[styles.addButton, { backgroundColor: `${colors.primary}15` }]}
-          onPress={() => router.push('/event/create' as any)}
-        >
-          <Plus size={24} color={colors.primary} />
-        </TouchableOpacity>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+      <ClientHeader
+        eyebrow="Planning"
+        title="Événements & réservations"
+        subtitle="Garde tes dates, prestataires et confirmations au même endroit."
+        colors={colors}
+        isDark={isDark}
+        actionIcon={Plus}
+        actionLabel="Créer un événement"
+        onAction={() => router.push('/event/create' as any)}
+      />
+
+      <View style={styles.summaryRow}>
+        <View style={[styles.summaryCard, { backgroundColor: surface, borderColor: colors.cardBorder }]}>
+          <Text style={[styles.summaryValue, { color: colors.text }]}>{visibleEventsCount}</Text>
+          <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>événements</Text>
+        </View>
+        <View style={[styles.summaryCard, { backgroundColor: surface, borderColor: colors.cardBorder }]}>
+          <Text style={[styles.summaryValue, { color: colors.text }]}>{visibleBookingsCount}</Text>
+          <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>réservations</Text>
+        </View>
       </View>
 
       {/* Main Tabs: Events / Bookings */}
-      <View style={styles.mainTabs}>
+      <View style={[styles.mainTabs, { backgroundColor: softSurface }]}>
         <TouchableOpacity
           style={[
             styles.mainTab,
@@ -261,39 +278,45 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
+  summaryRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     paddingHorizontal: Layout.spacing.lg,
-    paddingVertical: Layout.spacing.md,
+    gap: Layout.spacing.sm,
+    marginBottom: Layout.spacing.md,
   },
-  title: {
-    fontSize: Layout.fontSize['2xl'],
-    fontWeight: '700',
+  summaryCard: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: Layout.radius.sm,
+    paddingHorizontal: Layout.spacing.md,
+    paddingVertical: Layout.spacing.sm,
   },
-  addButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
+  summaryValue: {
+    fontSize: Layout.fontSize.xl,
+    fontFamily: fontFamily.bold,
+  },
+  summaryLabel: {
+    marginTop: 2,
+    fontSize: Layout.fontSize.xs,
+    fontFamily: fontFamily.medium,
+    textTransform: 'uppercase',
   },
   mainTabs: {
     flexDirection: 'row',
-    paddingHorizontal: Layout.spacing.lg,
+    marginHorizontal: Layout.spacing.lg,
+    padding: 4,
     marginBottom: Layout.spacing.sm,
-    gap: Layout.spacing.sm,
+    borderRadius: Layout.radius.sm,
   },
   mainTab: {
     flex: 1,
     paddingVertical: Layout.spacing.sm,
     alignItems: 'center',
-    borderRadius: Layout.radius.md,
+    borderRadius: Layout.radius.sm,
   },
   mainTabText: {
     fontSize: Layout.fontSize.sm,
-    fontWeight: '600',
+    fontFamily: fontFamily.bold,
   },
   filterTabs: {
     flexDirection: 'row',
@@ -308,7 +331,7 @@ const styles = StyleSheet.create({
   },
   filterTabText: {
     fontSize: Layout.fontSize.sm,
-    fontWeight: '500',
+    fontFamily: fontFamily.semiBold,
   },
   list: {
     paddingHorizontal: Layout.spacing.lg,

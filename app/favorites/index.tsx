@@ -3,21 +3,25 @@
  * Dark Mode Support
  */
 
+import { ClientHeader } from '@/components/client/ClientHeader';
+import { EmptyState } from '@/components/common/EmptyState';
 import { ProviderCard } from '@/components/providers/ProviderCard';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Layout } from '@/constants/Layout';
-import { useColors } from '@/hooks/useColors';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { useFavorites } from '@/hooks/useFavorites';
+import { goBackOrFallback } from '@/lib/navigation';
 import { ProviderListItem } from '@/types';
 import { Stack, useRouter } from 'expo-router';
-import { Heart } from 'lucide-react-native';
+import { ArrowLeft, Heart, Search } from 'lucide-react-native';
 import React, { useCallback } from 'react';
-import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function FavoritesScreen() {
     const router = useRouter();
     const colors = useColors();
+    const isDark = useIsDarkTheme();
     const { data: favorites, isLoading, refetch, isRefetching } = useFavorites();
 
     const renderItem = useCallback(({ item }: { item: any }) => {
@@ -51,25 +55,36 @@ export default function FavoritesScreen() {
     const ListEmpty = useCallback(() => {
         if (isLoading) return null;
         return (
-            <View style={styles.emptyContainer}>
-                <Heart size={48} color={colors.textTertiary} />
-                <Text style={[styles.emptyTitle, { color: colors.text }]}>Aucun favori</Text>
-                <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
-                    Vos prestataires favoris apparaîtront ici.
-                </Text>
-            </View>
+            <EmptyState
+                icon={<Heart size={32} color={colors.primary} />}
+                title="Aucun favori"
+                description="Garde les prestataires que tu veux revoir dans cette liste."
+                actionLabel="Trouver un prestataire"
+                onAction={() => router.push('/(tabs)/search' as any)}
+            />
         );
-    }, [isLoading, colors]);
+    }, [isLoading, colors.primary, router]);
 
     if (isLoading) {
         return (
             <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundSecondary }]} edges={['top', 'bottom']}>
                 <Stack.Screen
                     options={{
-                        headerShown: true,
-                        title: 'Mes favoris',
-                        headerBackTitle: 'Profil',
+                        headerShown: false,
                     }}
+                />
+                <ClientHeader
+                    eyebrow="Favoris"
+                    title="Prestataires suivis"
+                    subtitle="Les contacts que tu veux garder sous la main."
+                    colors={colors}
+                    isDark={isDark}
+                    leadingIcon={ArrowLeft}
+                    leadingLabel="Retour"
+                    onLeading={() => goBackOrFallback(router)}
+                    actionIcon={Search}
+                    actionLabel="Trouver un prestataire"
+                    onAction={() => router.push('/(tabs)/search' as any)}
                 />
                 <LoadingSpinner fullScreen message="Chargement..." />
             </SafeAreaView>
@@ -77,13 +92,24 @@ export default function FavoritesScreen() {
     }
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundSecondary }]} edges={['bottom']}>
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundSecondary }]} edges={['top', 'bottom']}>
             <Stack.Screen
                 options={{
-                    headerShown: true,
-                    title: 'Mes favoris',
-                    headerBackTitle: 'Profil',
+                    headerShown: false,
                 }}
+            />
+            <ClientHeader
+                eyebrow="Favoris"
+                title="Prestataires suivis"
+                subtitle={`${favorites?.length ?? 0} contact${favorites && favorites.length > 1 ? 's' : ''} à retrouver vite.`}
+                colors={colors}
+                isDark={isDark}
+                leadingIcon={ArrowLeft}
+                leadingLabel="Retour"
+                onLeading={() => goBackOrFallback(router)}
+                actionIcon={Search}
+                actionLabel="Trouver un prestataire"
+                onAction={() => router.push('/(tabs)/search' as any)}
             />
             <FlatList
                 data={favorites || []}
@@ -118,19 +144,5 @@ const styles = StyleSheet.create({
     emptyList: {
         flex: 1,
         justifyContent: 'center',
-    },
-    emptyContainer: {
-        alignItems: 'center',
-        paddingHorizontal: Layout.spacing.xl,
-    },
-    emptyTitle: {
-        fontSize: Layout.fontSize.lg,
-        fontWeight: '600',
-        marginTop: Layout.spacing.md,
-        marginBottom: Layout.spacing.sm,
-    },
-    emptySubtitle: {
-        fontSize: Layout.fontSize.md,
-        textAlign: 'center',
     },
 });
