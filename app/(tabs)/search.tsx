@@ -4,12 +4,13 @@
  */
 
 import { CategoryPill } from '@/components/common/CategoryPill';
+import { ClientHeader } from '@/components/client/ClientHeader';
+import { ClientSearchField } from '@/components/client/ClientSearchField';
 import { EmptyState } from '@/components/common/EmptyState';
 import { SectionHeader } from '@/components/common/SectionHeader';
 import { FiltersBottomSheet } from '@/components/providers/FiltersBottomSheet';
 import { CompareBar } from '@/components/providers/CompareBar';
 import { CARD_WIDTH, ProviderCard } from '@/components/providers/ProviderCard';
-import { Avatar } from '@/components/ui/Avatar';
 import { PressableScale } from '@/components/ui/PressableScale';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { VoiceSearchButton } from '@/components/ui/VoiceSearchButton';
@@ -28,7 +29,6 @@ import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   Bell,
-  ChevronRight,
   Grid,
   List,
   Search as SearchIcon,
@@ -45,7 +45,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -238,27 +237,15 @@ export default function SearchScreen() {
 
           {/* Search Bar */}
           <View style={styles.searchContainer}>
-            <View style={[styles.searchBar, { backgroundColor: cardBg }]}>
-              <SearchIcon size={20} color={colors.textTertiary} />
-              <TextInput
-                style={[styles.searchInput, { color: colors.text }]}
-                placeholder="Rechercher un prestataire..."
-                placeholderTextColor={colors.textTertiary}
-                value={searchText}
-                onChangeText={handleSearchChange}
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-              {searchText.length > 0 && (
-                <TouchableOpacity onPress={handleClearSearch}>
-                  <X size={20} color={colors.textTertiary} />
-                </TouchableOpacity>
-              )}
-              <VoiceSearchButton
-                onResult={handleVoiceResult}
-                size={32}
-              />
-            </View>
+            <ClientSearchField
+              colors={colors}
+              isDark={isDark}
+              value={searchText}
+              onChangeText={handleSearchChange}
+              onClear={handleClearSearch}
+              placeholder="Photographe, traiteur, DJ..."
+              trailing={<VoiceSearchButton onResult={handleVoiceResult} size={32} />}
+            />
 
             <TouchableOpacity
               style={[
@@ -399,40 +386,26 @@ export default function SearchScreen() {
               />
             }
           >
-          {/* Header */}
-          <View style={styles.homeHeader}>
-            <View style={styles.headerLeft}>
-              <Text style={[styles.greeting, { color: colors.textSecondary }]}>{greeting()}</Text>
-              <Text style={[styles.userName, { color: colors.text }]}>{firstName}</Text>
-            </View>
-            <View style={styles.headerRight}>
-                <TouchableOpacity
-                  style={[styles.iconButton, { backgroundColor: cardBg }]}
-                  onPress={() => router.push('/notifications' as any)}
-                >
-                  <Bell size={24} color={colors.text} />
-                </TouchableOpacity>
-              <TouchableOpacity onPress={() => router.push('/(tabs)/profile')}>
-                <Avatar
-                  source={profile?.avatar_url}
-                  name={profile?.full_name || '?'}
-                  size="md"
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
+          <ClientHeader
+            eyebrow={greeting()}
+            title="Trouver le bon prestataire"
+            subtitle={`${firstName}, explore les pros qui peuvent donner du relief à ton événement.`}
+            colors={colors}
+            isDark={isDark}
+            actionIcon={Bell}
+            actionLabel="Notifications"
+            onAction={() => router.push('/notifications' as any)}
+          />
 
           {/* Search Bar */}
-          <TouchableOpacity
-            style={[styles.searchBarHome, { backgroundColor: cardBg }]}
-            onPress={handleSearchFocus}
-            activeOpacity={0.7}
-          >
-            <SearchIcon size={20} color={colors.textTertiary} />
-            <Text style={[styles.searchPlaceholder, { color: colors.textTertiary }]}>
-              Rechercher un prestataire...
-            </Text>
-          </TouchableOpacity>
+          <View style={styles.homeSearchContainer}>
+            <ClientSearchField
+              colors={colors}
+              isDark={isDark}
+              onPress={handleSearchFocus}
+              placeholder="Photographe, traiteur, DJ..."
+            />
+          </View>
 
           {/* Categories Section */}
           <View style={styles.section}>
@@ -456,7 +429,7 @@ export default function SearchScreen() {
           {/* Top Providers Section */}
           <View style={styles.section}>
             <SectionHeader
-              title="Top prestataires"
+              title="Prestataires recommandés"
               actionLabel="Voir tout"
               onAction={() => setIsSearchMode(true)}
               delay={100}
@@ -568,81 +541,19 @@ const styles = StyleSheet.create({
     fontSize: Layout.fontSize['2xl'],
     fontFamily: fontFamily.bold,
   },
-  homeHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: Layout.spacing.lg,
-    paddingVertical: Layout.spacing.md,
-  },
-  headerLeft: {
-    flex: 1,
-  },
-  greeting: {
-    fontSize: Layout.fontSize.sm,
-  },
-  userName: {
-    fontSize: Layout.fontSize['2xl'],
-    fontFamily: fontFamily.bold,
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Layout.spacing.md,
-  },
-  iconButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   searchContainer: {
     flexDirection: 'row',
     paddingHorizontal: Layout.spacing.lg,
     gap: Layout.spacing.sm,
   },
-  searchBar: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Layout.spacing.md,
-    borderRadius: Layout.radius.lg,
-    height: 48,
-    gap: Layout.spacing.sm,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  searchBarHome: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  homeSearchContainer: {
     marginHorizontal: Layout.spacing.lg,
-    marginVertical: Layout.spacing.md,
-    paddingHorizontal: Layout.spacing.md,
-    paddingVertical: Layout.spacing.md,
-    borderRadius: Layout.radius.lg,
-    gap: Layout.spacing.sm,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: Layout.fontSize.md,
-  },
-  searchPlaceholder: {
-    flex: 1,
-    fontSize: Layout.fontSize.md,
+    marginBottom: Layout.spacing.md,
   },
   filterButton: {
     width: 48,
     height: 48,
-    borderRadius: Layout.radius.lg,
+    borderRadius: Layout.radius.sm,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -732,7 +643,7 @@ const styles = StyleSheet.create({
   categoryGridItem: {
     width: (Dimensions.get('window').width - Layout.spacing.lg * 2 - Layout.spacing.md * 2) / 3,
     aspectRatio: 1,
-    borderRadius: Layout.radius.lg,
+    borderRadius: Layout.radius.sm,
     justifyContent: 'center',
     alignItems: 'center',
     padding: Layout.spacing.sm,

@@ -22,14 +22,15 @@ import Animated, {
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import {
-  ChevronLeft,
+  ArrowLeft,
   Check,
   Clock,
   Plus,
   Trash2,
 } from 'lucide-react-native';
 import { Layout } from '@/constants/Layout';
-import { useColors } from '@/hooks/useColors';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
+import { ClientHeader } from '@/components/client/ClientHeader';
 import { PressableScale } from '@/components/ui/PressableScale';
 import { Button } from '@/components/ui/Button';
 import {
@@ -45,12 +46,12 @@ import { goBackOrFallback } from '@/lib/navigation';
 
 export default function ChecklistScreen() {
   const colors = useColors();
+  const isDark = useIsDarkTheme();
   const {
     categories,
     totalItems,
     completedItems,
     progress,
-    isLoading,
   } = useChecklistByCategory();
   const { mutate: updateItem } = useUpdateChecklistItem();
   const { mutate: addItem } = useAddChecklistItem();
@@ -108,27 +109,23 @@ export default function ChecklistScreen() {
           headerShown: false,
         }}
       />
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
-        {/* Header */}
-        <View style={styles.header}>
-          <PressableScale onPress={handleBack} haptic="light">
-            <View style={[styles.backButton, { backgroundColor: colors.card }]}>
-              <ChevronLeft size={24} color={colors.text} />
-            </View>
-          </PressableScale>
-          <Text style={[styles.title, { color: colors.text }]}>Checklist</Text>
-          <PressableScale
-            onPress={() => setShowAddForm(true)}
-            haptic="light"
-          >
-            <View style={[styles.addButton, { backgroundColor: `${colors.primary}15` }]}>
-              <Plus size={24} color={colors.primary} />
-            </View>
-          </PressableScale>
-        </View>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundSecondary }]} edges={['top']}>
+        <ClientHeader
+          eyebrow="Checklist"
+          title="À faire"
+          subtitle="Les étapes importantes de ton événement, regroupées par priorité."
+          colors={colors}
+          isDark={isDark}
+          leadingIcon={ArrowLeft}
+          leadingLabel="Retour"
+          onLeading={handleBack}
+          actionIcon={Plus}
+          actionLabel="Ajouter une tâche"
+          onAction={() => setShowAddForm(true)}
+        />
 
         {/* Progress */}
-        <View style={styles.progressSection}>
+        <View style={[styles.progressSection, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
           <View style={styles.progressInfo}>
             <Text style={[styles.progressText, { color: colors.textSecondary }]}>
               {completedItems} sur {totalItems} éléments
@@ -157,7 +154,7 @@ export default function ChecklistScreen() {
               key={category.name}
               entering={FadeInDown.delay(catIndex * 50)}
               layout={ReanimatedLayout.duration(260)}
-              style={[styles.categoryCard, { backgroundColor: colors.card }]}
+              style={[styles.categoryCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}
             >
               <Pressable
                 onPress={() => handleToggleCategory(category.name)}
@@ -386,8 +383,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   progressSection: {
-    paddingHorizontal: Layout.spacing.lg,
-    paddingBottom: Layout.spacing.lg,
+    marginHorizontal: Layout.spacing.lg,
+    marginBottom: Layout.spacing.lg,
+    padding: Layout.spacing.md,
+    borderRadius: Layout.radius.sm,
+    borderWidth: 1,
   },
   progressInfo: {
     flexDirection: 'row',
@@ -418,9 +418,10 @@ const styles = StyleSheet.create({
     paddingTop: 0,
   },
   categoryCard: {
-    borderRadius: Layout.radius.xl,
+    borderRadius: Layout.radius.sm,
     marginBottom: Layout.spacing.md,
     overflow: 'hidden',
+    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -526,8 +527,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.4)',
   },
   addFormCard: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: Layout.radius.lg,
+    borderTopRightRadius: Layout.radius.lg,
     padding: Layout.spacing.xl,
     paddingBottom: 40,
   },

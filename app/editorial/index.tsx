@@ -3,6 +3,7 @@
  * Filtrage par catégorie + infinite scroll
  */
 
+import { ClientHeader } from '@/components/client/ClientHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { PressableScale } from '@/components/ui/PressableScale';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -28,7 +29,7 @@ import {
   View,
 } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { goBackOrFallback } from '@/lib/navigation';
 
 function estimateReadTime(content: string): number {
@@ -125,7 +126,6 @@ export default function EditorialListScreen() {
   const router = useRouter();
   const colors = useColors();
   const isDark = useIsDarkTheme();
-  const insets = useSafeAreaInsets();
   const [selectedCategory, setSelectedCategory] = useState<string>('pour_vous');
   const eventType = useOnboardingStore((s) => s.eventType);
 
@@ -193,17 +193,20 @@ export default function EditorialListScreen() {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => goBackOrFallback(router)} hitSlop={10}>
-          <ArrowLeft size={24} color={colors.text} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Articles</Text>
-        <TouchableOpacity onPress={() => router.push('/editorial/saved' as any)} hitSlop={10}>
-          <Bookmark size={24} color={colors.text} />
-        </TouchableOpacity>
-      </View>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundSecondary }]} edges={['top']}>
+      <ClientHeader
+        eyebrow="Conseils"
+        title="Articles"
+        subtitle="Des repères courts pour avancer sans te disperser."
+        colors={colors}
+        isDark={isDark}
+        leadingIcon={ArrowLeft}
+        leadingLabel="Retour"
+        onLeading={() => goBackOrFallback(router)}
+        actionIcon={Bookmark}
+        actionLabel="Articles sauvegardés"
+        onAction={() => router.push('/editorial/saved' as any)}
+      />
 
       {/* Category filters */}
       <ScrollView
@@ -283,17 +286,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Layout.spacing.lg,
-    paddingVertical: Layout.spacing.md,
-  },
-  headerTitle: {
-    fontSize: Layout.fontSize.xl,
-    fontFamily: fontFamily.bold,
-  },
   categoryList: {
     paddingHorizontal: Layout.spacing.lg,
     gap: Layout.spacing.sm,
@@ -317,7 +309,7 @@ const styles = StyleSheet.create({
     paddingBottom: Layout.spacing.xxl,
   },
   articleCard: {
-    borderRadius: Layout.radius.lg,
+    borderRadius: Layout.radius.sm,
     overflow: 'hidden',
     marginBottom: Layout.spacing.md,
     shadowColor: '#000',

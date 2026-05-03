@@ -6,7 +6,7 @@
 import { EmptyState } from '@/components/common/EmptyState';
 import { SectionHeader } from '@/components/common/SectionHeader';
 import {
-  WelcomeHeader,
+  HomeOverview,
   CountdownCard,
   ChecklistPreview,
   ArticlesSection,
@@ -21,11 +21,18 @@ import { fontFamily } from '@/constants/Typography';
 import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { useInspirationFeed } from '@/hooks/useInspirations';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
+import { useAuthStore } from '@/stores/authStore';
 import {
   InspirationFilters,
   InspirationSortBy,
   InspirationWithProvider,
 } from '@/types/inspiration';
+import {
+  getDaysUntilEvent,
+  getEventTypeEmoji,
+  getEventTypeLabel,
+  getStyleLabel,
+} from '@/types/preferences';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { BlurView } from 'expo-blur';
 import { router } from 'expo-router';
@@ -63,6 +70,7 @@ export default function HomeScreen() {
   const isDark = useIsDarkTheme();
 
   const { data: preferences } = useUserPreferences();
+  const profile = useAuthStore((s) => s.profile);
 
   const [filters, setFilters] = useState<InspirationFilters>({});
   const [sortBy, setSortBy] = useState<InspirationSortBy>('recent');
@@ -104,6 +112,19 @@ export default function HomeScreen() {
     [data]
   );
 
+  const firstName = profile?.full_name?.split(' ')[0] || 'toi';
+  const daysUntil = getDaysUntilEvent(preferences?.event_date || null);
+  const eventLabel = preferences?.event_type
+    ? getEventTypeLabel(preferences.event_type)
+    : 'Événement';
+  const eventEmoji = preferences?.event_type
+    ? getEventTypeEmoji(preferences.event_type)
+    : '✨';
+  const firstPreferredStyle = preferences?.preferred_styles?.[0];
+  const preferredStyleLabel = firstPreferredStyle
+    ? getStyleLabel(firstPreferredStyle)
+    : null;
+
   const handleItemPress = useCallback((inspiration: InspirationWithProvider) => {
     router.push(`/inspiration/${inspiration.id}` as any);
   }, []);
@@ -128,6 +149,18 @@ export default function HomeScreen() {
 
   const handleFavoritesPress = useCallback(() => {
     router.push('/inspiration/favorites' as any);
+  }, []);
+
+  const handleFindProvidersPress = useCallback(() => {
+    router.push('/(tabs)/search' as any);
+  }, []);
+
+  const handleEventsPress = useCallback(() => {
+    router.push('/(tabs)/events' as any);
+  }, []);
+
+  const handleChecklistPress = useCallback(() => {
+    router.push('/checklist' as any);
   }, []);
 
   const handleClearSearch = useCallback(() => {
@@ -227,17 +260,29 @@ export default function HomeScreen() {
         isRefreshing={isRefetching}
         ListHeaderComponent={
           <View style={{ paddingTop: headerHeight - 8 }}>
-            {/* Stories Strip */}
+            <HomeOverview
+              colors={colors}
+              isDark={isDark}
+              firstName={firstName}
+              eventName={preferences?.event_name}
+              eventLabel={eventLabel}
+              eventEmoji={eventEmoji}
+              daysUntil={daysUntil}
+              location={preferences?.location}
+              guestCount={preferences?.guest_count}
+              preferredStyle={preferredStyleLabel}
+              onFindProviders={handleFindProvidersPress}
+              onOpenEvents={handleEventsPress}
+              onOpenChecklist={handleChecklistPress}
+              onOpenFavorites={handleFavoritesPress}
+            />
+
             <StoriesStrip />
 
-            {/* Prestataires populaires */}
-            <PopularProvidersSection />
-
-            <WelcomeHeader />
             <CountdownCard />
             <ChecklistPreview />
 
-            {/* Articles éditoriaux */}
+            <PopularProvidersSection />
             <ArticlesSection />
 
             <SectionHeader title="Inspirations pour toi" delay={100} />
@@ -468,7 +513,7 @@ const styles = StyleSheet.create({
   glassButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: Layout.radius.sm,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -510,7 +555,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: Layout.radius.lg,
+    borderRadius: Layout.radius.sm,
     paddingHorizontal: Layout.spacing.md,
     paddingVertical: Layout.spacing.sm,
     borderWidth: 1,
@@ -529,7 +574,7 @@ const styles = StyleSheet.create({
   filterButton: {
     width: 48,
     height: 48,
-    borderRadius: Layout.radius.lg,
+    borderRadius: Layout.radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,

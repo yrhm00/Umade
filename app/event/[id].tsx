@@ -4,6 +4,7 @@
  */
 
 import { BookingCard } from '@/components/booking/BookingCard';
+import { ClientHeader } from '@/components/client/ClientHeader';
 import { EventStatusBadge } from '@/components/events/EventStatusBadge';
 import { Button } from '@/components/ui/Button';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
@@ -14,6 +15,7 @@ import { useDeleteEvent, useEventDetail } from '@/hooks/useEvents';
 import { formatDate, formatPrice } from '@/lib/utils';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import {
+  ArrowLeft,
   Calendar,
   CheckSquare,
   ChevronRight,
@@ -123,42 +125,53 @@ export default function EventDetailScreen() {
 
   const bookings = event.bookings || [];
   const isPast = new Date(event.event_date) < new Date();
+  const eventSubtitle = [
+    formatDate(event.event_date),
+    event.location,
+  ].filter(Boolean).join(' · ');
 
   return (
     <>
       <Stack.Screen
         options={{
-          headerShown: true,
-          headerTitle: '',
-          headerTintColor: colors.text,
-          headerStyle: { backgroundColor: colors.backgroundSecondary },
-          headerRight: () => (
-            <TouchableOpacity onPress={handleDelete} disabled={isDeleting}>
-              <Trash2 size={22} color={colors.error} />
-            </TouchableOpacity>
-          ),
+          headerShown: false,
         }}
       />
-      <ScrollView
-        style={[styles.container, { backgroundColor: colors.backgroundSecondary }]}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={false}
-            onRefresh={() => refetch()}
-            tintColor={colors.primary}
-          />
-        }
-      >
-        {/* Title & Badge */}
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.text }]}>{event.title}</Text>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundSecondary }]} edges={['top']}>
+        <ClientHeader
+          eyebrow="Événement"
+          title={event.title}
+          subtitle={eventSubtitle}
+          colors={colors}
+          isDark={isDark}
+          leadingIcon={ArrowLeft}
+          leadingLabel="Retour"
+          onLeading={() => goBackOrFallback(router)}
+          actionIcon={Trash2}
+          actionLabel="Supprimer l'événement"
+          actionTintColor={colors.error}
+          actionDisabled={isDeleting}
+          onAction={handleDelete}
+        />
+
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={false}
+              onRefresh={() => refetch()}
+              tintColor={colors.primary}
+            />
+          }
+        >
+        <View style={styles.eventStatusRow}>
           <EventStatusBadge eventType={event.event_type} />
         </View>
 
         {/* Details */}
-        <View style={[styles.detailsCard, { backgroundColor: colors.card }]}>
+        <View style={[styles.detailsCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
           <View style={styles.detailRow}>
             <Calendar size={18} color={colors.primary} />
             <Text style={[styles.detailText, { color: colors.text }]}>{formatDate(event.event_date)}</Text>
@@ -255,7 +268,7 @@ export default function EventDetailScreen() {
                 <PressableScale
                   onPress={() => router.push(tool.route as any)}
                   haptic="light"
-                  style={[styles.toolCard, { backgroundColor: colors.card }]}
+              style={[styles.toolCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}
                 >
                   <View style={[styles.toolIconCircle, { backgroundColor: `${tool.color}20` }]}>
                     <tool.icon size={22} color={tool.color} />
@@ -290,7 +303,7 @@ export default function EventDetailScreen() {
               <BookingCard key={booking.id} booking={booking} />
             ))
           ) : (
-            <View style={[styles.emptyBookings, { backgroundColor: colors.card }]}>
+            <View style={[styles.emptyBookings, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
               <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
                 Aucune réservation pour cet événement
               </Text>
@@ -306,7 +319,8 @@ export default function EventDetailScreen() {
             </View>
           )}
         </View>
-      </ScrollView>
+        </ScrollView>
+      </SafeAreaView>
     </>
   );
 }
@@ -315,8 +329,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  scrollView: {
+    flex: 1,
+  },
   content: {
     padding: Layout.spacing.lg,
+    paddingTop: 0,
     paddingBottom: Layout.spacing.xxl,
   },
   errorContainer: {
@@ -329,23 +347,16 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: Layout.fontSize.lg,
   },
-  header: {
+  eventStatusRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: Layout.spacing.lg,
-    gap: Layout.spacing.md,
-  },
-  title: {
-    flex: 1,
-    fontSize: Layout.fontSize['2xl'],
-    fontWeight: '700',
+    marginBottom: Layout.spacing.md,
   },
   detailsCard: {
-    borderRadius: Layout.radius.lg,
+    borderRadius: Layout.radius.sm,
     padding: Layout.spacing.lg,
     gap: Layout.spacing.md,
     marginBottom: Layout.spacing.xl,
+    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -387,7 +398,8 @@ const styles = StyleSheet.create({
   emptyBookings: {
     alignItems: 'center',
     paddingVertical: Layout.spacing.xl,
-    borderRadius: Layout.radius.lg,
+    borderRadius: Layout.radius.sm,
+    borderWidth: 1,
     padding: Layout.spacing.lg,
   },
   emptyText: {
@@ -404,7 +416,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: Layout.spacing.md,
-    borderRadius: Layout.radius.lg,
+    borderRadius: Layout.radius.sm,
+    borderWidth: 1,
     gap: Layout.spacing.md,
   },
   toolIconCircle: {
@@ -423,7 +436,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: Layout.spacing.md,
-    borderRadius: Layout.radius.lg,
+    borderRadius: Layout.radius.sm,
     marginBottom: Layout.spacing.xl,
     gap: Layout.spacing.md,
   },

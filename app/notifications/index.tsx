@@ -7,30 +7,33 @@ import {
   EmptyNotifications,
   NotificationCard,
 } from '@/components/notifications';
+import { ClientHeader } from '@/components/client/ClientHeader';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Layout } from '@/constants/Layout';
-import { useColors } from '@/hooks/useColors';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import {
   useMarkAllNotificationsAsRead,
   useNotifications,
 } from '@/hooks/useNotifications';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { AppNotification } from '@/types';
-import { Stack } from 'expo-router';
-import { CheckCheck } from 'lucide-react-native';
+import { Stack, useRouter } from 'expo-router';
+import { ArrowLeft, CheckCheck } from 'lucide-react-native';
 import React, { useCallback, useMemo } from 'react';
 import {
   ActivityIndicator,
   FlatList,
   RefreshControl,
   StyleSheet,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { goBackOrFallback } from '@/lib/navigation';
 
 export default function NotificationsScreen() {
+  const router = useRouter();
   const colors = useColors();
+  const isDark = useIsDarkTheme();
   const {
     data,
     fetchNextPage,
@@ -80,28 +83,23 @@ export default function NotificationsScreen() {
     );
   }, [isFetchingNextPage, colors.primary]);
 
-  const HeaderRight = useCallback(() => {
-    if (unreadCount === 0) return null;
-    return (
-      <TouchableOpacity
-        onPress={handleMarkAllAsRead}
-        disabled={isMarkingAll}
-        style={styles.markAllButton}
-      >
-        <CheckCheck size={20} color={colors.primary} />
-      </TouchableOpacity>
-    );
-  }, [unreadCount, isMarkingAll, colors.primary]);
-
   if (isLoading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
         <Stack.Screen
           options={{
-            headerShown: true,
-            title: 'Notifications',
-            headerBackTitle: 'Retour',
+            headerShown: false,
           }}
+        />
+        <ClientHeader
+          eyebrow="Notifications"
+          title="Activité récente"
+          subtitle="Tes messages, réservations et confirmations arrivent ici."
+          colors={colors}
+          isDark={isDark}
+          leadingIcon={ArrowLeft}
+          leadingLabel="Retour"
+          onLeading={() => goBackOrFallback(router)}
         />
         <LoadingSpinner fullScreen message="Chargement..." />
       </SafeAreaView>
@@ -109,14 +107,29 @@ export default function NotificationsScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundSecondary }]} edges={['top', 'bottom']}>
       <Stack.Screen
         options={{
-          headerShown: true,
-          title: 'Notifications',
-          headerBackTitle: 'Retour',
-          headerRight: HeaderRight,
+          headerShown: false,
         }}
+      />
+      <ClientHeader
+        eyebrow="Notifications"
+        title="Activité récente"
+        subtitle={
+          unreadCount > 0
+            ? `${unreadCount} notification${unreadCount > 1 ? 's' : ''} à lire.`
+            : 'Tout est à jour pour le moment.'
+        }
+        colors={colors}
+        isDark={isDark}
+        leadingIcon={ArrowLeft}
+        leadingLabel="Retour"
+        onLeading={() => goBackOrFallback(router)}
+        actionIcon={unreadCount > 0 ? CheckCheck : undefined}
+        actionLabel="Tout marquer comme lu"
+        actionDisabled={isMarkingAll}
+        onAction={unreadCount > 0 ? handleMarkAllAsRead : undefined}
       />
       <FlatList
         data={notifications}
@@ -124,9 +137,10 @@ export default function NotificationsScreen() {
         keyExtractor={keyExtractor}
         ListFooterComponent={ListFooter}
         ListEmptyComponent={<EmptyNotifications />}
-        contentContainerStyle={
-          notifications.length === 0 ? styles.emptyList : undefined
-        }
+        contentContainerStyle={[
+          styles.listContent,
+          notifications.length === 0 && styles.emptyList,
+        ]}
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.5}
         showsVerticalScrollIndicator={false}
@@ -149,11 +163,13 @@ const styles = StyleSheet.create({
   emptyList: {
     flexGrow: 1,
   },
+  listContent: {
+    paddingHorizontal: Layout.spacing.lg,
+    paddingBottom: Layout.spacing.xxl,
+    gap: Layout.spacing.sm,
+  },
   loadingMore: {
     paddingVertical: Layout.spacing.lg,
     alignItems: 'center',
-  },
-  markAllButton: {
-    padding: Layout.spacing.sm,
   },
 });

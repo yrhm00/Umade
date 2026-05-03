@@ -1,16 +1,17 @@
 import { EmptyState } from '@/components/common/EmptyState';
+import { ClientHeader } from '@/components/client/ClientHeader';
+import { ClientSearchField } from '@/components/client/ClientSearchField';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Layout } from '@/constants/Layout';
-import { fontFamily } from '@/constants/Typography';
 import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { useConversations, useHideConversation, usePinConversation } from '@/hooks/useConversations';
 import { getChatMessageSearchableText } from '@/lib/chatMessagePreview';
 import { useRealtimeConversations } from '@/hooks/useRealtimeMessages';
 import { ConversationWithDetails } from '@/types';
 import { useRouter } from 'expo-router';
-import { MessageCircle, Search, X } from 'lucide-react-native';
+import { MessageCircle, Search } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
-import { FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { SwipeableConversationItem } from '@/components/chat/SwipeableConversationItem';
@@ -73,44 +74,36 @@ export default function MessagesScreen() {
     [colors.border]
   );
 
+  const conversationCount = conversations?.length ?? 0;
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
-      <View style={[styles.header, {
-        shadowColor: isDark ? '#000' : '#5F4A8B',
-        shadowOpacity: isDark ? 0.3 : 0.08,
-      }]}>
-        <Text style={[styles.title, { color: colors.text }]}>Messages</Text>
-      </View>
+      <ClientHeader
+        eyebrow="Inbox"
+        title="Messages"
+        subtitle={
+          conversationCount > 0
+            ? `${conversationCount} conversation${conversationCount > 1 ? 's' : ''} avec tes prestataires.`
+            : 'Tes échanges avec les prestataires arriveront ici.'
+        }
+        colors={colors}
+        isDark={isDark}
+        actionIcon={Search}
+        actionLabel="Trouver un prestataire"
+        onAction={() => router.push('/(tabs)/search')}
+      />
 
       {/* Search Bar */}
       {conversations && conversations.length > 0 && (
         <View style={styles.searchContainer}>
-          <View
-            style={[
-              styles.searchInputWrapper,
-              {
-                backgroundColor: colors.backgroundTertiary,
-              },
-            ]}
-          >
-            <Search size={18} color={colors.textTertiary} />
-            <TextInput
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholder="Rechercher une conversation..."
-              placeholderTextColor={colors.textTertiary}
-              style={[styles.searchInput, { color: colors.text }]}
-            />
-            {searchQuery.length > 0 && (
-              <Pressable
-                onPress={() => setSearchQuery('')}
-                style={styles.clearButton}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <X size={16} color={colors.textTertiary} />
-              </Pressable>
-            )}
-          </View>
+          <ClientSearchField
+            colors={colors}
+            isDark={isDark}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            onClear={() => setSearchQuery('')}
+            placeholder="Rechercher une conversation"
+          />
         </View>
       )}
 
@@ -162,41 +155,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    paddingHorizontal: Layout.spacing.lg,
-    paddingVertical: Layout.spacing.md,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  title: {
-    fontSize: Layout.fontSize['2xl'],
-    fontFamily: fontFamily.bold,
-  },
   searchContainer: {
-    paddingHorizontal: Layout.spacing.md,
-    paddingVertical: Layout.spacing.sm,
-  },
-  searchInputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: Layout.radius.lg,
-    minHeight: 48,
-    paddingHorizontal: Layout.spacing.md,
-    gap: Layout.spacing.sm,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: Layout.fontSize.md,
-    paddingVertical: 0,
-  },
-  clearButton: {
-    padding: 4,
+    paddingHorizontal: Layout.spacing.lg,
+    paddingBottom: Layout.spacing.md,
   },
   list: {
     paddingTop: Layout.spacing.sm,
