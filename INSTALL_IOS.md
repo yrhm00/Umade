@@ -1,37 +1,120 @@
-# Installer Umade sur iPhone
+# Installer Umade sur un iPhone depuis un Mac
 
-Ce guide part de zero pour recuperer le projet depuis GitHub, l'installer sur une machine, puis lancer l'app sur un iPhone avec Xcode.
+Ce guide est ecrit pour une personne qui part d'un Mac vide et qui ne connait pas le developpement.
 
-Important: pour installer une app iOS avec Xcode, il faut un Mac. Sur Windows ou Linux, tu peux cloner et lire le code, mais tu ne peux pas compiler/installler l'app iPhone avec Xcode. Pour installer depuis un PC Windows, il faut passer par un build cloud type EAS/TestFlight avec un compte Apple Developer.
+Objectif: recuperer le projet depuis GitHub, installer ce qu'il faut sur le Mac, puis lancer l'app Umade sur un iPhone avec Xcode.
 
-## 1. Prerequis
+## A lire avant de commencer
 
-Installe sur le Mac:
+Il faut obligatoirement:
 
-- Xcode depuis l'App Store
-- Node.js 20 ou plus recent
-- Git
-- CocoaPods
+- un Mac
+- un iPhone
+- un cable pour brancher l'iPhone au Mac
+- un compte Apple ID
+- une connexion internet
+- les identifiants Supabase du projet
 
-Commandes utiles:
+Sur Windows ou Linux, on peut telecharger le code, mais on ne peut pas installer directement l'app iPhone avec Xcode. Xcode existe seulement sur Mac.
+
+Le premier lancement peut prendre longtemps. Xcode est lourd, les dependances aussi. Prevois facilement 1 a 2 heures si le Mac n'a rien d'installe.
+
+## 1. Ouvrir le Terminal
+
+Le Terminal est l'application ou tu vas copier/coller les commandes.
+
+Pour l'ouvrir:
+
+1. Appuie sur `Cmd + Espace`.
+2. Tape `Terminal`.
+3. Appuie sur `Entree`.
+
+Quand tu vois une fenetre avec du texte et un curseur, tu es au bon endroit.
+
+## 2. Installer Xcode
+
+Xcode sert a compiler et installer l'app sur iPhone.
+
+1. Ouvre l'App Store sur le Mac.
+2. Cherche `Xcode`.
+3. Clique sur `Obtenir` ou `Installer`.
+4. Attends la fin de l'installation.
+5. Ouvre Xcode une premiere fois.
+6. Accepte les conditions.
+7. Installe les composants que Xcode propose.
+
+Ensuite, dans le Terminal, colle:
+
+```bash
+xcode-select --install
+```
+
+Si une fenetre s'ouvre, accepte l'installation.
+
+Puis colle:
+
+```bash
+sudo xcodebuild -license accept
+```
+
+Le Mac peut demander ton mot de passe. C'est normal. Quand tu tapes ton mot de passe dans le Terminal, rien ne s'affiche. Tape le mot de passe puis appuie sur `Entree`.
+
+Verifie que Xcode fonctionne:
+
+```bash
+xcodebuild -version
+```
+
+Tu dois voir une version de Xcode s'afficher.
+
+## 3. Installer Homebrew
+
+Homebrew sert a installer facilement les outils de developpement.
+
+Dans le Terminal, colle cette commande:
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+Pendant l'installation:
+
+- appuie sur `Entree` si Homebrew le demande
+- tape ton mot de passe Mac si demande
+- attends la fin
+
+A la fin, Homebrew peut afficher une ou deux lignes a copier/coller dans le Terminal. Si c'est le cas, copie-les et lance-les.
+
+Verifie Homebrew:
+
+```bash
+brew --version
+```
+
+## 4. Installer Node.js, Git et CocoaPods
+
+Ces outils servent a installer le projet et ses dependances.
+
+Dans le Terminal:
+
+```bash
+brew install node git cocoapods
+```
+
+Verifie que tout est installe:
 
 ```bash
 node -v
 npm -v
 git --version
-xcodebuild -version
 pod --version
 ```
 
-Si `pod` n'existe pas:
+Si ces commandes affichent des versions, c'est bon.
 
-```bash
-sudo gem install cocoapods
-```
+## 5. Telecharger le projet depuis GitHub
 
-Ouvre Xcode une premiere fois apres installation. Accepte la licence et installe les composants proposes.
-
-## 2. Recuperer le projet
+Dans le Terminal:
 
 ```bash
 cd ~/Desktop
@@ -39,55 +122,81 @@ git clone https://github.com/yrhm00/Umade.git
 cd Umade
 ```
 
-Verifier que tu es sur la branche principale:
+Tu viens de telecharger le projet sur le Bureau du Mac.
+
+Verifie que tu es bien dans le dossier:
 
 ```bash
-git branch --show-current
-git status
+pwd
 ```
 
-## 3. Installer les dependances JavaScript
+Tu dois voir un chemin qui finit par:
+
+```text
+Desktop/Umade
+```
+
+## 6. Installer les dependances du projet
+
+Toujours dans le Terminal, dans le dossier `Umade`:
 
 ```bash
 npm ci
 ```
 
-Controle rapide du projet Expo:
+Cette commande peut prendre plusieurs minutes.
+
+Ensuite, verifie le projet:
 
 ```bash
 npx expo-doctor
 ```
 
-Le resultat attendu est:
+Le resultat ideal est:
 
 ```text
 17/17 checks passed. No issues detected!
 ```
 
-## 4. Configurer la DB Supabase
+Si ce n'est pas exactement ca, lis la section `Problemes courants` plus bas.
 
-Le projet utilise Supabase via des variables Expo publiques.
+## 7. Configurer la base de donnees Supabase
 
-Creer le fichier local:
+L'app a besoin de Supabase pour le login, les messages, les favoris, les reservations et les donnees.
+
+Dans le Terminal:
 
 ```bash
 cp .env.example .env.local
+open -a TextEdit .env.local
 ```
 
-Ouvre `.env.local` et renseigne:
+TextEdit va ouvrir un fichier avec deux lignes a remplir:
 
 ```bash
 EXPO_PUBLIC_SUPABASE_URL=...
 EXPO_PUBLIC_SUPABASE_ANON_KEY=...
 ```
 
-Ces valeurs ne sont pas dans GitHub. Il faut les recuperer depuis le projet Supabase ou demander au mainteneur.
+Demande ces deux valeurs au proprietaire du projet Supabase.
 
-Sans `.env.local` correct, l'app peut se lancer, mais login, data, messages, reservations et favoris ne fonctionneront pas correctement.
+Exemple de format:
 
-## 5. Installer les Pods iOS
+```bash
+EXPO_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=xxxxx
+```
 
-Le dossier iOS natif est deja present dans le repo. Il faut seulement installer les Pods:
+Sauvegarde le fichier:
+
+1. Dans TextEdit, fais `Cmd + S`.
+2. Ferme TextEdit.
+
+Ne mets jamais `.env.local` sur GitHub. Ce fichier est local au Mac.
+
+## 8. Installer les dependances iOS
+
+Dans le Terminal:
 
 ```bash
 cd ios
@@ -95,165 +204,295 @@ pod install
 cd ..
 ```
 
-Ouvre toujours le workspace, pas le `.xcodeproj`:
+Cette commande installe les dependances natives iOS.
+
+Si `pod install` echoue, lis la section `Problemes courants`.
+
+## 9. Preparer l'iPhone
+
+Branche l'iPhone au Mac avec un cable.
+
+Sur l'iPhone:
+
+1. Si un message apparait, appuie sur `Faire confiance a cet ordinateur`.
+2. Entre le code de l'iPhone si demande.
+3. Ouvre `Reglages`.
+4. Va dans `Confidentialite et securite`.
+5. Active `Mode developpeur`.
+6. Redemarre l'iPhone si iOS le demande.
+
+Si tu ne vois pas `Mode developpeur`, continue quand meme. Il peut apparaitre apres une premiere tentative de lancement depuis Xcode.
+
+Garde le Mac et l'iPhone sur le meme Wi-Fi.
+
+## 10. Configurer Xcode
+
+Dans le Terminal:
 
 ```bash
 open ios/umade.xcworkspace
 ```
 
-## 6. Preparer l'iPhone
-
-Sur l'iPhone:
-
-1. Branche l'iPhone au Mac en USB.
-2. Accepte `Faire confiance a cet ordinateur`.
-3. Active le mode developpeur:
-   `Reglages` -> `Confidentialite et securite` -> `Mode developpeur`.
-4. Redemarre l'iPhone si iOS le demande.
-5. Garde le Mac et l'iPhone sur le meme Wi-Fi.
-
-## 7. Configurer Xcode
+Attention: il faut ouvrir `umade.xcworkspace`, pas `umade.xcodeproj`.
 
 Dans Xcode:
 
-1. Ouvre `ios/umade.xcworkspace`.
-2. Clique sur le projet `umade`.
-3. Selectionne la target `umade`.
-4. Va dans `Signing & Capabilities`.
+1. En haut a gauche, clique sur `umade`.
+2. Dans la colonne de gauche, clique encore sur le projet `umade`.
+3. Au centre, selectionne la target `umade`.
+4. Va dans l'onglet `Signing & Capabilities`.
 5. Coche `Automatically manage signing`.
-6. Choisis ton Apple ID / ta Team.
-7. Verifie le bundle identifier.
+6. Dans `Team`, choisis ton compte Apple.
 
-Bundle identifier actuel:
+Si ton compte Apple n'apparait pas:
+
+1. Dans Xcode, va dans `Xcode` -> `Settings`.
+2. Va dans `Accounts`.
+3. Clique sur `+`.
+4. Connecte ton Apple ID.
+5. Reviens dans `Signing & Capabilities`.
+
+Le bundle identifier actuel est:
 
 ```text
 com.yrhm.umade
 ```
 
-Si Xcode dit que ce bundle identifier est deja utilise ou inaccessible, remplace-le par un identifiant unique, par exemple:
+Si Xcode affiche une erreur disant que cet identifiant n'est pas disponible, remplace-le par un identifiant unique:
 
 ```text
-com.tonnom.umade.dev
+com.tonprenom.umade.dev
 ```
 
-Avec un compte Apple gratuit, l'app installee sur iPhone expire generalement apres quelques jours. Pour TestFlight/App Store, il faut un compte Apple Developer payant.
+Exemple:
 
-## 8. Installer sur iPhone avec Expo CLI
+```text
+com.sophie.umade.dev
+```
 
-La methode la plus simple:
+Avec un compte Apple gratuit, l'app installee sur l'iPhone peut expirer apres quelques jours. Pour distribuer proprement avec TestFlight ou App Store, il faut un compte Apple Developer payant.
+
+## 11. Installer l'app sur l'iPhone
+
+Ferme Xcode ou laisse-le ouvert, puis retourne dans le Terminal.
+
+Dans le dossier `Umade`:
 
 ```bash
 npx expo run:ios --device
 ```
-Choisis ton iPhone dans la liste.
+
+Le Terminal va afficher une liste d'appareils. Choisis ton iPhone.
 
 Cette commande va:
 
-- compiler l'app avec Xcode
-- signer l'app avec ta Team Apple
+- compiler l'app
+- signer l'app avec ton compte Apple
 - installer l'app sur l'iPhone
-- demarrer Metro pour le JavaScript
+- lancer le serveur Metro
 
-Si iOS bloque l'app au premier lancement:
+Le premier build peut etre long. Ne ferme pas le Terminal.
+
+## 12. Autoriser l'app sur l'iPhone
+
+Si l'iPhone bloque l'ouverture de l'app:
 
 1. Ouvre `Reglages`.
-2. Va dans `General` -> `VPN et gestion de l'appareil`.
-3. Selectionne ton certificat developpeur.
-4. Appuie sur `Faire confiance`.
+2. Va dans `General`.
+3. Va dans `VPN et gestion de l'appareil`.
+4. Selectionne le certificat developpeur.
+5. Appuie sur `Faire confiance`.
+6. Rouvre l'app Umade.
 
-## 9. Relancer l'app apres installation
+## 13. Relancer l'app les jours suivants
 
-Quand l'app est deja installee sur l'iPhone:
+Une fois l'app deja installee, tu n'as pas besoin de tout refaire.
+
+Dans le Terminal:
 
 ```bash
+cd ~/Desktop/Umade
 npx expo start --dev-client --lan
 ```
 
-Puis ouvre l'app `umade` sur l'iPhone.
+Ensuite, ouvre l'app Umade sur l'iPhone.
 
-Si l'iPhone ne trouve pas Metro:
+Si l'iPhone ne se connecte pas au Mac:
 
 ```bash
 npx expo start --dev-client --tunnel
 ```
 
-## 10. Methode Xcode manuelle
+## 14. Mettre le projet a jour plus tard
 
-Si la commande Expo echoue mais que les Pods sont installes:
-
-```bash
-open ios/umade.xcworkspace
-```
-
-Dans Xcode:
-
-1. Selectionne ton iPhone en haut.
-2. Selectionne le scheme `umade`.
-3. Clique sur `Run`.
-
-Pour une version Release locale:
-
-1. `Product` -> `Scheme` -> `Edit Scheme`.
-2. `Run` -> `Build Configuration` -> `Release`.
-3. Clique sur `Run`.
-
-## 11. Problemes courants
-
-### Xcode demande d'installer des composants
-
-Ouvre Xcode et accepte l'installation. Si tu vois une erreur `CoreSimulator is out of date`, mets Xcode et les composants iOS a jour:
-
-- `Xcode` -> `Settings` -> `Platforms`
-- installe la plateforme iOS disponible
-- redemarre Xcode
-
-### Pods en erreur
+Si quelqu'un a modifie le projet sur GitHub et que tu veux recuperer les changements:
 
 ```bash
+cd ~/Desktop/Umade
+git pull
+npm ci
 cd ios
-pod deintegrate
 pod install
 cd ..
+npx expo run:ios --device
 ```
 
-### Metro garde un cache casse
+## 15. Commandes resumees
+
+Si tout est deja installe sur le Mac, les commandes principales sont:
 
 ```bash
-npx expo start --clear --dev-client
-```
-
-### L'app ne voit pas Supabase
-
-Verifie `.env.local`:
-
-```bash
-EXPO_PUBLIC_SUPABASE_URL=...
-EXPO_PUBLIC_SUPABASE_ANON_KEY=...
-```
-
-Puis relance Metro:
-
-```bash
-npx expo start --clear --dev-client
-```
-
-### Xcode refuse le signing
-
-- Verifie ton Apple ID dans `Xcode` -> `Settings` -> `Accounts`.
-- Change le bundle identifier pour un identifiant unique.
-- Recoche `Automatically manage signing`.
-- Rebranche l'iPhone.
-
-## 12. Commandes resumees
-
-```bash
+cd ~/Desktop
 git clone https://github.com/yrhm00/Umade.git
 cd Umade
 npm ci
 cp .env.example .env.local
+open -a TextEdit .env.local
 npx expo-doctor
 cd ios
 pod install
 cd ..
 npx expo run:ios --device
 ```
+
+## 16. Problemes courants
+
+### `command not found: npm`
+
+Node.js n'est pas installe.
+
+Lance:
+
+```bash
+brew install node
+```
+
+Puis verifie:
+
+```bash
+node -v
+npm -v
+```
+
+### `command not found: pod`
+
+CocoaPods n'est pas installe.
+
+Lance:
+
+```bash
+brew install cocoapods
+```
+
+Puis:
+
+```bash
+pod --version
+```
+
+### `pod install` echoue
+
+Essaie:
+
+```bash
+cd ~/Desktop/Umade/ios
+pod deintegrate
+pod install
+cd ..
+```
+
+### Xcode affiche `CoreSimulator is out of date`
+
+Ouvre Xcode:
+
+1. Va dans `Xcode` -> `Settings`.
+2. Va dans `Platforms`.
+3. Installe ou mets a jour la plateforme iOS.
+4. Redemarre Xcode.
+
+### L'iPhone n'apparait pas
+
+Essaie dans cet ordre:
+
+1. Debranche et rebranche l'iPhone.
+2. Deverrouille l'iPhone.
+3. Accepte `Faire confiance a cet ordinateur`.
+4. Change de cable si possible.
+5. Ouvre Xcode et regarde si l'iPhone apparait en haut.
+6. Redemarre l'iPhone et le Mac.
+
+### Xcode refuse le signing
+
+Verifie:
+
+- ton Apple ID est connecte dans Xcode
+- `Automatically manage signing` est coche
+- une `Team` est selectionnee
+- le bundle identifier est unique
+
+Si besoin, change:
+
+```text
+com.yrhm.umade
+```
+
+en:
+
+```text
+com.tonprenom.umade.dev
+```
+
+### L'app s'ouvre mais les donnees ne chargent pas
+
+Le fichier `.env.local` est probablement absent ou incorrect.
+
+Verifie:
+
+```bash
+cd ~/Desktop/Umade
+open -a TextEdit .env.local
+```
+
+Il doit contenir:
+
+```bash
+EXPO_PUBLIC_SUPABASE_URL=...
+EXPO_PUBLIC_SUPABASE_ANON_KEY=...
+```
+
+Puis relance:
+
+```bash
+npx expo start --clear --dev-client
+```
+
+### L'app reste bloquee ou Metro garde une ancienne version
+
+Lance:
+
+```bash
+cd ~/Desktop/Umade
+npx expo start --clear --dev-client
+```
+
+### `expo-doctor` affiche une erreur de version
+
+Lance:
+
+```bash
+npx expo install --check
+```
+
+Puis suis les instructions affichees.
+
+## 17. Pour partager l'app a d'autres iPhones
+
+Installer depuis Xcode est bien pour tester sur son propre iPhone.
+
+Pour envoyer l'app a d'autres personnes, la solution propre est:
+
+- TestFlight
+- App Store Connect
+- ou un build cloud EAS
+
+Ces options demandent generalement un compte Apple Developer payant.
