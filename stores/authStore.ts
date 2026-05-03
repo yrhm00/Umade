@@ -39,6 +39,19 @@ function deriveState(session: Session | null, profile: Profile | null) {
   };
 }
 
+function isInvalidRefreshTokenError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  return message.toLowerCase().includes('refresh token');
+}
+
+async function clearLocalAuthSession() {
+  try {
+    await supabase.auth.signOut({ scope: 'local' });
+  } catch {
+    // The local session is already unusable; state cleanup below is enough.
+  }
+}
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   // Initial state
   session: null,
@@ -62,7 +75,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // Récupérer la session existante
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-      if (sessionError) throw sessionError;
+      if (sessionError) {
+        if (isInvalidRefreshTokenError(sessionError)) {
+          await clearLocalAuthSession();
+          set({
+            session: null,
+            user: null,
+            profile: null,
+            isLoading: false,
+            isInitialized: true,
+            ...deriveState(null, null),
+          });
+          return;
+        }
+
+        throw sessionError;
+      }
 
       if (session?.user) {
         // Récupérer le profil
@@ -233,7 +261,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ isLoading: true, error: null });
 
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      if (error && !isInvalidRefreshTokenError(error)) throw error;
 
       set({
         session: null,
