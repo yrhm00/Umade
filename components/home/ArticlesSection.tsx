@@ -33,6 +33,9 @@ export function ArticlesSection() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
         ItemSeparatorComponent={() => <View style={{ width: Layout.spacing.md }} />}
+        snapToInterval={240 + Layout.spacing.md}
+        snapToAlignment="start"
+        decelerationRate="fast"
         renderItem={({ item }) => <ArticleCardSmall article={item} />}
       />
     </Animated.View>
