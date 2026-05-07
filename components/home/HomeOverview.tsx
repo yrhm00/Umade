@@ -113,9 +113,15 @@ export function HomeOverview({
 
         {/* Massive counter */}
         <View style={styles.counterRow}>
-          <Text style={[styles.counterNumber, { color: surfaceText }]} numberOfLines={1}>
-            {counter.value}
-          </Text>
+          {counter.isPlaceholder ? (
+            <Text style={[styles.counterPlaceholder, { color: surfaceText }]}>
+              {counter.value}
+            </Text>
+          ) : (
+            <Text style={[styles.counterNumber, { color: surfaceText }]} numberOfLines={1}>
+              {counter.value}
+            </Text>
+          )}
           {counter.unit ? (
             <Text style={[styles.counterUnit, { color: surfaceText }]}>
               {counter.unit}
@@ -252,17 +258,19 @@ function getCounterParts(daysUntil: number | null) {
   if (daysUntil === null) {
     return {
       tag: 'À PLANIFIER',
-      value: '—',
+      value: 'bientôt',
       unit: '',
       caption: 'Pose la date pour démarrer le compte à rebours.',
+      isPlaceholder: true,
     };
   }
   if (daysUntil < 0) {
     return {
       tag: 'SOUVENIR',
       value: String(Math.abs(daysUntil)),
-      unit: Math.abs(daysUntil) === 1 ? 'j après' : 'j après',
+      unit: 'j après',
       caption: 'Garde tes contacts et inspirations en mémoire.',
+      isPlaceholder: false,
     };
   }
   if (daysUntil === 0) {
@@ -271,6 +279,7 @@ function getCounterParts(daysUntil: number | null) {
       value: 'J',
       unit: 'JOUR',
       caption: 'Profite à fond, tout est prêt.',
+      isPlaceholder: false,
     };
   }
   return {
@@ -278,6 +287,7 @@ function getCounterParts(daysUntil: number | null) {
     value: String(daysUntil),
     unit: daysUntil === 1 ? 'jour' : 'jours',
     caption: 'avant ton',
+    isPlaceholder: false,
   };
 }
 
@@ -318,28 +328,28 @@ const styles = StyleSheet.create({
     borderRadius: 9999,
   },
   blobMint: {
-    width: 220,
-    height: 220,
-    backgroundColor: FESTIVE.mint,
-    opacity: 0.18,
-    top: -70,
-    right: -60,
-  },
-  blobSun: {
     width: 160,
     height: 160,
+    backgroundColor: FESTIVE.mint,
+    opacity: 0.16,
+    top: -60,
+    right: -50,
+  },
+  blobSun: {
+    width: 120,
+    height: 120,
     backgroundColor: FESTIVE.sunflower,
-    opacity: 0.22,
-    top: 30,
-    right: -40,
+    opacity: 0.2,
+    top: 40,
+    right: -30,
   },
   blobBlush: {
-    width: 180,
-    height: 180,
+    width: 140,
+    height: 140,
     backgroundColor: FESTIVE.blush,
-    opacity: 0.28,
-    bottom: -60,
-    left: -50,
+    opacity: 0.24,
+    bottom: -50,
+    left: -40,
   },
   confettiA: {
     position: 'absolute',
@@ -407,6 +417,13 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.medium,
     fontSize: 18,
     marginBottom: 18,
+  },
+  counterPlaceholder: {
+    fontFamily: fontFamily.bold,
+    fontSize: 64,
+    lineHeight: 72,
+    letterSpacing: -2,
+    fontStyle: 'italic',
   },
   heroCaption: {
     marginTop: 4,
@@ -479,24 +496,25 @@ const styles = StyleSheet.create({
   },
   quickAction: {
     flex: 1,
-    minHeight: 56,
+    minHeight: 64,
     borderRadius: 16,
     borderWidth: 1,
-    paddingHorizontal: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 6,
   },
   quickIcon: {
-    width: 28,
-    height: 28,
+    width: 26,
+    height: 26,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
   quickLabel: {
-    flex: 1,
     fontFamily: fontFamily.bold,
-    fontSize: 13,
+    fontSize: 12,
   },
 });
