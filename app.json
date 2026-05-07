@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "umade",
+    "name": "Umade",
     "slug": "umade",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -23,7 +23,8 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.yrhm.umade"
     },
     "web": {
       "bundler": "metro",
