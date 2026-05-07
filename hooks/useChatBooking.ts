@@ -22,8 +22,8 @@ export function useChatBooking(conversationId: string | undefined) {
 
             if (!conversation) return null;
 
-            // Find the latest actionable booking between these two
-            const { data: booking, error } = await supabase
+            // Fetch all actionable bookings between these two participants
+            const { data: bookings, error } = await supabase
                 .from('bookings')
                 .select(`
           *,
@@ -32,13 +32,11 @@ export function useChatBooking(conversationId: string | undefined) {
         `)
                 .eq('client_id', conversation.client_id)
                 .eq('provider_id', conversation.provider_id)
-                .in('status', ['pending', 'confirmed', 'cancelled'])
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .single();
+                .in('status', ['pending', 'confirmed'])
+                .order('booking_date', { ascending: true });
 
-            if (error && error.code !== 'PGRST116') throw error; // PGRST116 is "no rows found"
-            return booking || null;
+            if (error) throw error;
+            return bookings ?? [];
         },
         enabled: !!conversationId,
     });
@@ -140,8 +138,11 @@ export function useChatBooking(conversationId: string | undefined) {
         },
     });
 
+    const bookings = bookingQuery.data ?? [];
+
     return {
-        booking: bookingQuery.data,
+        bookings,
+        booking: bookings[0] ?? null,
         isLoading: bookingQuery.isLoading,
         updateStatus: updateStatusMutation.mutateAsync,
         isUpdating: updateStatusMutation.isPending,
