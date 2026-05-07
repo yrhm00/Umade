@@ -437,7 +437,7 @@ const styles = StyleSheet.create({
   timeText: { fontSize: Layout.fontSize.sm, fontWeight: '600' },
   timeEndText: { fontSize: Layout.fontSize.xs },
   lineColumn: { width: 30, alignItems: 'center' },
-  dot: { width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center', zIndex: 1 },
+  dot: { width: 24, height: 24, borderRadius: 18, alignItems: 'center', justifyContent: 'center', zIndex: 1 },
   line: { width: 2, flex: 1, marginTop: 4 },
   contentCard: { flex: 1, padding: Layout.spacing.md, borderRadius: Layout.radius.lg, marginLeft: Layout.spacing.sm },
   completedCard: { opacity: 0.7 },

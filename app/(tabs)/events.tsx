@@ -2,7 +2,7 @@ import { BookingCard } from '@/components/booking/BookingCard';
 import { ClientHeader } from '@/components/client/ClientHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { EventCard } from '@/components/events/EventCard';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { Layout } from '@/constants/Layout';
 import { fontFamily } from '@/constants/Typography';
 import { useBookings } from '@/hooks/useBookings';
@@ -250,7 +250,21 @@ export default function EventsScreen() {
 
       {/* Content */}
       {isLoading ? (
-        <LoadingSpinner fullScreen message="Chargement..." />
+        <View style={styles.skeletonContent}>
+          {Array.from({ length: 3 }).map((_, i) => (
+            <View key={i} style={[styles.skeletonCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+              <View style={styles.skeletonCardHeader}>
+                <Skeleton height={18} width="60%" />
+                <Skeleton height={24} width={80} />
+              </View>
+              <Skeleton height={14} width="80%" style={{ marginTop: 8 }} />
+              <Skeleton height={14} width="50%" style={{ marginTop: 6 }} />
+              <View style={[styles.skeletonCardFooter, { borderTopColor: colors.border }]}>
+                <Skeleton height={14} width={120} />
+              </View>
+            </View>
+          ))}
+        </View>
       ) : activeTab === 'events' ? (
         filteredEvents.length > 0 ? (
           <AnimatedFlatList
@@ -438,5 +452,25 @@ const styles = StyleSheet.create({
   list: {
     paddingHorizontal: Layout.spacing.lg,
     paddingBottom: 120,
+  },
+  skeletonContent: {
+    paddingHorizontal: Layout.spacing.lg,
+    paddingTop: Layout.spacing.sm,
+    gap: Layout.spacing.md,
+  },
+  skeletonCard: {
+    borderRadius: Layout.radius.sm,
+    borderWidth: 1,
+    padding: Layout.spacing.md,
+  },
+  skeletonCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  skeletonCardFooter: {
+    marginTop: Layout.spacing.md,
+    paddingTop: Layout.spacing.sm,
+    borderTopWidth: 1,
   },
 });

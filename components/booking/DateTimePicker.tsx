@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
   },
   noSlotsContainer: {
     marginTop: 20,
-    borderRadius: 12,
+    borderRadius: 18,
     paddingVertical: 20,
     paddingHorizontal: 16,
     alignItems: 'center',

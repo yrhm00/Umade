@@ -448,7 +448,7 @@ const styles = StyleSheet.create({
     checkbox: {
         width: 22,
         height: 22,
-        borderRadius: 6,
+        borderRadius: 12,
         borderWidth: 2,
         marginRight: 10,
         alignItems: 'center',
@@ -476,7 +476,7 @@ const styles = StyleSheet.create({
     },
     errorBanner: {
         padding: 10,
-        borderRadius: 8,
+        borderRadius: 14,
         marginBottom: 10,
         alignItems: 'center',
     },

@@ -238,6 +238,8 @@ export function ChatInput({
             style={[styles.actionButton, { backgroundColor: colors.backgroundTertiary }]}
             onPress={() => quickReplyRef.current?.present()}
             disabled={disabled}
+            accessibilityLabel="Réponses rapides"
+            accessibilityRole="button"
           >
             <Zap size={20} color={colors.primary} />
           </TouchableOpacity>
@@ -248,8 +250,10 @@ export function ChatInput({
           style={[styles.actionButton, { backgroundColor: colors.backgroundTertiary }]}
           onPress={handlePickImage}
           disabled={disabled || isUploading}
+          accessibilityLabel="Joindre une photo"
+          accessibilityRole="button"
         >
-          <Camera size={20} color={colors.textSecondary} />
+          <Camera size={20} color={disabled || isUploading ? colors.textTertiary : colors.textSecondary} />
         </TouchableOpacity>
 
         <View style={[styles.inputContainer, { backgroundColor: colors.backgroundTertiary }]}>
@@ -258,17 +262,25 @@ export function ChatInput({
             value={text}
             onChangeText={handleChangeText}
             placeholder={
-              pendingImage
-                ? "Ajouter une légende (optionnel)..."
+              isUploading
+                ? 'Envoi en cours...'
+                : pendingImage
+                ? 'Ajouter une légende (optionnel)...'
                 : pendingInspiration
-                ? "Ajouter un message (optionnel)..."
-                : "Votre message..."
+                ? 'Ajouter un message (optionnel)...'
+                : 'Votre message...'
             }
             placeholderTextColor={colors.textTertiary}
             multiline
             maxLength={1000}
             editable={!disabled && !isUploading}
+            accessibilityLabel="Champ de message"
           />
+          {text.length > 900 && (
+            <Text style={[styles.charCounter, { color: text.length >= 990 ? colors.error : colors.textTertiary }]}>
+              {1000 - text.length}
+            </Text>
+          )}
         </View>
 
         <TouchableOpacity
@@ -279,6 +291,9 @@ export function ChatInput({
           ]}
           onPress={handleSend}
           disabled={!canSend}
+          accessibilityLabel={isUploading ? 'Envoi en cours' : 'Envoyer le message'}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: !canSend, busy: isUploading }}
         >
           {isUploading ? (
             <ActivityIndicator size="small" color="#FFFFFF" />
@@ -381,5 +396,11 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  charCounter: {
+    fontSize: 11,
+    alignSelf: 'flex-end',
+    marginTop: 2,
+    paddingBottom: 2,
   },
 });

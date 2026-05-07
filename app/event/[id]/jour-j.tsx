@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
   liveDot: {
     width: 8,
     height: 8,
-    borderRadius: 4,
+    borderRadius: 10,
   },
   liveText: {
     fontSize: 12,

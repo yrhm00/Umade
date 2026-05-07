@@ -488,7 +488,7 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         paddingHorizontal: 24,
         backgroundColor: Colors.primary.DEFAULT,
-        borderRadius: 12,
+        borderRadius: 18,
     },
     ctaButtonText: {
         color: Colors.white,
@@ -528,7 +528,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 6,
         paddingVertical: 2,
         backgroundColor: Colors.gray[100],
-        borderRadius: 4,
+        borderRadius: 10,
     },
     inactiveText: {
         fontSize: 10,
@@ -607,7 +607,7 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.gray[50],
         borderWidth: 1,
         borderColor: Colors.gray[200],
-        borderRadius: 12,
+        borderRadius: 18,
         padding: 12,
         fontSize: 16,
         color: Colors.text.primary,
@@ -635,7 +635,7 @@ const styles = StyleSheet.create({
         paddingVertical: 14,
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: 12,
+        borderRadius: 18,
         backgroundColor: Colors.gray[100],
     },
     cancelButtonText: {
@@ -648,7 +648,7 @@ const styles = StyleSheet.create({
         paddingVertical: 14,
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: 12,
+        borderRadius: 18,
         backgroundColor: Colors.primary.DEFAULT,
     },
     saveButtonDisabled: {

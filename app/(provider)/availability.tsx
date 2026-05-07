@@ -482,7 +482,7 @@ const styles = StyleSheet.create({
     },
     infoCard: {
         backgroundColor: Colors.primary.DEFAULT + '10',
-        borderRadius: 12,
+        borderRadius: 18,
         padding: 16,
         marginBottom: 20,
         borderLeftWidth: 4,
@@ -501,7 +501,7 @@ const styles = StyleSheet.create({
     },
     dayCard: {
         backgroundColor: Colors.white,
-        borderRadius: 12,
+        borderRadius: 18,
         padding: 16,
         marginBottom: 12,
         shadowColor: '#000',
@@ -522,7 +522,7 @@ const styles = StyleSheet.create({
     dayIcon: {
         width: 32,
         height: 32,
-        borderRadius: 8,
+        borderRadius: 14,
         backgroundColor: Colors.warning.DEFAULT + '15',
         alignItems: 'center',
         justifyContent: 'center',
@@ -555,7 +555,7 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.gray[50],
         paddingHorizontal: 12,
         paddingVertical: 10,
-        borderRadius: 8,
+        borderRadius: 14,
         gap: 6,
     },
     timeButtonActive: {

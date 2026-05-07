@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 3,
     backgroundColor: 'rgba(0,0,0,0.35)',
-    borderRadius: 4,
+    borderRadius: 10,
     fontSize: 10,
     fontWeight: '400',
     color: 'rgba(255,255,255,0.9)',

@@ -419,7 +419,7 @@ const styles = StyleSheet.create({
   tag: {
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 4,
+    borderRadius: 10,
   },
   tagText: {
     fontSize: 12,

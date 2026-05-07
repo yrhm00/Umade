@@ -32,6 +32,7 @@ import {
 import { useRealtimeMessages } from '@/hooks/useRealtimeMessages';
 import { MessageWithSender } from '@/types';
 import { InspirationContextData } from '@/components/chat/InspirationContextCard';
+import { toast } from '@/lib/toast';
 import { useLocalSearchParams } from 'expo-router';
 import { Trash2 } from 'lucide-react-native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -236,10 +237,10 @@ export default function ChatScreen() {
   const handleSend = useCallback(
     (content: string) => {
       if (!conversationId) return;
-      sendMessage({
-        conversation_id: conversationId,
-        content,
-      });
+      sendMessage(
+        { conversation_id: conversationId, content },
+        { onError: (err) => toast.error(err.message || 'Message non envoyé') }
+      );
     },
     [conversationId, sendMessage]
   );

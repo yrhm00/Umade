@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
   dot: {
     width: 12,
     height: 12,
-    borderRadius: 6,
+    borderRadius: 12,
     backgroundColor: '#EF4444',
     marginRight: -1,
     zIndex: 1,

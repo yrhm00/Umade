@@ -462,7 +462,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 16,
     height: 16,
-    borderRadius: 8,
+    borderRadius: 14,
   },
   checkmark: {
     position: 'absolute',

@@ -503,8 +503,8 @@ const styles = StyleSheet.create({
   },
   progressTitle: { fontSize: Layout.fontSize.md, fontWeight: '600' },
   progressPercent: { fontSize: Layout.fontSize.xl, fontWeight: '700' },
-  progressBar: { height: 8, borderRadius: 4, overflow: 'hidden' },
-  progressFill: { height: '100%', borderRadius: 4 },
+  progressBar: { height: 8, borderRadius: 10, overflow: 'hidden' },
+  progressFill: { height: '100%', borderRadius: 10 },
   progressStats: { marginTop: Layout.spacing.sm },
   progressStat: { fontSize: Layout.fontSize.sm },
   quickStats: {
@@ -571,7 +571,7 @@ const styles = StyleSheet.create({
     padding: Layout.spacing.lg,
   },
   sectionLeft: { flexDirection: 'row', alignItems: 'center', gap: Layout.spacing.sm },
-  statusDot: { width: 12, height: 12, borderRadius: 6 },
+  statusDot: { width: 12, height: 12, borderRadius: 12 },
   sectionTitle: { fontSize: Layout.fontSize.md, fontWeight: '600' },
   countBadge: {
     paddingHorizontal: Layout.spacing.sm,
@@ -588,7 +588,7 @@ const styles = StyleSheet.create({
   checkbox: {
     width: 24,
     height: 24,
-    borderRadius: 12,
+    borderRadius: 18,
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',

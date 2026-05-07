@@ -476,7 +476,7 @@ const styles = StyleSheet.create({
     left: Layout.spacing.lg + 95,
     minWidth: 20,
     height: 20,
-    borderRadius: 10,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 5,

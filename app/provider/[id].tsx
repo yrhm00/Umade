@@ -36,6 +36,7 @@ import {
 } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
+  ActivityIndicator,
   Dimensions,
   FlatList,
   Image,
@@ -146,8 +147,24 @@ export default function ProviderDetailScreen() {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.errorContainer}>
-          <Text style={[styles.errorText, { color: colors.textSecondary }]}>Prestataire non trouvé</Text>
-          <Button title="Retour" onPress={handleBack} variant="outline" />
+          <TouchableOpacity
+            onPress={handleBack}
+            style={[styles.errorBackButton, { backgroundColor: `${colors.primary}12` }]}
+            accessibilityLabel="Retour"
+            accessibilityRole="button"
+          >
+            <ArrowLeft size={20} color={colors.primary} />
+          </TouchableOpacity>
+          <Text style={[styles.errorTitle, { color: colors.text }]}>Prestataire introuvable</Text>
+          <Text style={[styles.errorSubtitle, { color: colors.textSecondary }]}>
+            Ce prestataire n'existe plus ou le lien est invalide.
+          </Text>
+          <Button
+            title="Explorer les prestataires"
+            onPress={() => router.replace('/(tabs)/search' as any)}
+            size="lg"
+            style={{ marginTop: Layout.spacing.lg }}
+          />
         </View>
       </SafeAreaView>
     );
@@ -531,6 +548,8 @@ export default function ProviderDetailScreen() {
               <TouchableOpacity
                 style={[styles.contactButton, { borderColor: colors.primary }]}
                 onPress={handleContact}
+                accessibilityLabel={`Contacter ${provider.business_name} par message`}
+                accessibilityRole="button"
               >
                 <MessageCircle size={20} color={colors.primary} />
               </TouchableOpacity>
@@ -556,6 +575,8 @@ export default function ProviderDetailScreen() {
             style={[headerButtonStyle, styles.floatingButtonShadow]}
             onPress={handleBack}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            accessibilityLabel="Retour"
+            accessibilityRole="button"
           >
             <ArrowLeft size={24} color={headerIconColor} />
           </TouchableOpacity>
@@ -565,6 +586,8 @@ export default function ProviderDetailScreen() {
               style={[headerButtonStyle, styles.floatingButtonShadow]}
               onPress={handleShare}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              accessibilityLabel="Partager ce prestataire"
+              accessibilityRole="button"
             >
               <Share2 size={22} color={headerIconColor} />
             </TouchableOpacity>
@@ -572,12 +595,19 @@ export default function ProviderDetailScreen() {
               style={[headerButtonStyle, styles.floatingButtonShadow]}
               onPress={handleFavoritePress}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              accessibilityLabel={isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+              accessibilityRole="button"
+              accessibilityState={{ selected: isFavorite, busy: isFavoriteLoading }}
             >
-              <Heart
-                size={22}
-                color={isFavorite ? colors.error : headerIconColor}
-                fill={isFavorite ? colors.error : 'transparent'}
-              />
+              {isFavoriteLoading ? (
+                <ActivityIndicator size="small" color={headerIconColor} />
+              ) : (
+                <Heart
+                  size={22}
+                  color={isFavorite ? colors.error : headerIconColor}
+                  fill={isFavorite ? colors.error : 'transparent'}
+                />
+              )}
             </TouchableOpacity>
           </View>
         </View>
@@ -606,10 +636,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: Layout.spacing.xl,
-    gap: Layout.spacing.lg,
+    gap: Layout.spacing.md,
   },
-  errorText: {
-    fontSize: Layout.fontSize.lg,
+  errorBackButton: {
+    alignSelf: 'flex-start',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Layout.spacing.sm,
+  },
+  errorTitle: {
+    fontSize: Layout.fontSize.xl,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  errorSubtitle: {
+    fontSize: Layout.fontSize.md,
+    textAlign: 'center',
+    lineHeight: 22,
   },
 
   // Header buttons
@@ -663,7 +709,7 @@ const styles = StyleSheet.create({
   dot: {
     width: 8,
     height: 8,
-    borderRadius: 4,
+    borderRadius: 10,
     backgroundColor: 'rgba(255,255,255,0.5)',
   },
   dotActive: {
@@ -953,7 +999,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     paddingVertical: 4,
     paddingHorizontal: 8,
-    borderRadius: 8,
+    borderRadius: 14,
     overflow: 'hidden',
     backgroundColor: 'rgba(0,0,0,0.35)',
   },

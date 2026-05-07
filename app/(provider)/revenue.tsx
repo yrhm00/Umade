@@ -426,7 +426,7 @@ const styles = StyleSheet.create({
     bar: {
         width: '80%',
         minWidth: 8,
-        borderRadius: 4,
+        borderRadius: 10,
     },
     barLabel: {
         fontSize: 10,
@@ -446,7 +446,7 @@ const styles = StyleSheet.create({
     statCard: {
         width: (SCREEN_WIDTH - 44) / 2,
         backgroundColor: Colors.white,
-        borderRadius: 12,
+        borderRadius: 18,
         padding: 16,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 1 },
@@ -480,7 +480,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         backgroundColor: Colors.white,
-        borderRadius: 12,
+        borderRadius: 18,
         padding: 16,
         marginBottom: 8,
     },
@@ -556,7 +556,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: 14,
         paddingHorizontal: 16,
-        borderRadius: 12,
+        borderRadius: 18,
         marginBottom: 8,
         backgroundColor: Colors.gray[50],
     },

@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
     inputGroup: {
         flexDirection: 'row',
         alignItems: 'center',
-        borderRadius: 12,
+        borderRadius: 18,
         marginBottom: 12,
         borderWidth: 1,
     },
