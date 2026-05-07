@@ -403,12 +403,12 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     height: 8,
-    borderRadius: 4,
+    borderRadius: 10,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    borderRadius: 4,
+    borderRadius: 10,
   },
   scrollView: {
     flex: 1,
@@ -477,7 +477,7 @@ const styles = StyleSheet.create({
   checkbox: {
     width: 24,
     height: 24,
-    borderRadius: 6,
+    borderRadius: 12,
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
@@ -498,7 +498,7 @@ const styles = StyleSheet.create({
   statusBadge: {
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: 10,
   },
   statusText: {
     fontSize: 10,

@@ -3,19 +3,56 @@
  */
 
 import { SectionHeader } from '@/components/common/SectionHeader';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { Layout } from '@/constants/Layout';
+import { useColors } from '@/hooks/useColors';
 import { useTopProviders } from '@/hooks/useProviders';
 import { useRouter } from 'expo-router';
+import { AlertCircle } from 'lucide-react-native';
 import React from 'react';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { ProviderCardSmall } from './ProviderCardSmall';
 
 export function PopularProvidersSection() {
   const router = useRouter();
-  const { data: providers } = useTopProviders(6);
+  const colors = useColors();
+  const { data: providers, isLoading, isError, refetch } = useTopProviders(6);
 
-  // Ne rien afficher si pas de prestataires
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <SectionHeader title="Prestataires populaires" />
+        <View style={styles.skeletonRow}>
+          {Array.from({ length: 4 }).map((_, i) => (
+            <View key={i} style={styles.skeletonItem}>
+              <Skeleton.ProviderCard />
+            </View>
+          ))}
+        </View>
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View style={styles.container}>
+        <SectionHeader title="Prestataires populaires" />
+        <TouchableOpacity
+          style={[styles.errorRow, { backgroundColor: `${colors.error}10` }]}
+          onPress={() => refetch()}
+          accessibilityLabel="Réessayer de charger les prestataires"
+          accessibilityRole="button"
+        >
+          <AlertCircle size={16} color={colors.error} />
+          <Text style={[styles.errorText, { color: colors.error }]}>
+            Impossible de charger — Appuyer pour réessayer
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   if (!providers || providers.length === 0) return null;
 
   return (
@@ -44,5 +81,26 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: Layout.spacing.lg,
+  },
+  skeletonRow: {
+    flexDirection: 'row',
+    paddingHorizontal: Layout.spacing.lg,
+    gap: Layout.spacing.md,
+  },
+  skeletonItem: {
+    width: 140,
+  },
+  errorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Layout.spacing.sm,
+    marginHorizontal: Layout.spacing.lg,
+    paddingVertical: Layout.spacing.sm,
+    paddingHorizontal: Layout.spacing.md,
+    borderRadius: Layout.radius.md,
+  },
+  errorText: {
+    fontSize: 13,
+    flex: 1,
   },
 });

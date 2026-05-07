@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
         marginLeft: 4,
     },
     sectionContent: {
-        borderRadius: 12,
+        borderRadius: 18,
         borderWidth: 1,
         overflow: 'hidden',
     },
@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
     iconContainer: {
         width: 40,
         height: 40,
-        borderRadius: 10,
+        borderRadius: 16,
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 12,

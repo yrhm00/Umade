@@ -794,7 +794,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         alignItems: 'center',
         backgroundColor: Colors.gray[50],
-        borderRadius: 10,
+        borderRadius: 16,
     },
     tabActive: {
         backgroundColor: Colors.primary.DEFAULT,
@@ -912,7 +912,7 @@ const styles = StyleSheet.create({
     },
     bar: {
         width: 24,
-        borderRadius: 4,
+        borderRadius: 10,
     },
     barLabel: {
         fontSize: 11,
@@ -959,14 +959,14 @@ const styles = StyleSheet.create({
     statCard: {
         width: (SCREEN_WIDTH - 44) / 2,
         backgroundColor: Colors.white,
-        borderRadius: 12,
+        borderRadius: 18,
         padding: 16,
         alignItems: 'center',
     },
     statIcon: {
         width: 44,
         height: 44,
-        borderRadius: 12,
+        borderRadius: 18,
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 12,
@@ -1016,13 +1016,13 @@ const styles = StyleSheet.create({
     rateBar: {
         height: 8,
         backgroundColor: Colors.gray[100],
-        borderRadius: 4,
+        borderRadius: 10,
         overflow: 'hidden',
     },
     rateFill: {
         height: '100%',
         backgroundColor: Colors.success.DEFAULT,
-        borderRadius: 4,
+        borderRadius: 10,
     },
     rateValue: {
         fontSize: 20,
@@ -1069,7 +1069,7 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         paddingHorizontal: 12,
         backgroundColor: Colors.gray[50],
-        borderRadius: 10,
+        borderRadius: 16,
         alignItems: 'center',
     },
     historyFilterActive: {
@@ -1116,7 +1116,7 @@ const styles = StyleSheet.create({
     },
     historyItem: {
         backgroundColor: Colors.white,
-        borderRadius: 12,
+        borderRadius: 18,
         padding: 14,
         flexDirection: 'row',
     },
@@ -1145,13 +1145,13 @@ const styles = StyleSheet.create({
     historyAvatar: {
         width: 24,
         height: 24,
-        borderRadius: 12,
+        borderRadius: 18,
         marginRight: 8,
     },
     historyAvatarPlaceholder: {
         width: 24,
         height: 24,
-        borderRadius: 12,
+        borderRadius: 18,
         backgroundColor: Colors.gray[100],
         alignItems: 'center',
         justifyContent: 'center',
@@ -1182,7 +1182,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: 8,
         paddingVertical: 4,
-        borderRadius: 6,
+        borderRadius: 12,
         gap: 4,
     },
     historyStatusCompleted: {

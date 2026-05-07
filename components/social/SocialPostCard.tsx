@@ -159,7 +159,12 @@ export function SocialPostCard({
           </Pressable>
         )}
 
-        <Pressable style={styles.moreButton}>
+        <Pressable
+          style={styles.moreButton}
+          onPress={() => router.push(`/social/${post.id}` as any)}
+          accessibilityLabel="Options du post"
+          accessibilityRole="button"
+        >
           <MoreHorizontal size={20} color={colors.textSecondary} />
         </Pressable>
       </View>
@@ -218,17 +223,33 @@ export function SocialPostCard({
       {/* Actions */}
       <View style={styles.actions}>
         <View style={styles.leftActions}>
-          <Pressable onPress={handleLikePress} style={styles.actionButton}>
+          <Pressable
+            onPress={handleLikePress}
+            style={styles.actionButton}
+            accessibilityLabel={isLiked ? 'Retirer le like' : 'Liker ce post'}
+            accessibilityRole="button"
+            accessibilityState={{ selected: isLiked }}
+          >
             <Heart
               size={24}
               color={isLiked ? Colors.error.DEFAULT : colors.text}
               fill={isLiked ? Colors.error.DEFAULT : 'transparent'}
             />
           </Pressable>
-          <Pressable onPress={handleCommentPress} style={styles.actionButton}>
+          <Pressable
+            onPress={handleCommentPress}
+            style={styles.actionButton}
+            accessibilityLabel={`Voir les commentaires`}
+            accessibilityRole="button"
+          >
             <MessageCircle size={24} color={colors.text} />
           </Pressable>
-          <Pressable onPress={handleSharePress} style={styles.actionButton}>
+          <Pressable
+            onPress={handleSharePress}
+            style={styles.actionButton}
+            accessibilityLabel="Partager ce post"
+            accessibilityRole="button"
+          >
             <Share2 size={22} color={colors.text} />
           </Pressable>
         </View>
@@ -319,7 +340,7 @@ const styles = StyleSheet.create({
   followButton: {
     paddingHorizontal: 14,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: 14,
     borderWidth: 1,
     marginRight: Layout.spacing.xs,
   },

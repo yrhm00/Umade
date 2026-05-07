@@ -126,7 +126,6 @@ export default function RootLayout() {
     }
 
     const endSubscription = openingPlayer.addListener('playToEnd', () => {
-      // On garde un très court "hold" du dernier frame avant le fade.
       closeOpeningVideo(120);
     });
 
@@ -136,9 +135,13 @@ export default function RootLayout() {
       }
     });
 
+    // Fallback : ferme l'overlay après 6s si la vidéo ne joue pas (simulateur, iOS beta, etc.)
+    const safetyTimer = setTimeout(() => closeOpeningVideo(), 6000);
+
     return () => {
       endSubscription.remove();
       errorSubscription.remove();
+      clearTimeout(safetyTimer);
     };
   }, [showOpeningVideo, openingPlayer, closeOpeningVideo]);
 

@@ -607,7 +607,7 @@ const styles = StyleSheet.create({
     right: 4,
     width: 24,
     height: 24,
-    borderRadius: 12,
+    borderRadius: 18,
     backgroundColor: 'rgba(0,0,0,0.6)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -619,7 +619,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.success.DEFAULT,
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: 10,
   },
   newBadgeText: {
     fontSize: 10,

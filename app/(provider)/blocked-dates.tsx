@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         backgroundColor: Colors.white,
-        borderRadius: 12,
+        borderRadius: 18,
         padding: 16,
         marginBottom: 12,
         shadowColor: '#000',
@@ -390,7 +390,7 @@ const styles = StyleSheet.create({
     selectedDates: {
         backgroundColor: Colors.primary.light + '20',
         padding: 12,
-        borderRadius: 12,
+        borderRadius: 18,
         marginTop: 24,
         alignItems: 'center',
     },
@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
     },
     reasonInput: {
         backgroundColor: Colors.gray[50],
-        borderRadius: 12,
+        borderRadius: 18,
         padding: 16,
         marginTop: 16,
         fontSize: 16,

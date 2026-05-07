@@ -25,10 +25,10 @@ export const Layout = {
   
   // Border radius
   radius: {
-    sm: 8,
-    md: 12,
-    lg: 16,
-    xl: 24,
+    sm: 14,
+    md: 20,
+    lg: 28,
+    xl: 36,
     full: 9999,
   },
   

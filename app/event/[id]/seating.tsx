@@ -145,9 +145,9 @@ function DraggableTable({
       case 'round':
         return { width: size, height: size, borderRadius: size / 2 };
       case 'square':
-        return { width: size, height: size, borderRadius: 10 };
+        return { width: size, height: size, borderRadius: 16 };
       case 'rectangular':
-        return { width: size * 1.55, height: size, borderRadius: 10 };
+        return { width: size * 1.55, height: size, borderRadius: 16 };
       default:
         return { width: size, height: size, borderRadius: size / 2 };
     }

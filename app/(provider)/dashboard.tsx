@@ -665,7 +665,7 @@ const styles = StyleSheet.create({
   walletPanelIconWrap: {
     width: 36,
     height: 36,
-    borderRadius: 10,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -765,7 +765,7 @@ const styles = StyleSheet.create({
     fontSize: Layout.fontSize.sm,
   },
   unreadBadge: {
-    borderRadius: 12,
+    borderRadius: 18,
     minWidth: 24,
     height: 24,
     justifyContent: 'center',
@@ -841,7 +841,7 @@ const styles = StyleSheet.create({
   statusBadge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 8,
+    borderRadius: 14,
   },
   statusText: {
     fontSize: 10,

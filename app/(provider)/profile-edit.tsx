@@ -636,7 +636,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'flex-start',
         backgroundColor: Colors.white,
-        borderRadius: 12,
+        borderRadius: 18,
         marginBottom: 12,
         borderWidth: 1,
         borderColor: Colors.gray[200],

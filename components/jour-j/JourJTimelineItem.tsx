@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
   liveBadge: {
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: 10,
   },
   liveBadgeText: {
     fontSize: 9,

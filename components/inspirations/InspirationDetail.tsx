@@ -381,7 +381,7 @@ const styles = StyleSheet.create({
   paginationDot: {
     width: 8,
     height: 8,
-    borderRadius: 4,
+    borderRadius: 10,
     backgroundColor: 'rgba(255,255,255,0.5)',
   },
   paginationDotActive: {

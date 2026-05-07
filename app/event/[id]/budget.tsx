@@ -432,8 +432,8 @@ const styles = StyleSheet.create({
   progressHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: Layout.spacing.sm },
   progressLabel: { fontSize: Layout.fontSize.md, fontWeight: '600' },
   progressPercent: { fontSize: Layout.fontSize.md, fontWeight: '700' },
-  progressBar: { height: 8, borderRadius: 4, overflow: 'hidden' },
-  progressFill: { height: '100%', borderRadius: 4 },
+  progressBar: { height: 8, borderRadius: 10, overflow: 'hidden' },
+  progressFill: { height: '100%', borderRadius: 10 },
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',

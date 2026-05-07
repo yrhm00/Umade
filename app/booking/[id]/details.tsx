@@ -1553,7 +1553,7 @@ const styles = StyleSheet.create({
   detailIconWrap: {
     width: 28,
     height: 28,
-    borderRadius: 8,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 1,
@@ -1874,7 +1874,7 @@ const styles = StyleSheet.create({
   completionIconWrap: {
     width: 30,
     height: 30,
-    borderRadius: 10,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },

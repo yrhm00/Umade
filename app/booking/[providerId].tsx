@@ -139,7 +139,7 @@ export default function BookingFlowScreen() {
         booking_date: selectedDate,
         total_price: selectedService.price,
         client_message: clientMessage.trim() || undefined,
-      } as any,
+      },
       {
         onSuccess: () => {
           celebrationRef.current?.fire();

@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
     optionIcon: {
         width: 44,
         height: 44,
-        borderRadius: 12,
+        borderRadius: 18,
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: Layout.spacing.md,

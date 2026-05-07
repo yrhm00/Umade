@@ -126,13 +126,13 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 8,
     backgroundColor: Colors.gray[200],
-    borderRadius: 4,
+    borderRadius: 10,
     overflow: 'hidden',
   },
   barFill: {
     height: '100%',
     backgroundColor: Colors.warning.DEFAULT,
-    borderRadius: 4,
+    borderRadius: 10,
   },
   countLabel: {
     fontSize: Layout.fontSize.xs,
