@@ -1,0 +1,211 @@
+You are given a task to integrate an existing React component in the codebase
+
+The codebase should support:
+- shadcn project structure  
+- Tailwind CSS
+- Typescript
+
+If it doesn't, provide instructions on how to setup project via shadcn CLI, install Tailwind or Typescript.
+
+Determine the default path for components and styles. 
+If default path for components is not /components/ui, provide instructions on why it's important to create this folder
+Copy-paste this component to /components/ui folder:
+```tsx
+animated-text.tsx
+import * as React from "react"
+import { motion, Variants } from "framer-motion"
+import { cn } from "@/lib/utils"
+
+interface AnimatedTextProps extends React.HTMLAttributes<HTMLDivElement> {
+  text: string
+  duration?: number
+  delay?: number
+  replay?: boolean
+  className?: string
+  textClassName?: string
+  underlineClassName?: string
+  as?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "p" | "span"
+  underlineGradient?: string
+  underlineHeight?: string
+  underlineOffset?: string
+}
+
+const AnimatedText = React.forwardRef<HTMLDivElement, AnimatedTextProps>(
+  ({
+    text,
+    duration = 0.5,
+    delay = 0.1,
+    replay = true,
+    className,
+    textClassName,
+    underlineClassName,
+    as: Component = "h1",
+    underlineGradient = "from-blue-500 via-purple-500 to-pink-500",
+    underlineHeight = "h-1",
+    underlineOffset = "-bottom-2",
+    ...props
+  }, ref) => {
+    const letters = Array.from(text)
+
+    const container: Variants = {
+      hidden: { 
+        opacity: 0 
+      },
+      visible: (i: number = 1) => ({
+        opacity: 1,
+        transition: { 
+          staggerChildren: duration, 
+          delayChildren: i * delay 
+        }
+      })
+    }
+
+    const child: Variants = {
+      visible: {
+        opacity: 1,
+        y: 0,
+        transition: {
+          type: "spring",
+          damping: 12,
+          stiffness: 200
+        }
+      },
+      hidden: {
+        opacity: 0,
+        y: 20,
+        transition: {
+          type: "spring",
+          damping: 12,
+          stiffness: 200
+        }
+      }
+    }
+
+    const lineVariants: Variants = {
+      hidden: {
+        width: "0%",
+        left: "50%"
+      },
+      visible: {
+        width: "100%",
+        left: "0%",
+        transition: {
+          delay: letters.length * delay,
+          duration: 0.8,
+          ease: "easeOut"
+        }
+      }
+    }
+
+    return (
+      <div 
+        ref={ref} 
+        className={cn("flex flex-col items-center justify-center gap-2", className)}
+        {...props}
+      >
+        <div className="relative">
+          <motion.div
+            style={{ display: "flex", overflow: "hidden" }}
+            variants={container}
+            initial="hidden"
+            animate={replay ? "visible" : "hidden"}
+            className={cn("text-4xl font-bold text-center", textClassName)}
+          >
+            {letters.map((letter, index) => (
+              <motion.span key={index} variants={child}>
+                {letter === " " ? "\u00A0" : letter}
+              </motion.span>
+            ))}
+          </motion.div>
+
+          <motion.div
+            variants={lineVariants}
+            initial="hidden"
+            animate="visible"
+            className={cn(
+              "absolute",
+              underlineHeight,
+              underlineOffset,
+              "bg-gradient-to-r",
+              underlineGradient,
+              underlineClassName
+            )}
+          />
+        </div>
+      </div>
+    )
+  }
+)
+AnimatedText.displayName = "AnimatedText"
+
+export { AnimatedText }
+
+demo.tsx
+import { AnimatedText } from "@/components/ui/animated-text"
+
+function DefaultDemo() {
+  return <AnimatedText text="Mishra Hub" />
+}
+
+function CustomStyleDemo() {
+  return (
+    <AnimatedText 
+      text="Custom Style"
+      textClassName="text-6xl text-gradient-to-r from-blue-600 to-purple-600"
+      underlineGradient="from-red-500 via-yellow-500 to-green-500"
+      underlineHeight="h-2"
+      underlineOffset="-bottom-4"
+    />
+  )
+}
+
+function HeadingDemo() {
+  return (
+    <AnimatedText 
+      text="As H2 Element"
+      as="h2"
+      textClassName="text-2xl"
+      underlineClassName="rounded-full"
+    />
+  )
+}
+
+function SlowAnimationDemo() {
+  return (
+    <AnimatedText 
+      text="Slower Animation"
+      duration={0.8}
+      delay={0.2}
+    />
+  )
+}
+
+export {
+  DefaultDemo,
+  CustomStyleDemo,
+  HeadingDemo,
+  SlowAnimationDemo
+}
+```
+
+Install NPM dependencies:
+```bash
+framer-motion
+```
+
+Implementation Guidelines
+ 1. Analyze the component structure and identify all required dependencies
+ 2. Review the component's argumens and state
+ 3. Identify any required context providers or hooks and install them
+ 4. Questions to Ask
+ - What data/props will be passed to this component?
+ - Are there any specific state management requirements?
+ - Are there any required assets (images, icons, etc.)?
+ - What is the expected responsive behavior?
+ - What is the best place to use this component in the app?
+
+Steps to integrate
+ 0. Copy paste all the code above in the correct directories
+ 1. Install external dependencies
+ 2. Fill image assets with Unsplash stock images you know exist
+ 3. Use lucide-react icons for svgs or logos if component requires them

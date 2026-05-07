@@ -66,6 +66,7 @@ export function useBookings(status?: BookingStatus) {
       return (data || []) as BookingWithDetails[];
     },
     enabled: !!userId,
+    staleTime: 1000 * 60 * 2,
   });
 }
 
@@ -110,6 +111,7 @@ export function useProviderBookings(filter?: BookingFilter) {
       return (data || []) as BookingWithDetails[];
     },
     enabled: !!providerId,
+    staleTime: 1000 * 60 * 2,
   });
 }
 
@@ -140,6 +142,7 @@ export function useUpcomingProviderBookings(limit = 3) {
       return (data || []) as BookingWithDetails[];
     },
     enabled: !!providerId,
+    staleTime: 1000 * 60 * 2,
   });
 }
 
@@ -168,6 +171,7 @@ export function useBooking(bookingId: string | undefined) {
       return data as BookingWithDetails;
     },
     enabled: !!bookingId,
+    staleTime: 1000 * 60 * 2,
   });
 }
 
@@ -221,6 +225,7 @@ export function useEventBookings(eventId: string | undefined) {
       return (data || []) as BookingWithDetails[];
     },
     enabled: !!eventId,
+    staleTime: 1000 * 60 * 2,
   });
 }
 

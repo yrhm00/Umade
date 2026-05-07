@@ -106,7 +106,8 @@ export function useStoriesFeed() {
       });
     },
     staleTime: 1000 * 60, // 1 minute
-    refetchInterval: 1000 * 60 * 5, // Refresh every 5 minutes
+    refetchInterval: 1000 * 60 * 5,
+    refetchIntervalInBackground: false,
   });
 }
 
