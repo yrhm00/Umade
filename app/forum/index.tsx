@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   categoriesContainer: {
-    paddingHorizontal: Layout.spacing.md,
+    paddingLeft: Layout.spacing.md,
     paddingVertical: Layout.spacing.sm,
     gap: Layout.spacing.sm,
   },
@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   sortContainer: {
-    paddingHorizontal: Layout.spacing.md,
+    paddingLeft: Layout.spacing.md,
     paddingBottom: Layout.spacing.sm,
     gap: Layout.spacing.sm,
   },

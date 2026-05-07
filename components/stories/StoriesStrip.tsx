@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
     borderBottomColor: 'rgba(0,0,0,0.05)',
   },
   scrollContent: {
-    paddingHorizontal: Layout.spacing.md,
+    paddingLeft: Layout.spacing.md,
     gap: Layout.spacing.sm,
   },
 });
