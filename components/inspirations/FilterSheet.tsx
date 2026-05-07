@@ -90,9 +90,6 @@ export const FilterSheet = forwardRef<BottomSheetModal, FilterSheetProps>(
     };
 
     const hasFilters = (filters.event_types?.length ?? 0) > 0 || (filters.styles?.length ?? 0) > 0;
-    // The custom LiquidTabBar is a floating overlay (height 70 + 10px offset).
-    // Add extra bottom padding so the CTA is never covered by it.
-    const tabBarOverlayHeight = 80;
 
     return (
       <BottomSheetModal
@@ -118,7 +115,7 @@ export const FilterSheet = forwardRef<BottomSheetModal, FilterSheetProps>(
 
           <BottomSheetScrollView
             style={styles.content}
-            contentContainerStyle={{ paddingBottom: Layout.spacing.xl + insets.bottom + tabBarOverlayHeight }}
+            contentContainerStyle={{ paddingBottom: Layout.spacing.xl + insets.bottom }}
             showsVerticalScrollIndicator={false}
           >
             {/* Type d'evenement */}
@@ -154,7 +151,7 @@ export const FilterSheet = forwardRef<BottomSheetModal, FilterSheetProps>(
 
           {/* Actions */}
           <View style={[styles.actions, {
-            paddingBottom: Math.max(insets.bottom + tabBarOverlayHeight, Layout.spacing.md),
+            paddingBottom: Math.max(insets.bottom, Layout.spacing.md),
           }]}>
             {hasFilters && (
               <AnimatedButton

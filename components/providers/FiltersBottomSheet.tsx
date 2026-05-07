@@ -56,9 +56,6 @@ export const FiltersBottomSheet = forwardRef<BottomSheetModal, FiltersBottomShee
   ({ filters, onApply, onReset }, ref) => {
     const { data: categories } = useCategories();
     const insets = useSafeAreaInsets();
-    // The custom LiquidTabBar is a floating overlay (height 70 + 10px offset).
-    // Add extra bottom padding so the "Appliquer" CTA is never covered by it.
-    const tabBarOverlayHeight = 80;
 
     const [localFilters, setLocalFilters] = useState<ProviderFilters>(filters);
 
@@ -106,7 +103,7 @@ export const FiltersBottomSheet = forwardRef<BottomSheetModal, FiltersBottomShee
         snapPoints={snapPoints}
         enableDynamicSizing={false}
         enablePanDownToClose
-        enableContentPanningGesture
+        enableContentPanningGesture={false}
         backdropComponent={renderBackdrop}
         backgroundStyle={styles.bottomSheetBackground}
         handleIndicatorStyle={styles.handleIndicator}
@@ -123,7 +120,7 @@ export const FiltersBottomSheet = forwardRef<BottomSheetModal, FiltersBottomShee
             style={styles.scrollView}
             contentContainerStyle={[
               styles.scrollContent,
-              { paddingBottom: Layout.spacing.xxl + insets.bottom + tabBarOverlayHeight },
+              { paddingBottom: Layout.spacing.lg + insets.bottom },
             ]}
             showsVerticalScrollIndicator={false}
           >
@@ -248,7 +245,7 @@ export const FiltersBottomSheet = forwardRef<BottomSheetModal, FiltersBottomShee
           <View
             style={[
               styles.footer,
-              { paddingBottom: Math.max(insets.bottom + tabBarOverlayHeight, Layout.spacing.md) },
+              { paddingBottom: Math.max(insets.bottom, Layout.spacing.md) },
             ]}
           >
             <Button
