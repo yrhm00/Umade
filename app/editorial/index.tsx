@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   categoryList: {
-    paddingHorizontal: Layout.spacing.lg,
+    paddingLeft: Layout.spacing.lg,
     gap: Layout.spacing.sm,
     paddingBottom: Layout.spacing.md,
   },

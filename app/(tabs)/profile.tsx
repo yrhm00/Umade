@@ -487,7 +487,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.bold,
   },
   badgesList: {
-    paddingHorizontal: Layout.spacing.lg,
+    paddingLeft: Layout.spacing.lg,
     gap: Layout.spacing.md,
   },
 });
