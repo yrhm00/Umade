@@ -69,6 +69,9 @@ export function PopularProvidersSection() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
         ItemSeparatorComponent={() => <View style={{ width: Layout.spacing.md }} />}
+        snapToInterval={150 + Layout.spacing.md}
+        snapToAlignment="start"
+        decelerationRate="fast"
         renderItem={({ item }) => <ProviderCardSmall provider={item} />}
       />
     </Animated.View>
