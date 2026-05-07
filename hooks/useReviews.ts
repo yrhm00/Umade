@@ -256,6 +256,7 @@ export function useUserReviews() {
     queryKey: ['reviews', 'user', userId],
     queryFn: () => fetchUserReviews(userId!),
     enabled: !!userId,
+    staleTime: 1000 * 60 * 5,
   });
 }
 
@@ -266,6 +267,7 @@ export function useReviewableBookings() {
     queryKey: ['bookings', 'reviewable', userId],
     queryFn: () => fetchReviewableBookings(userId!),
     enabled: !!userId,
+    staleTime: 1000 * 60 * 5,
   });
 }
 
@@ -274,6 +276,7 @@ export function useBookingForReview(bookingId: string) {
     queryKey: ['bookings', 'forReview', bookingId],
     queryFn: () => fetchBookingForReview(bookingId),
     enabled: !!bookingId,
+    staleTime: 1000 * 60 * 5,
   });
 }
 

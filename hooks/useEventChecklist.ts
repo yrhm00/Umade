@@ -297,14 +297,16 @@ export function useApplyChecklistTemplate() {
     mutationFn: async ({ eventId, eventType }: { eventId: string; eventType: string }) => {
       const template = CHECKLIST_TEMPLATES[eventType] || CHECKLIST_TEMPLATES.birthday;
 
-      for (const item of template) {
-        await createItem({
-          event_id: eventId,
-          title: item.title,
-          category: item.category,
-          priority: item.priority,
-        });
-      }
+      await Promise.all(
+        template.map((item) =>
+          createItem({
+            event_id: eventId,
+            title: item.title,
+            category: item.category,
+            priority: item.priority,
+          })
+        )
+      );
 
       return { created: template.length };
     },

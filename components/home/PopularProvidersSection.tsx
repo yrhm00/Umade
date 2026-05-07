@@ -80,11 +80,11 @@ const styles = StyleSheet.create({
     marginBottom: Layout.spacing.md,
   },
   listContent: {
-    paddingHorizontal: Layout.spacing.lg,
+    paddingLeft: Layout.spacing.lg,
   },
   skeletonRow: {
     flexDirection: 'row',
-    paddingHorizontal: Layout.spacing.lg,
+    paddingLeft: Layout.spacing.lg,
     gap: Layout.spacing.md,
   },
   skeletonItem: {

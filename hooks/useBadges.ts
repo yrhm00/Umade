@@ -35,6 +35,7 @@ export function useUserBadges() {
       return (data || []) as UserBadgeWithDetails[];
     },
     enabled: !!userId,
+    staleTime: 1000 * 60 * 2,
   });
 }
 

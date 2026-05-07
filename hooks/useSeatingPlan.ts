@@ -871,24 +871,23 @@ export function useAutoAssignGuests() {
         }
       }
 
-      // 6) Assigner les invités
-      let assigned = 0;
+      // 6) Assigner les invités — calcul JS séquentiel, puis upsert bulk
+      const assignments: { id: string; table_id: string; updated_at: string }[] = [];
+      const now = new Date().toISOString();
+
       for (const guest of guestsToAssign) {
         const availableTable = tables.find((table) => (tableCounts[table.id] || 0) < table.capacity);
         if (!availableTable) break;
-
-        const { error: updateError } = await fromTable('guests')
-          .update({
-            table_id: availableTable.id,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', guest.id);
-
-        if (updateError) throw updateError;
-
+        assignments.push({ id: guest.id, table_id: availableTable.id, updated_at: now });
         tableCounts[availableTable.id] = (tableCounts[availableTable.id] || 0) + 1;
-        assigned += 1;
       }
+
+      if (assignments.length > 0) {
+        const { error: upsertError } = await fromTable('guests').upsert(assignments, { onConflict: 'id' });
+        if (upsertError) throw upsertError;
+      }
+
+      const assigned = assignments.length;
 
       return {
         assigned,
