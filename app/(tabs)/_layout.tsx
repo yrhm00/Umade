@@ -1,11 +1,12 @@
-import { LiquidTabBar } from '@/components/navigation/LiquidTabBar';
 import { Colors } from '@/constants/Colors';
 import { useTotalUnreadCount } from '@/hooks/useConversations';
 import { useAuthStore } from '@/stores/authStore';
-import { Redirect, Tabs } from 'expo-router';
-import { Calendar, MessageCircle, Search, User, Home } from 'lucide-react-native';
+import { createNativeBottomTabNavigator } from '@bottom-tabs/react-navigation';
+import { Redirect, withLayoutContext } from 'expo-router';
 import React from 'react';
 
+const { Navigator } = createNativeBottomTabNavigator();
+const Tabs = withLayoutContext(Navigator);
 
 export default function TabLayout() {
   const hasSession = useAuthStore((state) => !!state.session);
@@ -13,75 +14,62 @@ export default function TabLayout() {
   const isProvider = useAuthStore((state) => state.profile?.role === 'provider');
   const unreadCount = useTotalUnreadCount();
 
-  // Pas connecté → rediriger vers l'auth
   if (!hasSession) {
     return <Redirect href="/(auth)/welcome" />;
   }
 
-  // Connecté mais pas onboardé → rediriger vers l'onboarding
   if (!isOnboarded) {
-    return <Redirect href={"/onboarding/event-type" as any} />;
+    return <Redirect href={'/onboarding/event-type' as any} />;
   }
 
-  // Prestataire → rediriger vers le dashboard provider
   if (isProvider) {
     return <Redirect href="/(provider)/dashboard" />;
   }
 
+  const badgeText =
+    unreadCount > 0 ? (unreadCount > 9 ? '9+' : String(unreadCount)) : undefined;
+
   return (
     <Tabs
-      tabBar={(props) => <LiquidTabBar {...props} />}
       screenOptions={{
-        headerShown: false,
-        tabBarShowLabel: false, // Labels are managed in the custom bar or hidden
         tabBarActiveTintColor: Colors.primary.DEFAULT,
-        tabBarInactiveTintColor: Colors.gray[400],
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: 'Accueil',
-          tabBarIcon: ({ color, size }) => (
-            <Home size={size} color={color} />
-          ),
+          tabBarIcon: () => ({ sfSymbol: 'house.fill' }),
         }}
       />
       <Tabs.Screen
         name="search"
         options={{
           title: 'Recherche',
-          tabBarIcon: ({ color, size }) => (
-            <Search size={size} color={color} />
-          ),
+          tabBarIcon: () => ({ sfSymbol: 'magnifyingglass' }),
+          role: 'search' as any,
         }}
       />
       <Tabs.Screen
         name="events"
         options={{
           title: 'Événements',
-          tabBarIcon: ({ color, size }) => (
-            <Calendar size={size} color={color} />
-          ),
+          tabBarIcon: () => ({ sfSymbol: 'calendar' }),
         }}
       />
       <Tabs.Screen
         name="messages"
         options={{
           title: 'Messages',
-          tabBarIcon: ({ color, size }) => (
-            <MessageCircle size={size} color={color} />
-          ),
-          tabBarBadge: unreadCount > 0 ? (unreadCount > 9 ? '9+' : unreadCount) : undefined,
+          tabBarIcon: () => ({ sfSymbol: 'message.fill' }),
+          tabBarBadge: badgeText,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profil',
-          tabBarIcon: ({ color, size }) => (
-            <User size={size} color={color} />
-          ),
+          tabBarIcon: () => ({ sfSymbol: 'person.fill' }),
         }}
       />
     </Tabs>
