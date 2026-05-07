@@ -156,6 +156,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   searchContainer: {
+    flexDirection: 'row',
     paddingHorizontal: Layout.spacing.lg,
     paddingBottom: Layout.spacing.md,
   },
