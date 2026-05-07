@@ -3,17 +3,14 @@ import type { ThemeColors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
 import { fontFamily } from '@/constants/Typography';
 import {
-  ArrowRight,
-  CalendarDays,
+  ArrowUpRight,
   CheckSquare2,
   Heart,
-  MapPin,
-  Search,
   Sparkles,
 } from 'lucide-react-native';
 import type { LucideIcon } from 'lucide-react-native';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 interface HomeOverviewProps {
@@ -33,20 +30,15 @@ interface HomeOverviewProps {
   onOpenFavorites: () => void;
 }
 
-interface MetaItem {
-  icon: LucideIcon;
-  label: string;
-  accent: string;
-}
+const FESTIVE = {
+  coral: '#FF5A5F',
+  sunflower: '#F2B14A',
+  mint: '#5CC9B0',
+  blush: '#FFB6B6',
+  cream: '#FBF6EC',
+};
 
-interface QuickAction {
-  icon: LucideIcon;
-  label: string;
-  accent: string;
-  backgroundColor: string;
-  borderColor: string;
-  onPress: () => void;
-}
+const MONO = Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' })!;
 
 export function HomeOverview({
   colors,
@@ -65,233 +57,228 @@ export function HomeOverview({
   onOpenFavorites,
 }: HomeOverviewProps) {
   const eventTitle =
-    eventName || (eventLabel === 'Événement' ? 'Prépare ton événement' : eventLabel);
+    eventName || (eventLabel === 'Événement' ? 'Ton événement' : eventLabel);
   const locationLabel = location?.trim() || 'Lieu à choisir';
-  const dateLabel = getDateLabel(daysUntil);
   const detailLabel =
     typeof guestCount === 'number' && guestCount > 0
       ? `${guestCount} invités`
       : preferredStyle || 'Style à choisir';
 
-  const surface = isDark ? colors.backgroundSecondary : '#FFFFFF';
-  const softSurface = isDark ? 'rgba(255,255,255,0.06)' : '#F8F5F0';
-  const borderColor = isDark
-    ? 'rgba(143, 119, 184, 0.26)'
-    : 'rgba(95, 74, 139, 0.12)';
+  const cream = isDark ? 'rgba(255, 250, 240, 0.04)' : FESTIVE.cream;
+  const surfaceText = isDark ? colors.text : '#1A1626';
+  const muted = isDark ? colors.textSecondary : 'rgba(26, 22, 38, 0.55)';
 
-  const metaItems: MetaItem[] = [
-    { icon: CalendarDays, label: dateLabel, accent: colors.primary },
-    { icon: MapPin, label: locationLabel, accent: '#2563EB' },
-    { icon: Sparkles, label: detailLabel, accent: '#059669' },
-  ];
-
-  const quickActions: QuickAction[] = [
-    {
-      icon: CheckSquare2,
-      label: 'Checklist',
-      accent: '#059669',
-      backgroundColor: isDark ? 'rgba(5, 150, 105, 0.14)' : '#ECFDF5',
-      borderColor: isDark ? 'rgba(5, 150, 105, 0.24)' : '#A7F3D0',
-      onPress: onOpenChecklist,
-    },
-    {
-      icon: CalendarDays,
-      label: 'Événement',
-      accent: '#D97706',
-      backgroundColor: isDark ? 'rgba(217, 119, 6, 0.14)' : '#FFFBEB',
-      borderColor: isDark ? 'rgba(217, 119, 6, 0.24)' : '#FDE68A',
-      onPress: onOpenEvents,
-    },
-    {
-      icon: Heart,
-      label: 'Favoris',
-      accent: '#E11D48',
-      backgroundColor: isDark ? 'rgba(225, 29, 72, 0.14)' : '#FFF1F2',
-      borderColor: isDark ? 'rgba(225, 29, 72, 0.24)' : '#FECDD3',
-      onPress: onOpenFavorites,
-    },
-  ];
+  const counter = getCounterParts(daysUntil);
 
   return (
     <Animated.View
-      entering={FadeInDown.delay(40).duration(260)}
+      entering={FadeInDown.delay(40).duration(280)}
       style={styles.container}
     >
-      <View style={styles.headingRow}>
-        <View style={styles.headingCopy}>
-          <Text style={[styles.kicker, { color: colors.primary }]}>
-            Ton espace
-          </Text>
-          <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
-            Bonjour {firstName}
-          </Text>
-        </View>
-        <View style={[styles.emojiBadge, { backgroundColor: softSurface }]}>
-          <Text style={styles.emoji}>{eventEmoji}</Text>
-        </View>
+      {/* Greeting strip */}
+      <View style={styles.greetingRow}>
+        <View style={[styles.dot, { backgroundColor: FESTIVE.coral }]} />
+        <Text style={[styles.greetingText, { color: muted }]} numberOfLines={1}>
+          bonjour, {firstName.toLowerCase()}
+        </Text>
       </View>
 
-      <Text
-        style={[styles.subtitle, { color: colors.textSecondary }]}
-        numberOfLines={2}
-      >
-        {getHomeSubtitle(daysUntil)}
-      </Text>
-
+      {/* Hero — layered shapes + giant counter */}
       <View
         style={[
-          styles.focusCard,
+          styles.hero,
           {
-            backgroundColor: surface,
-            borderColor,
-            shadowColor: isDark ? '#000000' : '#5F4A8B',
+            backgroundColor: cream,
+            borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(26,22,38,0.06)',
           },
         ]}
       >
-        <View style={styles.focusHeader}>
-          <View style={[styles.focusIcon, { backgroundColor: softSurface }]}>
-            <CalendarDays size={20} color={colors.primary} strokeWidth={2.4} />
-          </View>
-          <View style={styles.focusCopy}>
-            <Text style={[styles.focusTitle, { color: colors.text }]} numberOfLines={1}>
-              {eventTitle}
+        {/* Decorative layered shapes */}
+        <View style={[styles.blob, styles.blobMint]} pointerEvents="none" />
+        <View style={[styles.blob, styles.blobSun]} pointerEvents="none" />
+        <View style={[styles.blob, styles.blobBlush]} pointerEvents="none" />
+        <View style={styles.confettiA} pointerEvents="none" />
+        <View style={styles.confettiB} pointerEvents="none" />
+        <View style={styles.confettiC} pointerEvents="none" />
+
+        {/* Top tag */}
+        <View style={styles.heroTopRow}>
+          <View style={[styles.tag, { borderColor: surfaceText }]}>
+            <Text style={[styles.tagText, { color: surfaceText }]}>
+              {counter.tag}
             </Text>
-            <Text
-              style={[styles.focusSubtitle, { color: colors.textSecondary }]}
-              numberOfLines={1}
-            >
-              {getFocusLine(daysUntil, locationLabel)}
-            </Text>
           </View>
+          <Text style={styles.heroEmoji}>{eventEmoji}</Text>
         </View>
 
-        <View style={styles.metaRow}>
-          {metaItems.map((item) => (
-            <MetaChip
-              key={item.label}
-              item={item}
-              colors={colors}
-              isDark={isDark}
-            />
-          ))}
+        {/* Massive counter */}
+        <View style={styles.counterRow}>
+          <Text style={[styles.counterNumber, { color: surfaceText }]} numberOfLines={1}>
+            {counter.value}
+          </Text>
+          {counter.unit ? (
+            <Text style={[styles.counterUnit, { color: surfaceText }]}>
+              {counter.unit}
+            </Text>
+          ) : null}
         </View>
 
-        <PressableScale
-          onPress={onFindProviders}
-          haptic="light"
-          accessibilityLabel="Trouver des prestataires"
-          style={[styles.primaryAction, { backgroundColor: colors.primary }]}
+        {/* Description */}
+        <Text style={[styles.heroCaption, { color: muted }]} numberOfLines={2}>
+          {counter.caption}
+        </Text>
+        <Text
+          style={[styles.heroEventName, { color: surfaceText }]}
+          numberOfLines={1}
         >
-          <View style={styles.primaryActionIcon}>
-            <Search size={18} color="#FFFFFF" strokeWidth={2.5} />
-          </View>
-          <View style={styles.primaryActionCopy}>
-            <Text style={styles.primaryActionLabel}>Trouver des prestataires</Text>
-            <Text style={styles.primaryActionCaption} numberOfLines={1}>
-              Photo, traiteur, DJ...
+          {eventTitle.toUpperCase()}
+        </Text>
+
+        {/* Meta line */}
+        <View style={styles.metaLine}>
+          <Text style={[styles.metaText, { color: surfaceText }]} numberOfLines={1}>
+            {locationLabel}
+          </Text>
+          <View style={[styles.metaSep, { backgroundColor: surfaceText }]} />
+          <Text style={[styles.metaText, { color: surfaceText }]} numberOfLines={1}>
+            {detailLabel}
+          </Text>
+        </View>
+
+        {/* Split CTA: pill label + square arrow */}
+        <View style={styles.ctaRow}>
+          <PressableScale
+            onPress={onFindProviders}
+            haptic="light"
+            accessibilityLabel="Trouver des prestataires"
+            style={[
+              styles.ctaPill,
+              {
+                backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : '#FFFFFF',
+                borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(26,22,38,0.08)',
+              },
+            ]}
+          >
+            <Text style={[styles.ctaPillLabel, { color: surfaceText }]}>
+              Trouve tes prestataires
             </Text>
-          </View>
-          <ArrowRight size={18} color="#FFFFFF" strokeWidth={2.5} />
-        </PressableScale>
+            <Text style={[styles.ctaPillSub, { color: muted }]} numberOfLines={1}>
+              photo · traiteur · DJ · fleurs
+            </Text>
+          </PressableScale>
+
+          <PressableScale
+            onPress={onFindProviders}
+            haptic="medium"
+            accessibilityLabel="Trouver des prestataires"
+            style={[styles.ctaArrow, { backgroundColor: FESTIVE.coral }]}
+          >
+            <ArrowUpRight size={26} color="#FFFFFF" strokeWidth={2.6} />
+          </PressableScale>
+        </View>
       </View>
 
-      <View style={styles.quickActionsRow}>
-        {quickActions.map((action) => (
-          <QuickActionPill key={action.label} action={action} />
-        ))}
+      {/* Festive quick actions */}
+      <View style={styles.quickRow}>
+        <QuickAction
+          label="Checklist"
+          icon={CheckSquare2}
+          accent={FESTIVE.mint}
+          onPress={onOpenChecklist}
+          isDark={isDark}
+        />
+        <QuickAction
+          label="Événements"
+          icon={Sparkles}
+          accent={FESTIVE.sunflower}
+          onPress={onOpenEvents}
+          isDark={isDark}
+        />
+        <QuickAction
+          label="Favoris"
+          icon={Heart}
+          accent={FESTIVE.coral}
+          onPress={onOpenFavorites}
+          isDark={isDark}
+        />
       </View>
     </Animated.View>
   );
 }
 
-function MetaChip({
-  item,
-  colors,
+function QuickAction({
+  label,
+  icon: Icon,
+  accent,
+  onPress,
   isDark,
 }: {
-  item: MetaItem;
-  colors: ThemeColors;
+  label: string;
+  icon: LucideIcon;
+  accent: string;
+  onPress: () => void;
   isDark: boolean;
 }) {
-  const Icon = item.icon;
-  return (
-    <View
-      style={[
-        styles.metaChip,
-        {
-          backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : '#F8F5F0',
-        },
-      ]}
-    >
-      <Icon size={13} color={item.accent} strokeWidth={2.4} />
-      <Text style={[styles.metaText, { color: colors.text }]} numberOfLines={1}>
-        {item.label}
-      </Text>
-    </View>
-  );
-}
-
-function QuickActionPill({ action }: { action: QuickAction }) {
-  const Icon = action.icon;
   return (
     <PressableScale
-      onPress={action.onPress}
+      onPress={onPress}
       haptic="light"
-      accessibilityLabel={action.label}
+      accessibilityLabel={label}
       style={[
         styles.quickAction,
         {
-          backgroundColor: action.backgroundColor,
-          borderColor: action.borderColor,
+          backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : '#FFFFFF',
+          borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(26,22,38,0.06)',
         },
       ]}
     >
-      <Icon size={16} color={action.accent} strokeWidth={2.4} />
-      <Text style={[styles.quickActionText, { color: action.accent }]} numberOfLines={1}>
-        {action.label}
+      <View style={[styles.quickIcon, { backgroundColor: accent }]}>
+        <Icon size={16} color="#FFFFFF" strokeWidth={2.6} />
+      </View>
+      <Text
+        style={[
+          styles.quickLabel,
+          { color: isDark ? '#FFFFFF' : '#1A1626' },
+        ]}
+        numberOfLines={1}
+      >
+        {label}
       </Text>
     </PressableScale>
   );
 }
 
-function getDateLabel(daysUntil: number | null) {
-  if (daysUntil === null) return 'Date à fixer';
-  if (daysUntil < 0) return 'Événement passé';
-  if (daysUntil === 0) return 'Aujourd’hui';
-  if (daysUntil === 1) return 'Demain';
-  return `J-${daysUntil}`;
-}
-
-function getFocusLine(daysUntil: number | null, locationLabel: string) {
+function getCounterParts(daysUntil: number | null) {
   if (daysUntil === null) {
-    if (locationLabel === 'Lieu à choisir') {
-      return 'Date, lieu et style à définir';
-    }
-    return `Date à fixer · ${locationLabel}`;
+    return {
+      tag: 'À PLANIFIER',
+      value: '—',
+      unit: '',
+      caption: 'Pose la date pour démarrer le compte à rebours.',
+    };
   }
   if (daysUntil < 0) {
-    return 'Garde les contacts qui ont compté';
+    return {
+      tag: 'SOUVENIR',
+      value: String(Math.abs(daysUntil)),
+      unit: Math.abs(daysUntil) === 1 ? 'j après' : 'j après',
+      caption: 'Garde tes contacts et inspirations en mémoire.',
+    };
   }
   if (daysUntil === 0) {
-    return `Aujourd’hui · ${locationLabel}`;
+    return {
+      tag: "C'EST AUJOURD'HUI",
+      value: 'J',
+      unit: 'JOUR',
+      caption: 'Profite à fond, tout est prêt.',
+    };
   }
-  if (daysUntil === 1) {
-    return `Demain · ${locationLabel}`;
-  }
-  return `J-${daysUntil} · ${locationLabel}`;
-}
-
-function getHomeSubtitle(daysUntil: number | null) {
-  if (daysUntil === null) {
-    return 'Pose les bases, puis avance vers les bons prestataires.';
-  }
-  if (daysUntil < 0) {
-    return 'Retrouve tes contacts, avis et inspirations en un coup d’œil.';
-  }
-  if (daysUntil <= 7) {
-    return 'Priorise les confirmations et les derniers échanges.';
-  }
-  return 'Inspire-toi, compare et avance sur les réservations clés.';
+  return {
+    tag: 'COMPTE À REBOURS',
+    value: String(daysUntil),
+    unit: daysUntil === 1 ? 'jour' : 'jours',
+    caption: 'avant ton',
+  };
 }
 
 const styles = StyleSheet.create({
@@ -300,147 +287,216 @@ const styles = StyleSheet.create({
     marginTop: Layout.spacing.md,
     marginBottom: Layout.spacing.lg,
   },
-  headingRow: {
+  greetingRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: Layout.spacing.md,
-  },
-  headingCopy: {
-    flex: 1,
-    minWidth: 0,
-  },
-  kicker: {
-    marginBottom: 3,
-    fontSize: Layout.fontSize.xs,
-    fontFamily: fontFamily.bold,
-    textTransform: 'uppercase',
-  },
-  title: {
-    fontSize: Layout.fontSize['3xl'],
-    fontFamily: fontFamily.bold,
-    lineHeight: 36,
-  },
-  emojiBadge: {
-    width: 40,
-    height: 40,
-    borderRadius: Layout.radius.sm,
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 8,
+    marginBottom: Layout.spacing.sm,
   },
-  emoji: {
-    fontSize: 22,
-    lineHeight: 26,
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
-  subtitle: {
-    marginTop: Layout.spacing.xs,
-    fontSize: Layout.fontSize.md,
-    fontFamily: fontFamily.medium,
-    lineHeight: 22,
+  greetingText: {
+    fontFamily: MONO,
+    fontSize: 12,
+    letterSpacing: 0.5,
   },
-  focusCard: {
-    marginTop: Layout.spacing.md,
+  hero: {
+    position: 'relative',
+    borderRadius: 28,
     borderWidth: 1,
-    borderRadius: Layout.radius.sm,
-    padding: Layout.spacing.md,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.07,
-    shadowRadius: 16,
-    elevation: 2,
+    paddingHorizontal: Layout.spacing.lg,
+    paddingTop: Layout.spacing.lg,
+    paddingBottom: Layout.spacing.lg,
+    overflow: 'hidden',
   },
-  focusHeader: {
+  // Decorative layered shapes
+  blob: {
+    position: 'absolute',
+    borderRadius: 9999,
+  },
+  blobMint: {
+    width: 220,
+    height: 220,
+    backgroundColor: FESTIVE.mint,
+    opacity: 0.18,
+    top: -70,
+    right: -60,
+  },
+  blobSun: {
+    width: 160,
+    height: 160,
+    backgroundColor: FESTIVE.sunflower,
+    opacity: 0.22,
+    top: 30,
+    right: -40,
+  },
+  blobBlush: {
+    width: 180,
+    height: 180,
+    backgroundColor: FESTIVE.blush,
+    opacity: 0.28,
+    bottom: -60,
+    left: -50,
+  },
+  confettiA: {
+    position: 'absolute',
+    width: 10,
+    height: 10,
+    borderRadius: 2,
+    backgroundColor: FESTIVE.coral,
+    transform: [{ rotate: '20deg' }],
+    top: 80,
+    right: 40,
+  },
+  confettiB: {
+    position: 'absolute',
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: FESTIVE.sunflower,
+    top: 160,
+    right: 90,
+  },
+  confettiC: {
+    position: 'absolute',
+    width: 14,
+    height: 14,
+    borderRadius: 3,
+    backgroundColor: FESTIVE.mint,
+    transform: [{ rotate: '40deg' }],
+    bottom: 90,
+    left: 30,
+    opacity: 0.6,
+  },
+  heroTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Layout.spacing.sm,
+    justifyContent: 'space-between',
   },
-  focusIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: Layout.radius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
+  tag: {
+    borderWidth: 1.5,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
   },
-  focusCopy: {
-    flex: 1,
-    minWidth: 0,
+  tagText: {
+    fontFamily: MONO,
+    fontSize: 10,
+    letterSpacing: 1.4,
   },
-  focusTitle: {
-    fontSize: Layout.fontSize.lg,
+  heroEmoji: {
+    fontSize: 28,
+  },
+  counterRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    marginTop: Layout.spacing.lg,
+    gap: 8,
+  },
+  counterNumber: {
     fontFamily: fontFamily.bold,
+    fontSize: 110,
+    lineHeight: 110,
+    letterSpacing: -4,
+    includeFontPadding: false,
   },
-  focusSubtitle: {
-    marginTop: 2,
-    fontSize: Layout.fontSize.sm,
+  counterUnit: {
     fontFamily: fontFamily.medium,
+    fontSize: 18,
+    marginBottom: 18,
   },
-  metaRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Layout.spacing.sm,
-    marginTop: Layout.spacing.md,
+  heroCaption: {
+    marginTop: 4,
+    fontFamily: fontFamily.medium,
+    fontSize: 14,
   },
-  metaChip: {
-    minHeight: 30,
-    maxWidth: '100%',
-    borderRadius: Layout.radius.sm,
+  heroEventName: {
+    marginTop: 2,
+    fontFamily: fontFamily.bold,
+    fontSize: 22,
+    letterSpacing: 1.5,
+  },
+  metaLine: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: Layout.spacing.sm,
+    gap: 10,
+    marginTop: Layout.spacing.md,
   },
   metaText: {
-    maxWidth: 190,
-    fontSize: Layout.fontSize.xs,
-    fontFamily: fontFamily.semiBold,
+    fontFamily: MONO,
+    fontSize: 12,
+    flexShrink: 1,
   },
-  primaryAction: {
-    minHeight: 58,
-    borderRadius: Layout.radius.sm,
+  metaSep: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    opacity: 0.4,
+  },
+  ctaRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'stretch',
     gap: Layout.spacing.sm,
-    marginTop: Layout.spacing.md,
-    paddingHorizontal: Layout.spacing.md,
+    marginTop: Layout.spacing.lg,
   },
-  primaryActionIcon: {
-    width: 28,
-    height: 28,
-    alignItems: 'center',
+  ctaPill: {
+    flex: 1,
+    minHeight: 64,
+    borderRadius: 18,
+    borderWidth: 1,
+    paddingHorizontal: Layout.spacing.md,
+    paddingVertical: 10,
     justifyContent: 'center',
   },
-  primaryActionCopy: {
-    flex: 1,
-    minWidth: 0,
-  },
-  primaryActionLabel: {
-    fontSize: Layout.fontSize.md,
+  ctaPillLabel: {
     fontFamily: fontFamily.bold,
-    color: '#FFFFFF',
+    fontSize: 15,
   },
-  primaryActionCaption: {
+  ctaPillSub: {
     marginTop: 2,
-    fontSize: Layout.fontSize.xs,
-    fontFamily: fontFamily.medium,
-    color: 'rgba(255,255,255,0.78)',
+    fontFamily: MONO,
+    fontSize: 11,
   },
-  quickActionsRow: {
+  ctaArrow: {
+    width: 64,
+    height: 64,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: FESTIVE.coral,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 14,
+    elevation: 6,
+  },
+  quickRow: {
     flexDirection: 'row',
     gap: Layout.spacing.sm,
-    marginTop: Layout.spacing.sm,
+    marginTop: Layout.spacing.md,
   },
   quickAction: {
     flex: 1,
-    minHeight: 44,
-    borderRadius: Layout.radius.sm,
+    minHeight: 56,
+    borderRadius: 16,
     borderWidth: 1,
+    paddingHorizontal: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 5,
-    paddingHorizontal: 6,
+    gap: 8,
   },
-  quickActionText: {
-    fontSize: Layout.fontSize.xs,
+  quickIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quickLabel: {
+    flex: 1,
     fontFamily: fontFamily.bold,
+    fontSize: 13,
   },
 });
