@@ -44,6 +44,6 @@ const styles = StyleSheet.create({
     marginBottom: Layout.spacing.md,
   },
   listContent: {
-    paddingLeft: Layout.spacing.lg,
+    paddingHorizontal: Layout.spacing.lg,
   },
 });

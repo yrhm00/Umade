@@ -1,8 +1,0 @@
-{
-  "enabledPlugins": {
-    "ruflo-core@ruflo": true,
-    "ruflo-swarm@ruflo": true,
-    "ruflo-autopilot@ruflo": true,
-    "ruflo-federation@ruflo": true
-  }
-}

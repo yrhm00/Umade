@@ -38,6 +38,5 @@ export function useClientStats() {
         queryKey: ['clientStats', userId],
         queryFn: () => fetchClientStats(userId!),
         enabled: !!userId,
-        staleTime: 1000 * 60 * 5,
     });
 }
