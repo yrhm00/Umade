@@ -20,7 +20,17 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import Animated, {
+  Extrapolation,
+  interpolate,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
+} from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+const COLLAPSE_DISTANCE = 80;
+const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
 type TabType = 'events' | 'bookings';
 type FilterType = 'upcoming' | 'past';
@@ -92,6 +102,45 @@ export default function EventsScreen() {
   const visibleEventsCount = filteredEvents.length;
   const visibleBookingsCount = filteredBookings.length;
 
+  const scrollY = useSharedValue(0);
+  const onScroll = useAnimatedScrollHandler((e) => {
+    scrollY.value = e.contentOffset.y;
+  });
+
+  const expandedStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      scrollY.value,
+      [0, COLLAPSE_DISTANCE * 0.6],
+      [1, 0],
+      Extrapolation.CLAMP
+    ),
+  }));
+
+  const collapsedStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      scrollY.value,
+      [COLLAPSE_DISTANCE * 0.5, COLLAPSE_DISTANCE],
+      [0, 1],
+      Extrapolation.CLAMP
+    ),
+  }));
+
+  const summaryWrapperStyle = useAnimatedStyle(() => {
+    const height = interpolate(
+      scrollY.value,
+      [0, COLLAPSE_DISTANCE],
+      [74, 32],
+      Extrapolation.CLAMP
+    );
+    const marginBottom = interpolate(
+      scrollY.value,
+      [0, COLLAPSE_DISTANCE],
+      [Layout.spacing.md, Layout.spacing.sm],
+      Extrapolation.CLAMP
+    );
+    return { height, marginBottom };
+  });
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <ClientHeader
@@ -105,16 +154,27 @@ export default function EventsScreen() {
         onAction={() => router.push('/event/create' as any)}
       />
 
-      <View style={styles.summaryRow}>
-        <View style={[styles.summaryCard, { backgroundColor: surface, borderColor: colors.cardBorder }]}>
-          <Text style={[styles.summaryValue, { color: colors.text }]}>{visibleEventsCount}</Text>
-          <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>événements</Text>
-        </View>
-        <View style={[styles.summaryCard, { backgroundColor: surface, borderColor: colors.cardBorder }]}>
-          <Text style={[styles.summaryValue, { color: colors.text }]}>{visibleBookingsCount}</Text>
-          <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>réservations</Text>
-        </View>
-      </View>
+      <Animated.View style={[styles.summaryWrapper, summaryWrapperStyle]}>
+        <Animated.View style={[styles.summaryRowAbsolute, expandedStyle]} pointerEvents="none">
+          <View style={[styles.summaryCard, { backgroundColor: surface, borderColor: colors.cardBorder }]}>
+            <Text style={[styles.summaryValue, { color: colors.text }]}>{visibleEventsCount}</Text>
+            <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>événements</Text>
+          </View>
+          <View style={[styles.summaryCard, { backgroundColor: surface, borderColor: colors.cardBorder }]}>
+            <Text style={[styles.summaryValue, { color: colors.text }]}>{visibleBookingsCount}</Text>
+            <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>réservations</Text>
+          </View>
+        </Animated.View>
+        <Animated.View style={[styles.summaryCompactAbsolute, collapsedStyle]} pointerEvents="none">
+          <View style={[styles.summaryPill, { backgroundColor: surface, borderColor: colors.cardBorder }]}>
+            <Text style={[styles.summaryPillValue, { color: colors.text }]}>{visibleEventsCount}</Text>
+            <Text style={[styles.summaryPillLabel, { color: colors.textSecondary }]}>événements</Text>
+            <View style={[styles.summaryPillDivider, { backgroundColor: colors.cardBorder }]} />
+            <Text style={[styles.summaryPillValue, { color: colors.text }]}>{visibleBookingsCount}</Text>
+            <Text style={[styles.summaryPillLabel, { color: colors.textSecondary }]}>réservations</Text>
+          </View>
+        </Animated.View>
+      </Animated.View>
 
       {/* Main Tabs: Events / Bookings */}
       <View style={[styles.mainTabs, { backgroundColor: softSurface }]}>
@@ -193,12 +253,14 @@ export default function EventsScreen() {
         <LoadingSpinner fullScreen message="Chargement..." />
       ) : activeTab === 'events' ? (
         filteredEvents.length > 0 ? (
-          <FlatList
+          <AnimatedFlatList
             data={filteredEvents}
-            keyExtractor={(item) => item.id}
-            renderItem={renderEventItem}
+            keyExtractor={(item: any) => item.id}
+            renderItem={renderEventItem as any}
             contentContainerStyle={styles.list}
             showsVerticalScrollIndicator={false}
+            onScroll={onScroll}
+            scrollEventThrottle={16}
             refreshControl={
               <RefreshControl
                 refreshing={eventsLoading}
@@ -232,12 +294,14 @@ export default function EventsScreen() {
           />
         )
       ) : filteredBookings.length > 0 ? (
-        <FlatList
+        <AnimatedFlatList
           data={filteredBookings}
-          keyExtractor={(item) => item.id}
-          renderItem={renderBookingItem}
+          keyExtractor={(item: any) => item.id}
+          renderItem={renderBookingItem as any}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
+          onScroll={onScroll}
+          scrollEventThrottle={16}
           refreshControl={
             <RefreshControl
               refreshing={bookingsLoading}
@@ -278,11 +342,26 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  summaryRow: {
-    flexDirection: 'row',
+  summaryWrapper: {
     paddingHorizontal: Layout.spacing.lg,
+    overflow: 'hidden',
+  },
+  summaryRowAbsolute: {
+    position: 'absolute',
+    top: 0,
+    left: Layout.spacing.lg,
+    right: Layout.spacing.lg,
+    bottom: 0,
+    flexDirection: 'row',
     gap: Layout.spacing.sm,
-    marginBottom: Layout.spacing.md,
+  },
+  summaryCompactAbsolute: {
+    position: 'absolute',
+    top: 0,
+    left: Layout.spacing.lg,
+    right: Layout.spacing.lg,
+    bottom: 0,
+    justifyContent: 'center',
   },
   summaryCard: {
     flex: 1,
@@ -300,6 +379,29 @@ const styles = StyleSheet.create({
     fontSize: Layout.fontSize.xs,
     fontFamily: fontFamily.medium,
     textTransform: 'uppercase',
+  },
+  summaryPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: Layout.radius.sm,
+    paddingHorizontal: Layout.spacing.md,
+    paddingVertical: 6,
+    gap: 6,
+  },
+  summaryPillValue: {
+    fontSize: Layout.fontSize.sm,
+    fontFamily: fontFamily.bold,
+  },
+  summaryPillLabel: {
+    fontSize: Layout.fontSize.xs,
+    fontFamily: fontFamily.medium,
+    textTransform: 'uppercase',
+  },
+  summaryPillDivider: {
+    width: 1,
+    height: 12,
+    marginHorizontal: Layout.spacing.xs,
   },
   mainTabs: {
     flexDirection: 'row',
