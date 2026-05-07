@@ -153,7 +153,7 @@ export function useUnreadNotificationsCount() {
       return count;
     },
     enabled: !!userId,
-    // Pas de refetchInterval : la subscription Realtime gère les nouvelles notifications
+    refetchInterval: 30000, // Rafraîchir toutes les 30 secondes
   });
 }
 

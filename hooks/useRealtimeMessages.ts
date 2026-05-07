@@ -62,22 +62,12 @@ export function useRealtimeMessages(conversationId: string | undefined) {
           // Skip our own messages (already added via optimistic update)
           if (newMsg.sender_id === userId) return;
 
-          // Resolve sender from cache first, fetch only on miss
-          const cachedProfile = queryClient.getQueryData<{ id: string; full_name: string | null; avatar_url: string | null }>(
-            ['profiles', newMsg.sender_id]
-          );
-          let sender = cachedProfile ?? null;
-          if (!sender) {
-            const { data } = await supabase
-              .from('profiles')
-              .select('id, full_name, avatar_url')
-              .eq('id', newMsg.sender_id)
-              .single();
-            sender = data;
-            if (data) {
-              queryClient.setQueryData(['profiles', newMsg.sender_id], data);
-            }
-          }
+          // Fetch sender info
+          const { data: sender } = await supabase
+            .from('profiles')
+            .select('id, full_name, avatar_url')
+            .eq('id', newMsg.sender_id)
+            .single();
 
           const messageWithSender: MessageWithSender = {
             id: newMsg.id,

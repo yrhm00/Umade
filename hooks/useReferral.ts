@@ -291,8 +291,7 @@ function generateReferralCode(): string {
 }
 
 /**
- * Fonction helper pour ajouter des crédits — opération atomique via RPC
- * Évite la race condition du pattern read-then-update
+ * Fonction helper pour ajouter des crédits
  */
 async function addCredits(
   userId: string,
@@ -300,11 +299,35 @@ async function addCredits(
   type: string,
   description: string
 ): Promise<void> {
-  const { error } = await (supabase as any).rpc('add_user_credits', {
-    p_user_id: userId,
-    p_amount: amount,
-    p_type: type,
-    p_description: description,
-  });
-  if (error) throw error;
+  // Mise à jour du solde
+  const { data: credits } = await fromTable('user_credits')
+    .select('balance, lifetime_earned')
+    .eq('user_id', userId)
+    .single();
+
+  if (credits) {
+    await fromTable('user_credits')
+      .update({
+        balance: (credits.balance || 0) + amount,
+        lifetime_earned: (credits.lifetime_earned || 0) + amount,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('user_id', userId);
+  } else {
+    await fromTable('user_credits')
+      .insert({
+        user_id: userId,
+        balance: amount,
+        lifetime_earned: amount,
+      });
+  }
+
+  // Enregistrement de la transaction
+  await fromTable('credit_transactions')
+    .insert({
+      user_id: userId,
+      amount,
+      type,
+      description,
+    });
 }

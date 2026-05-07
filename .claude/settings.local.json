@@ -18,32 +18,7 @@
       "Bash(npx expo export:*)",
       "Bash(ls:*)",
       "Bash(npx supabase:*)",
-      "Bash(curl:*)",
-      "Bash(cat:*)",
-      "Bash(head:*)",
-      "Bash(npx expo prebuild:*)",
-      "Bash(open:*)",
-      "Bash(xargs:*)",
-      "Bash(wc:*)",
-      "Bash(comm:*)",
-      "Bash(find:*)",
-      "Bash(grep:*)",
-      "Bash(done)",
-      "Bash(unzip:*)",
-      "Bash(xxd:*)",
-      "Bash(./node_modules/.bin/tsc:*)",
-      "Bash(npx -p typescript tsc:*)",
-      "Bash(node_modules/.bin/tsc:*)",
-      "Bash(git commit:*)",
-      "Bash(npm run:*)",
-      "Bash(find /Users/yassin/Desktop/umade -type f \\\\\\(-name *.svg -o -name *.pdf \\\\\\) -not -path */node_modules/* -not -path */.next/* -not -path */.expo/* -not -path */Pods/*)",
-      "Bash(find /Users/yassin/Desktop/umade -maxdepth 3 \\\\\\(-name logo* -o -name *brand* -o -name *hero* \\\\\\) -type f)",
-      "Bash(gh repo *)",
-      "Bash(npx *)",
-      "Bash(xcrun simctl *)",
-      "Bash(pkill -f \"expo start\")",
-      "Bash(lsof -ti:8081)",
-      "Bash(xcrun xctrace *)"
+      "Bash(curl:*)"
     ]
   }
 }

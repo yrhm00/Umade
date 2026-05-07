@@ -608,20 +608,20 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.medium,
   },
   categoriesContainer: {
-    paddingLeft: Layout.spacing.lg,
+    paddingHorizontal: Layout.spacing.lg,
     gap: Layout.spacing.sm,
   },
   quickFilters: {
     marginTop: Layout.spacing.md,
   },
   quickFiltersList: {
-    paddingLeft: Layout.spacing.lg,
+    paddingHorizontal: Layout.spacing.lg,
   },
   categoryGap: {
     width: Layout.spacing.sm,
   },
   providersContainer: {
-    paddingLeft: Layout.spacing.lg,
+    paddingHorizontal: Layout.spacing.lg,
   },
   providerSeparator: {
     width: Layout.spacing.md,
