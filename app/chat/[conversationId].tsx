@@ -3,7 +3,7 @@
  * Dark Mode Support
  */
 
-import { BookingActionCard } from '@/components/chat/BookingActionCard';
+import { BookingActionCarousel } from '@/components/chat/BookingActionCarousel';
 import { ChatHeader } from '@/components/chat/ChatHeader';
 import { ChatInput } from '@/components/chat/ChatInput';
 import { DateSeparator } from '@/components/chat/DateSeparator';
@@ -145,9 +145,15 @@ export default function ChatScreen() {
     // Fallback: si je ne suis pas le client, je suis côté prestataire.
     return conversation.client_id !== userId;
   }, [conversation, userId]);
-  const { booking, updateStatus, isUpdating } = useChatBooking(conversationId);
-  const shouldShowPinnedBookingCard =
-    !!booking && (booking.status === 'pending' || booking.status === 'confirmed');
+  const { bookings, updateStatus, isUpdating } = useChatBooking(conversationId);
+  const actionableBookings = useMemo(
+    () =>
+      bookings.filter(
+        (b) => b.status === 'pending' || b.status === 'confirmed'
+      ),
+    [bookings]
+  );
+  const shouldShowPinnedBookingCard = actionableBookings.length > 0;
   const handleUpdateBookingStatus = useCallback(
     async (bookingId: string, status: 'pending' | 'confirmed' | 'cancelled' | 'completed') => {
       await updateStatus({ bookingId, status });
@@ -434,11 +440,11 @@ export default function ChatScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
       <ChatHeader conversationId={conversationId ?? ''} />
 
-      {/* Booking Action Card (Pending Request) */}
-      {shouldShowPinnedBookingCard && booking && (
+      {/* Booking Action Card (Pending Request) — swipeable when multiple */}
+      {shouldShowPinnedBookingCard && (
         <View style={[styles.actionCardContainer, { backgroundColor: colors.background }]}>
-          <BookingActionCard
-            booking={booking}
+          <BookingActionCarousel
+            bookings={actionableBookings}
             isProvider={isProvider}
             onUpdateStatus={handleUpdateBookingStatus}
             isUpdating={isUpdating}
