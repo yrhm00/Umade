@@ -498,7 +498,7 @@ export default function BookingDetailsScreen() {
           message,
         });
       } catch (error) {
-        console.error('auto_deposit_reminder_failed', error);
+        if (__DEV__) console.error('auto_deposit_reminder_failed', error);
         sessionAutoReminderAtRef.current = 0;
       } finally {
         autoReminderInFlightRef.current = false;

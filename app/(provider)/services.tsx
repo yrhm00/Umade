@@ -68,12 +68,13 @@ export default function ServicesScreen() {
         queryFn: async () => {
             if (!userId) throw new Error('User ID not found');
 
-            const { data: provider } = await supabase
+            const { data: provider, error: providerError } = await supabase
                 .from('providers')
                 .select('id')
                 .eq('user_id', userId)
-                .single();
+                .maybeSingle();
 
+            if (providerError) throw providerError;
             if (!provider) throw new Error('Provider not found');
 
             const { data, error } = await supabase

@@ -96,14 +96,14 @@ export default function ProviderPortfolioScreen() {
                 .from('portfolio')
                 .getPublicUrl(fileName);
 
-            // Get max order to append at end
+            // Get max order to append at end (maybeSingle handles empty portfolio)
             const { data: maxOrderData } = await supabase
                 .from('portfolio_images')
                 .select('display_order')
                 .eq('provider_id', provider.id)
                 .order('display_order', { ascending: false })
                 .limit(1)
-                .single();
+                .maybeSingle();
 
             const nextOrder = (maxOrderData?.display_order || 0) + 1;
 
@@ -180,6 +180,7 @@ export default function ProviderPortfolioScreen() {
     };
 
     const handleDragEnd = async ({ data }: { data: PortfolioImage[] }) => {
+        const previous = queryClient.getQueryData(['portfolio', profile?.id]);
         // Optimistic update
         queryClient.setQueryData(['portfolio', profile?.id], data);
 
@@ -189,15 +190,23 @@ export default function ProviderPortfolioScreen() {
                 display_order: idx + 1,
             }));
 
-            // Sequential update for simplicity
-            for (const update of updates) {
-                await supabase
-                    .from('portfolio_images')
-                    .update({ display_order: update.display_order })
-                    .eq('id', update.id);
-            }
+            // Run all updates in parallel and surface any failure
+            const results = await Promise.all(
+                updates.map((update) =>
+                    supabase
+                        .from('portfolio_images')
+                        .update({ display_order: update.display_order })
+                        .eq('id', update.id)
+                )
+            );
+            const firstError = results.find((r) => r.error)?.error;
+            if (firstError) throw firstError;
         } catch (error) {
-            console.error("Reorder failed", error);
+            if (__DEV__) console.error('Reorder failed', error);
+            // Roll back optimistic order then refetch from source of truth
+            if (previous !== undefined) {
+                queryClient.setQueryData(['portfolio', profile?.id], previous);
+            }
             queryClient.invalidateQueries({ queryKey: ['portfolio'] });
             toast.error("Impossible de sauvegarder l'ordre");
         }

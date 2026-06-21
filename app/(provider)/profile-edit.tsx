@@ -178,7 +178,7 @@ export default function ProviderProfileEditScreen() {
         },
         onError: (error) => {
             toast.error('Impossible de mettre à jour le profil');
-            console.error('Update error:', error);
+            if (__DEV__) console.error('Update error:', error);
         },
     });
 
@@ -246,16 +246,11 @@ export default function ProviderProfileEditScreen() {
     };
 
     const uploadImage = async (base64: string) => {
-        if (!profile?.id) {
-            console.log('No profile ID, aborting upload');
-            return;
-        }
+        if (!profile?.id) return;
 
-        console.log('Starting upload, base64 length:', base64.length);
         setIsUploading(true);
         try {
             const fileName = `avatar-${profile.id}-${Date.now()}.jpg`;
-            console.log('File path:', fileName);
 
             // Decode base64 to array buffer
             const binaryString = atob(base64);
@@ -263,17 +258,14 @@ export default function ProviderProfileEditScreen() {
             for (let i = 0; i < binaryString.length; i++) {
                 bytes[i] = binaryString.charCodeAt(i);
             }
-            console.log('Bytes array size:', bytes.length);
 
             // Upload to Supabase Storage
-            const { data: uploadData, error: uploadError } = await supabase.storage
+            const { error: uploadError } = await supabase.storage
                 .from('avatars')
                 .upload(fileName, bytes.buffer, {
                     contentType: 'image/jpeg',
                     upsert: true,
                 });
-
-            console.log('Upload result:', { uploadData, uploadError });
 
             if (uploadError) throw uploadError;
 
@@ -282,10 +274,9 @@ export default function ProviderProfileEditScreen() {
                 .from('avatars')
                 .getPublicUrl(fileName);
 
-            console.log('Public URL:', publicUrl);
             setFormData((prev) => ({ ...prev, avatar_url: publicUrl }));
         } catch (error) {
-            console.error('Upload error:', error);
+            if (__DEV__) console.error('Upload error:', error);
             toast.error('Impossible de télécharger l\'image');
         } finally {
             setIsUploading(false);
