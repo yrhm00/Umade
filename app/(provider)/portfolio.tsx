@@ -220,6 +220,8 @@ export default function ProviderPortfolioScreen() {
                     onLongPress={drag}
                     disabled={isActive}
                     activeOpacity={1}
+                    accessibilityLabel={`Photo ${index !== undefined ? index + 1 : ''}, maintenir pour réorganiser`}
+                    accessibilityRole="button"
                     style={[
                         styles.imageContainer,
                         { opacity: isActive ? 0.7 : 1 }
@@ -242,6 +244,8 @@ export default function ProviderPortfolioScreen() {
                     <TouchableOpacity
                         style={styles.deleteButton}
                         onPress={() => handleDelete(item.id)}
+                        accessibilityLabel="Supprimer cette photo"
+                        accessibilityRole="button"
                     >
                         <Trash2 size={20} color={Colors.error.DEFAULT} />
                     </TouchableOpacity>
