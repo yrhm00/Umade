@@ -62,12 +62,15 @@ export function useRealtimeMessages(conversationId: string | undefined) {
           // Skip our own messages (already added via optimistic update)
           if (newMsg.sender_id === userId) return;
 
-          // Fetch sender info
-          const { data: sender } = await supabase
+          // Fetch sender info (best-effort — message still rendered if sender lookup fails)
+          const { data: sender, error: senderError } = await supabase
             .from('profiles')
             .select('id, full_name, avatar_url')
             .eq('id', newMsg.sender_id)
-            .single();
+            .maybeSingle();
+          if (senderError && __DEV__) {
+            console.warn('[useRealtimeMessages] sender lookup failed:', senderError.message);
+          }
 
           const messageWithSender: MessageWithSender = {
             id: newMsg.id,

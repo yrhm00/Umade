@@ -141,21 +141,32 @@ export default function ProviderAvailabilityScreen() {
 
             if (deleteError) throw deleteError;
 
-            // Insert new slots in batches (Supabase has limit)
+            // Insert new slots in batches (Supabase has limit). If a batch
+            // fails mid-way, roll back by deleting everything we just inserted
+            // so the schedule isn't left in a half-applied state.
             const BATCH_SIZE = 100;
-            for (let i = 0; i < slots.length; i += BATCH_SIZE) {
-                const batch = slots.slice(i, i + BATCH_SIZE);
-                const { error: insertError } = await supabase
-                    .from('availabilities')
-                    .insert(batch);
+            try {
+                for (let i = 0; i < slots.length; i += BATCH_SIZE) {
+                    const batch = slots.slice(i, i + BATCH_SIZE);
+                    const { error: insertError } = await supabase
+                        .from('availabilities')
+                        .insert(batch);
 
-                if (insertError) throw insertError;
+                    if (insertError) throw insertError;
+                }
+            } catch (insertError) {
+                await supabase
+                    .from('availabilities')
+                    .delete()
+                    .eq('provider_id', provider.id)
+                    .gte('date', tomorrowStr);
+                throw insertError;
             }
 
             toast.success('Vos disponibilités ont été enregistrées et sont maintenant visibles pour les clients.');
             goBackOrFallback(router);
         } catch (error) {
-            console.error('Error saving schedule:', error);
+            if (__DEV__) console.error('Error saving schedule:', error);
             toast.error('Impossible de sauvegarder les disponibilités dans la base de données.');
         } finally {
             setIsSaving(false);
