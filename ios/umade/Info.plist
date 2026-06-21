@@ -45,14 +45,18 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSCameraUsageDescription</key>
-	<string>Allow $(PRODUCT_NAME) to access your camera</string>
+	<string>Umade utilise l'appareil photo pour vous permettre d'ajouter des photos à vos inspirations, à votre portfolio prestataire et à votre photo de profil.</string>
 	<key>NSFaceIDUsageDescription</key>
-	<string>Allow $(PRODUCT_NAME) to access your Face ID biometric data.</string>
+	<string>Umade utilise Face ID pour sécuriser l'accès à votre compte sans avoir à ressaisir votre mot de passe.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Allow $(PRODUCT_NAME) to access your microphone</string>
+	<string>Umade peut utiliser votre micro lorsque vous enregistrez une vidéo pour votre portfolio prestataire.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Allow $(PRODUCT_NAME) to access your photos</string>
+	<string>Umade accède à votre bibliothèque photo pour vous permettre de partager des inspirations, illustrer votre portfolio et choisir une photo de profil.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Umade enregistre des images dans votre bibliothèque photo (par exemple, sauvegarde d'une inspiration ou export d'un contrat).</string>
 	<key>NSUserActivityTypes</key>
 	<array>
 		<string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>
