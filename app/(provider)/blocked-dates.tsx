@@ -126,6 +126,8 @@ export default function BlockedDatesScreen() {
                     style={styles.deleteButton}
                     onPress={() => handleDeletePeriod(index, item)}
                     disabled={deleteMutation.isPending}
+                    accessibilityLabel="Supprimer cette période bloquée"
+                    accessibilityRole="button"
                 >
                     <Trash2 size={20} color={Colors.error.DEFAULT} />
                 </TouchableOpacity>

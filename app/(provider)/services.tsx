@@ -112,13 +112,13 @@ export default function ServicesScreen() {
             return data;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['provider', 'services'] });
+            queryClient.invalidateQueries({ queryKey: ['provider', 'services', userId] });
             closeModal();
             toast.success('Service ajouté avec succès');
         },
         onError: (error) => {
             toast.error("Impossible d'ajouter le service");
-            console.error(error);
+            if (__DEV__) console.error(error);
         },
     });
 
@@ -136,13 +136,13 @@ export default function ServicesScreen() {
 	            if (error) throw error;
 	        },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['provider', 'services'] });
+            queryClient.invalidateQueries({ queryKey: ['provider', 'services', userId] });
             closeModal();
             toast.success('Service mis à jour avec succès');
         },
         onError: (error) => {
             toast.error("Impossible de mettre à jour le service");
-            console.error(error);
+            if (__DEV__) console.error(error);
         },
     });
 
@@ -156,12 +156,12 @@ export default function ServicesScreen() {
             if (error) throw error;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['provider', 'services'] });
+            queryClient.invalidateQueries({ queryKey: ['provider', 'services', userId] });
             toast.success('Service supprimé');
         },
         onError: (error) => {
             toast.error("Impossible de supprimer le service");
-            console.error(error);
+            if (__DEV__) console.error(error);
         },
     });
 
@@ -307,6 +307,8 @@ export default function ServicesScreen() {
                             <TouchableOpacity
                                 style={styles.deleteButton}
                                 onPress={() => handleDelete(service.id)}
+                                accessibilityLabel={`Supprimer le service ${service.name}`}
+                                accessibilityRole="button"
                             >
                                 <Trash2 size={20} color={Colors.gray[400]} />
                             </TouchableOpacity>
