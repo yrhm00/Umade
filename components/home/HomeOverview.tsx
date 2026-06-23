@@ -251,7 +251,7 @@ function getCounter(daysUntil: number | null) {
 
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: Layout.spacing.lg,
+    marginHorizontal: Layout.spacing.md,
     marginBottom: Layout.spacing.md,
     gap: Layout.spacing.md,
   },
@@ -372,11 +372,11 @@ const styles = StyleSheet.create({
     flex: 1,
     borderWidth: 1,
     borderRadius: 14,
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
     minHeight: 48,
   },
   quickIconWrap: {
