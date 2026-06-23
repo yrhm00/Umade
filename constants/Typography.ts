@@ -1,10 +1,10 @@
 import { TextStyle } from 'react-native';
 
 export const fontFamily = {
-  regular: 'PlusJakartaSans-Regular',
-  medium: 'PlusJakartaSans-Medium',
-  semiBold: 'PlusJakartaSans-SemiBold',
-  bold: 'PlusJakartaSans-Bold',
+  regular: 'Inter-Regular',
+  medium: 'Inter-Medium',
+  semiBold: 'Inter-SemiBold',
+  bold: 'Inter-Bold',
 } as const;
 
 /**

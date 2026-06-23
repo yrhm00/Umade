@@ -3,13 +3,13 @@ import type { ThemeColors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
 import { fontFamily } from '@/constants/Typography';
 import {
-  ArrowRight,
+  ArrowUpRight,
   CalendarDays,
   CheckSquare2,
   Heart,
   MapPin,
-  Search,
   Sparkles,
+  Users,
 } from 'lucide-react-native';
 import type { LucideIcon } from 'lucide-react-native';
 import React from 'react';
@@ -33,18 +33,10 @@ interface HomeOverviewProps {
   onOpenFavorites: () => void;
 }
 
-interface MetaItem {
-  icon: LucideIcon;
-  label: string;
-  accent: string;
-}
-
 interface QuickAction {
   icon: LucideIcon;
   label: string;
   accent: string;
-  backgroundColor: string;
-  borderColor: string;
   onPress: () => void;
 }
 
@@ -54,7 +46,6 @@ export function HomeOverview({
   firstName,
   eventName,
   eventLabel,
-  eventEmoji,
   daysUntil,
   location,
   guestCount,
@@ -65,382 +56,340 @@ export function HomeOverview({
   onOpenFavorites,
 }: HomeOverviewProps) {
   const eventTitle =
-    eventName || (eventLabel === 'Événement' ? 'Prépare ton événement' : eventLabel);
-  const locationLabel = location?.trim() || 'Lieu à choisir';
-  const dateLabel = getDateLabel(daysUntil);
-  const detailLabel =
-    typeof guestCount === 'number' && guestCount > 0
-      ? `${guestCount} invités`
-      : preferredStyle || 'Style à choisir';
+    eventName || (eventLabel === 'Événement' ? 'Ton événement' : eventLabel);
+  const locationLabel = location?.trim() || 'Lieu à définir';
+  const counter = getCounter(daysUntil);
 
   const surface = isDark ? colors.backgroundSecondary : '#FFFFFF';
-  const softSurface = isDark ? 'rgba(255,255,255,0.06)' : '#F8F5F0';
+  const subtle = isDark ? 'rgba(255,255,255,0.04)' : '#FAFAFA';
   const borderColor = isDark
-    ? 'rgba(143, 119, 184, 0.26)'
-    : 'rgba(95, 74, 139, 0.12)';
+    ? 'rgba(255,255,255,0.08)'
+    : 'rgba(17, 24, 39, 0.08)';
+  const mutedText = isDark ? 'rgba(255,255,255,0.5)' : 'rgba(17, 24, 39, 0.5)';
 
-  const metaItems: MetaItem[] = [
-    { icon: CalendarDays, label: dateLabel, accent: colors.primary },
-    { icon: MapPin, label: locationLabel, accent: '#2563EB' },
-    { icon: Sparkles, label: detailLabel, accent: '#059669' },
+  const metaItems = [
+    { icon: MapPin, label: locationLabel },
+    typeof guestCount === 'number' && guestCount > 0
+      ? { icon: Users, label: `${guestCount} invités` }
+      : preferredStyle
+        ? { icon: Sparkles, label: preferredStyle }
+        : { icon: Sparkles, label: 'Style à définir' },
   ];
 
   const quickActions: QuickAction[] = [
     {
       icon: CheckSquare2,
       label: 'Checklist',
-      accent: '#059669',
-      backgroundColor: isDark ? 'rgba(5, 150, 105, 0.14)' : '#ECFDF5',
-      borderColor: isDark ? 'rgba(5, 150, 105, 0.24)' : '#A7F3D0',
+      accent: '#10B981',
       onPress: onOpenChecklist,
     },
     {
       icon: CalendarDays,
-      label: 'Événement',
-      accent: '#D97706',
-      backgroundColor: isDark ? 'rgba(217, 119, 6, 0.14)' : '#FFFBEB',
-      borderColor: isDark ? 'rgba(217, 119, 6, 0.24)' : '#FDE68A',
+      label: 'Événements',
+      accent: '#F59E0B',
       onPress: onOpenEvents,
     },
     {
       icon: Heart,
       label: 'Favoris',
-      accent: '#E11D48',
-      backgroundColor: isDark ? 'rgba(225, 29, 72, 0.14)' : '#FFF1F2',
-      borderColor: isDark ? 'rgba(225, 29, 72, 0.24)' : '#FECDD3',
+      accent: '#EF4444',
       onPress: onOpenFavorites,
     },
   ];
 
   return (
     <Animated.View
-      entering={FadeInDown.delay(40).duration(260)}
+      entering={FadeInDown.duration(280)}
       style={styles.container}
     >
-      <View style={styles.headingRow}>
-        <View style={styles.headingCopy}>
-          <Text style={[styles.kicker, { color: colors.primary }]}>
-            Ton espace
-          </Text>
-          <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
-            Bonjour {firstName}
-          </Text>
-        </View>
-        <View style={[styles.emojiBadge, { backgroundColor: softSurface }]}>
-          <Text style={styles.emoji}>{eventEmoji}</Text>
-        </View>
+      {/* Greeting */}
+      <View style={styles.greeting}>
+        <Text style={[styles.greetingHello, { color: mutedText }]}>
+          Bonjour
+        </Text>
+        <Text style={[styles.greetingName, { color: colors.text }]} numberOfLines={1}>
+          {firstName}
+        </Text>
       </View>
 
-      <Text
-        style={[styles.subtitle, { color: colors.textSecondary }]}
-        numberOfLines={2}
-      >
-        {getHomeSubtitle(daysUntil)}
-      </Text>
-
+      {/* Hero card */}
       <View
         style={[
-          styles.focusCard,
-          {
-            backgroundColor: surface,
-            borderColor,
-            shadowColor: isDark ? '#000000' : '#5F4A8B',
-          },
+          styles.heroCard,
+          { backgroundColor: surface, borderColor },
         ]}
       >
-        <View style={styles.focusHeader}>
-          <View style={[styles.focusIcon, { backgroundColor: softSurface }]}>
-            <CalendarDays size={20} color={colors.primary} strokeWidth={2.4} />
-          </View>
-          <View style={styles.focusCopy}>
-            <Text style={[styles.focusTitle, { color: colors.text }]} numberOfLines={1}>
-              {eventTitle}
+        <View style={styles.heroTop}>
+          <View style={styles.heroLeft}>
+            <Text style={[styles.heroEyebrow, { color: mutedText }]}>
+              {counter.eyebrow}
             </Text>
-            <Text
-              style={[styles.focusSubtitle, { color: colors.textSecondary }]}
-              numberOfLines={1}
-            >
-              {getFocusLine(daysUntil, locationLabel)}
-            </Text>
+            <View style={styles.heroCounterRow}>
+              <Text
+                style={[
+                  styles.heroCounter,
+                  counter.isPlaceholder && styles.heroCounterPlaceholder,
+                  { color: colors.text },
+                ]}
+                numberOfLines={1}
+              >
+                {counter.value}
+              </Text>
+              {counter.unit ? (
+                <Text style={[styles.heroCounterUnit, { color: mutedText }]}>
+                  {counter.unit}
+                </Text>
+              ) : null}
+            </View>
           </View>
         </View>
 
-        <View style={styles.metaRow}>
-          {metaItems.map((item) => (
-            <MetaChip
-              key={item.label}
-              item={item}
-              colors={colors}
-              isDark={isDark}
-            />
-          ))}
+        <View style={styles.heroDivider} />
+
+        <View style={styles.heroBody}>
+          <Text style={[styles.heroTitle, { color: colors.text }]} numberOfLines={1}>
+            {eventTitle}
+          </Text>
+          <View style={styles.heroMetaRow}>
+            {metaItems.map((item, i) => (
+              <View key={i} style={styles.heroMetaItem}>
+                <item.icon size={13} color={mutedText} strokeWidth={2} />
+                <Text
+                  style={[styles.heroMetaText, { color: mutedText }]}
+                  numberOfLines={1}
+                >
+                  {item.label}
+                </Text>
+              </View>
+            ))}
+          </View>
         </View>
 
         <PressableScale
           onPress={onFindProviders}
           haptic="light"
           accessibilityLabel="Trouver des prestataires"
-          style={[styles.primaryAction, { backgroundColor: colors.primary }]}
+          style={[styles.heroCta, { backgroundColor: colors.text }]}
         >
-          <View style={styles.primaryActionIcon}>
-            <Search size={18} color="#FFFFFF" strokeWidth={2.5} />
-          </View>
-          <View style={styles.primaryActionCopy}>
-            <Text style={styles.primaryActionLabel}>Trouver des prestataires</Text>
-            <Text style={styles.primaryActionCaption} numberOfLines={1}>
-              Photo, traiteur, DJ...
-            </Text>
-          </View>
-          <ArrowRight size={18} color="#FFFFFF" strokeWidth={2.5} />
+          <Text style={[styles.heroCtaLabel, { color: surface }]}>
+            Trouver des prestataires
+          </Text>
+          <ArrowUpRight size={18} color={surface} strokeWidth={2.2} />
         </PressableScale>
       </View>
 
-      <View style={styles.quickActionsRow}>
+      {/* Quick actions */}
+      <View style={styles.quickRow}>
         {quickActions.map((action) => (
-          <QuickActionPill key={action.label} action={action} />
+          <QuickActionTile
+            key={action.label}
+            action={action}
+            surface={surface}
+            borderColor={borderColor}
+            mutedText={mutedText}
+            textColor={colors.text}
+          />
         ))}
       </View>
     </Animated.View>
   );
 }
 
-function MetaChip({
-  item,
-  colors,
-  isDark,
+function QuickActionTile({
+  action,
+  surface,
+  borderColor,
+  mutedText,
+  textColor,
 }: {
-  item: MetaItem;
-  colors: ThemeColors;
-  isDark: boolean;
+  action: QuickAction;
+  surface: string;
+  borderColor: string;
+  mutedText: string;
+  textColor: string;
 }) {
-  const Icon = item.icon;
-  return (
-    <View
-      style={[
-        styles.metaChip,
-        {
-          backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : '#F8F5F0',
-        },
-      ]}
-    >
-      <Icon size={13} color={item.accent} strokeWidth={2.4} />
-      <Text style={[styles.metaText, { color: colors.text }]} numberOfLines={1}>
-        {item.label}
-      </Text>
-    </View>
-  );
-}
-
-function QuickActionPill({ action }: { action: QuickAction }) {
   const Icon = action.icon;
   return (
     <PressableScale
       onPress={action.onPress}
       haptic="light"
       accessibilityLabel={action.label}
-      style={[
-        styles.quickAction,
-        {
-          backgroundColor: action.backgroundColor,
-          borderColor: action.borderColor,
-        },
-      ]}
+      style={[styles.quickTile, { backgroundColor: surface, borderColor }]}
     >
-      <Icon size={16} color={action.accent} strokeWidth={2.4} />
-      <Text style={[styles.quickActionText, { color: action.accent }]} numberOfLines={1}>
+      <View style={[styles.quickIconWrap, { backgroundColor: action.accent + '14' }]}>
+        <Icon size={16} color={action.accent} strokeWidth={2.2} />
+      </View>
+      <Text style={[styles.quickLabel, { color: textColor }]} numberOfLines={1}>
         {action.label}
       </Text>
     </PressableScale>
   );
 }
 
-function getDateLabel(daysUntil: number | null) {
-  if (daysUntil === null) return 'Date à fixer';
-  if (daysUntil < 0) return 'Événement passé';
-  if (daysUntil === 0) return 'Aujourd’hui';
-  if (daysUntil === 1) return 'Demain';
-  return `J-${daysUntil}`;
-}
-
-function getFocusLine(daysUntil: number | null, locationLabel: string) {
+function getCounter(daysUntil: number | null) {
   if (daysUntil === null) {
-    if (locationLabel === 'Lieu à choisir') {
-      return 'Date, lieu et style à définir';
-    }
-    return `Date à fixer · ${locationLabel}`;
+    return { eyebrow: 'À PLANIFIER', value: '—', unit: 'date à définir', isPlaceholder: true };
   }
   if (daysUntil < 0) {
-    return 'Garde les contacts qui ont compté';
+    return {
+      eyebrow: 'SOUVENIR',
+      value: String(Math.abs(daysUntil)),
+      unit: Math.abs(daysUntil) === 1 ? 'jour passé' : 'jours passés',
+      isPlaceholder: false,
+    };
   }
   if (daysUntil === 0) {
-    return `Aujourd’hui · ${locationLabel}`;
+    return { eyebrow: "AUJOURD'HUI", value: 'J', unit: 'jour J', isPlaceholder: false };
   }
-  if (daysUntil === 1) {
-    return `Demain · ${locationLabel}`;
-  }
-  return `J-${daysUntil} · ${locationLabel}`;
-}
-
-function getHomeSubtitle(daysUntil: number | null) {
-  if (daysUntil === null) {
-    return 'Pose les bases, puis avance vers les bons prestataires.';
-  }
-  if (daysUntil < 0) {
-    return 'Retrouve tes contacts, avis et inspirations en un coup d’œil.';
-  }
-  if (daysUntil <= 7) {
-    return 'Priorise les confirmations et les derniers échanges.';
-  }
-  return 'Inspire-toi, compare et avance sur les réservations clés.';
+  return {
+    eyebrow: 'COMPTE À REBOURS',
+    value: `J-${daysUntil}`,
+    unit: daysUntil === 1 ? 'jour restant' : 'jours restants',
+    isPlaceholder: false,
+  };
 }
 
 const styles = StyleSheet.create({
   container: {
     marginHorizontal: Layout.spacing.lg,
-    marginTop: Layout.spacing.md,
-    marginBottom: Layout.spacing.lg,
+    marginBottom: Layout.spacing.md,
+    gap: Layout.spacing.md,
   },
-  headingRow: {
+
+  // Greeting
+  greeting: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 8,
+    marginTop: 4,
+  },
+  greetingHello: {
+    fontFamily: fontFamily.medium,
+    fontSize: 22,
+    letterSpacing: -0.4,
+  },
+  greetingName: {
+    fontFamily: fontFamily.bold,
+    fontSize: 22,
+    letterSpacing: -0.6,
+    flexShrink: 1,
+  },
+
+  // Hero card
+  heroCard: {
+    borderWidth: 1,
+    borderRadius: 22,
+    padding: 18,
+  },
+  heroTop: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
-    gap: Layout.spacing.md,
   },
-  headingCopy: {
+  heroLeft: {
     flex: 1,
-    minWidth: 0,
   },
-  kicker: {
-    marginBottom: 3,
-    fontSize: Layout.fontSize.xs,
-    fontFamily: fontFamily.bold,
-    textTransform: 'uppercase',
+  heroEyebrow: {
+    fontFamily: fontFamily.semiBold,
+    fontSize: 10,
+    letterSpacing: 1.4,
+    marginBottom: 6,
   },
-  title: {
-    fontSize: Layout.fontSize['3xl'],
-    fontFamily: fontFamily.bold,
-    lineHeight: 36,
-  },
-  emojiBadge: {
-    width: 40,
-    height: 40,
-    borderRadius: Layout.radius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emoji: {
-    fontSize: 22,
-    lineHeight: 26,
-  },
-  subtitle: {
-    marginTop: Layout.spacing.xs,
-    fontSize: Layout.fontSize.md,
-    fontFamily: fontFamily.medium,
-    lineHeight: 22,
-  },
-  focusCard: {
-    marginTop: Layout.spacing.md,
-    borderWidth: 1,
-    borderRadius: Layout.radius.sm,
-    padding: Layout.spacing.md,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.07,
-    shadowRadius: 16,
-    elevation: 2,
-  },
-  focusHeader: {
+  heroCounterRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: Layout.spacing.sm,
+    alignItems: 'baseline',
+    gap: 8,
   },
-  focusIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: Layout.radius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  focusCopy: {
-    flex: 1,
-    minWidth: 0,
-  },
-  focusTitle: {
-    fontSize: Layout.fontSize.lg,
+  heroCounter: {
     fontFamily: fontFamily.bold,
+    fontSize: 44,
+    lineHeight: 48,
+    letterSpacing: -2,
   },
-  focusSubtitle: {
-    marginTop: 2,
-    fontSize: Layout.fontSize.sm,
+  heroCounterPlaceholder: {
+    fontSize: 32,
+    fontStyle: 'italic',
+  },
+  heroCounterUnit: {
     fontFamily: fontFamily.medium,
+    fontSize: 13,
+    letterSpacing: -0.2,
   },
-  metaRow: {
+  heroDivider: {
+    height: 1,
+    backgroundColor: 'rgba(17, 24, 39, 0.06)',
+    marginVertical: 14,
+  },
+
+  // Hero body (event meta)
+  heroBody: {
+    marginBottom: 16,
+    gap: 8,
+  },
+  heroTitle: {
+    fontFamily: fontFamily.semiBold,
+    fontSize: 17,
+    letterSpacing: -0.4,
+  },
+  heroMetaRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: Layout.spacing.sm,
-    marginTop: Layout.spacing.md,
+    gap: 14,
   },
-  metaChip: {
-    minHeight: 30,
-    maxWidth: '100%',
-    borderRadius: Layout.radius.sm,
+  heroMetaItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    paddingHorizontal: Layout.spacing.sm,
+    maxWidth: '48%',
   },
-  metaText: {
-    maxWidth: 190,
-    fontSize: Layout.fontSize.xs,
-    fontFamily: fontFamily.semiBold,
-  },
-  primaryAction: {
-    minHeight: 58,
-    borderRadius: Layout.radius.sm,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Layout.spacing.sm,
-    marginTop: Layout.spacing.md,
-    paddingHorizontal: Layout.spacing.md,
-  },
-  primaryActionIcon: {
-    width: 28,
-    height: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  primaryActionCopy: {
-    flex: 1,
-    minWidth: 0,
-  },
-  primaryActionLabel: {
-    fontSize: Layout.fontSize.md,
-    fontFamily: fontFamily.bold,
-    color: '#FFFFFF',
-  },
-  primaryActionCaption: {
-    marginTop: 2,
-    fontSize: Layout.fontSize.xs,
+  heroMetaText: {
     fontFamily: fontFamily.medium,
-    color: 'rgba(255,255,255,0.78)',
+    fontSize: 13,
+    letterSpacing: -0.1,
   },
-  quickActionsRow: {
-    flexDirection: 'row',
-    gap: Layout.spacing.sm,
-    marginTop: Layout.spacing.sm,
-  },
-  quickAction: {
-    flex: 1,
-    minHeight: 44,
-    borderRadius: Layout.radius.sm,
-    borderWidth: 1,
+
+  // CTA
+  heroCta: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 5,
-    paddingHorizontal: 6,
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 14,
   },
-  quickActionText: {
-    fontSize: Layout.fontSize.xs,
-    fontFamily: fontFamily.bold,
+  heroCtaLabel: {
+    fontFamily: fontFamily.semiBold,
+    fontSize: 14,
+    letterSpacing: -0.2,
+  },
+
+  // Quick actions
+  quickRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  quickTile: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    minHeight: 48,
+  },
+  quickIconWrap: {
+    width: 26,
+    height: 26,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quickLabel: {
+    fontFamily: fontFamily.semiBold,
+    fontSize: 12,
+    letterSpacing: -0.2,
+    flexShrink: 1,
   },
 });
