@@ -180,7 +180,7 @@ function ChecklistItemRow({ item, onToggle, index, colors }: ChecklistItemRowPro
 
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: Layout.spacing.lg,
+    marginHorizontal: Layout.spacing.md,
     marginBottom: Layout.spacing.lg,
     borderRadius: Layout.radius.xl,
     padding: Layout.spacing.lg,

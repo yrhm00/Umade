@@ -498,7 +498,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Layout.spacing.lg,
+    paddingHorizontal: Layout.spacing.md,
     paddingVertical: Layout.spacing.xs,
   },
   title: {
@@ -547,7 +547,7 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Layout.spacing.lg,
+    paddingHorizontal: Layout.spacing.md,
     paddingBottom: Layout.spacing.xs,
     gap: Layout.spacing.sm,
   },
@@ -612,7 +612,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 20,
-    paddingHorizontal: Layout.spacing.lg,
+    paddingHorizontal: Layout.spacing.md,
     paddingBottom: Layout.spacing.md,
   },
   searchOverlayContent: {
@@ -630,7 +630,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.medium,
   },
   sectionHeader: {
-    paddingHorizontal: Layout.spacing.lg,
+    paddingHorizontal: Layout.spacing.md,
     paddingTop: Layout.spacing.lg,
     paddingBottom: Layout.spacing.sm,
   },

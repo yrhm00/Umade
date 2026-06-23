@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: Layout.spacing.md,
-    paddingHorizontal: Layout.spacing.lg,
+    paddingHorizontal: Layout.spacing.md,
     paddingTop: Layout.spacing.md,
     paddingBottom: Layout.spacing.sm,
   },
