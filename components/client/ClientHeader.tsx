@@ -41,12 +41,12 @@ export function ClientHeader({
   style,
 }: ClientHeaderProps) {
   const actionBackground = isDark
-    ? 'rgba(143, 119, 184, 0.18)'
+    ? 'rgba(255,255,255,0.04)'
     : '#FFFFFF';
   const actionBorder = isDark
-    ? 'rgba(143, 119, 184, 0.28)'
-    : 'rgba(95, 74, 139, 0.12)';
-  const iconColor = actionTintColor ?? colors.primary;
+    ? 'rgba(255,255,255,0.10)'
+    : 'rgba(17, 24, 39, 0.10)';
+  const iconColor = actionTintColor ?? colors.text;
 
   return (
     <View style={[styles.container, style]}>
@@ -60,11 +60,10 @@ export function ClientHeader({
             {
               backgroundColor: actionBackground,
               borderColor: actionBorder,
-              shadowColor: isDark ? '#000000' : '#5F4A8B',
             },
           ]}
         >
-          <LeadingIcon size={22} color={colors.text} strokeWidth={2.4} />
+          <LeadingIcon size={20} color={colors.text} strokeWidth={2} />
         </PressableScale>
       ) : null}
 
@@ -96,12 +95,11 @@ export function ClientHeader({
             {
               backgroundColor: actionBackground,
               borderColor: actionBorder,
-              shadowColor: isDark ? '#000000' : '#5F4A8B',
               opacity: actionDisabled ? 0.5 : 1,
             },
           ]}
         >
-          <ActionIcon size={22} color={iconColor} strokeWidth={2.4} />
+          <ActionIcon size={20} color={iconColor} strokeWidth={2} />
         </PressableScale>
       ) : null}
     </View>
@@ -114,40 +112,39 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: Layout.spacing.md,
     paddingHorizontal: Layout.spacing.lg,
-    paddingTop: Layout.spacing.lg,
-    paddingBottom: Layout.spacing.md,
+    paddingTop: Layout.spacing.md,
+    paddingBottom: Layout.spacing.sm,
   },
   copy: {
     flex: 1,
     minWidth: 0,
   },
   eyebrow: {
-    marginBottom: 4,
-    fontSize: Layout.fontSize.xs,
-    fontFamily: fontFamily.bold,
+    marginBottom: 6,
+    fontSize: 10,
+    fontFamily: fontFamily.semiBold,
     textTransform: 'uppercase',
+    letterSpacing: 1.4,
   },
   title: {
-    fontSize: Layout.fontSize['3xl'],
+    fontSize: 30,
     fontFamily: fontFamily.bold,
     lineHeight: 36,
+    letterSpacing: -1,
   },
   subtitle: {
-    marginTop: Layout.spacing.xs,
-    fontSize: Layout.fontSize.md,
-    fontFamily: fontFamily.medium,
-    lineHeight: 22,
+    marginTop: 6,
+    fontSize: 14,
+    fontFamily: fontFamily.regular,
+    lineHeight: 20,
+    letterSpacing: -0.1,
   },
   action: {
-    width: 44,
-    height: 44,
-    borderRadius: Layout.radius.sm,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 2,
   },
 });

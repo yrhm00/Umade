@@ -29,10 +29,10 @@ export function ClientSearchField({
   onFocus,
   trailing,
 }: ClientSearchFieldProps) {
-  const backgroundColor = isDark ? colors.backgroundTertiary : '#FFFFFF';
+  const backgroundColor = isDark ? 'rgba(255,255,255,0.04)' : '#FFFFFF';
   const borderColor = isDark
-    ? 'rgba(143, 119, 184, 0.25)'
-    : 'rgba(95, 74, 139, 0.10)';
+    ? 'rgba(255,255,255,0.10)'
+    : 'rgba(17, 24, 39, 0.10)';
 
   const content = (
     <View
@@ -41,11 +41,10 @@ export function ClientSearchField({
         {
           backgroundColor,
           borderColor,
-          shadowColor: isDark ? '#000000' : '#5F4A8B',
         },
       ]}
     >
-      <Search size={20} color={colors.primary} strokeWidth={2.4} />
+      <Search size={18} color={colors.textSecondary} strokeWidth={2} />
       {onChangeText ? (
         <TextInput
           value={value}
@@ -89,27 +88,25 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    minHeight: 52,
-    borderRadius: Layout.radius.sm,
+    minHeight: 46,
+    borderRadius: 12,
     borderWidth: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Layout.spacing.sm,
-    paddingHorizontal: Layout.spacing.md,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.07,
-    shadowRadius: 16,
-    elevation: 2,
+    gap: 10,
+    paddingHorizontal: 14,
   },
   input: {
     flex: 1,
-    fontSize: Layout.fontSize.md,
+    fontSize: 14,
     fontFamily: fontFamily.medium,
+    letterSpacing: -0.1,
     paddingVertical: 0,
   },
   placeholder: {
     flex: 1,
-    fontSize: Layout.fontSize.md,
+    fontSize: 14,
     fontFamily: fontFamily.medium,
+    letterSpacing: -0.1,
   },
 });
