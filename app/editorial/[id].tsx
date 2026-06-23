@@ -27,6 +27,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import Markdown from 'react-native-markdown-display';
 import Animated, {
   FadeInDown,
   interpolate,
@@ -44,6 +45,18 @@ const COVER_HEIGHT = 320;
 function estimateReadTime(content: string): number {
   const words = content.split(/\s+/).length;
   return Math.max(1, Math.ceil(words / 200));
+}
+
+/**
+ * Some content rows in Supabase have literal "\n" sequences instead of
+ * real newlines (e.g. imported from JSON). Convert them so markdown
+ * heading and paragraph rules trigger as expected.
+ */
+function normalizeMarkdown(content: string | null | undefined): string {
+  if (!content) return '';
+  return content
+    .replace(/\\n/g, '\n')
+    .replace(/\\t/g, '\t');
 }
 
 const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
@@ -261,9 +274,33 @@ export default function ArticleDetailScreen() {
           <View style={[styles.separator, { backgroundColor: colors.border }]} />
 
           {/* Article body */}
-          <Text style={[styles.body, { color: colors.textSecondary }]}>
-            {article.content}
-          </Text>
+          <Markdown
+            style={{
+              body: { ...styles.body, color: colors.textSecondary },
+              heading1: { ...styles.h1Md, color: colors.text },
+              heading2: { ...styles.h2Md, color: colors.text },
+              heading3: { ...styles.h3Md, color: colors.text },
+              paragraph: { ...styles.paragraphMd, color: colors.textSecondary },
+              strong: { fontFamily: fontFamily.bold, color: colors.text },
+              em: { fontFamily: fontFamily.medium, fontStyle: 'italic' },
+              bullet_list: { marginVertical: 6 },
+              ordered_list: { marginVertical: 6 },
+              list_item: { marginVertical: 4 },
+              link: { color: colors.primary, textDecorationLine: 'underline' },
+              blockquote: {
+                backgroundColor: isDark
+                  ? 'rgba(255,255,255,0.04)'
+                  : 'rgba(17,24,39,0.04)',
+                borderLeftWidth: 3,
+                borderLeftColor: colors.primary,
+                paddingHorizontal: 12,
+                paddingVertical: 8,
+                marginVertical: 8,
+              },
+            }}
+          >
+            {normalizeMarkdown(article.content)}
+          </Markdown>
 
           {/* Tags */}
           {article.tags && article.tags.length > 0 && (
@@ -497,6 +534,36 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.regular,
     lineHeight: 28,
     marginBottom: Layout.spacing.xl,
+  },
+  h1Md: {
+    fontSize: 26,
+    fontFamily: fontFamily.bold,
+    letterSpacing: -0.8,
+    marginTop: 20,
+    marginBottom: 10,
+    lineHeight: 32,
+  },
+  h2Md: {
+    fontSize: 22,
+    fontFamily: fontFamily.bold,
+    letterSpacing: -0.6,
+    marginTop: 18,
+    marginBottom: 8,
+    lineHeight: 28,
+  },
+  h3Md: {
+    fontSize: 18,
+    fontFamily: fontFamily.semiBold,
+    letterSpacing: -0.4,
+    marginTop: 14,
+    marginBottom: 6,
+    lineHeight: 24,
+  },
+  paragraphMd: {
+    fontSize: 15,
+    fontFamily: fontFamily.regular,
+    lineHeight: 24,
+    marginVertical: 4,
   },
   tagsContainer: {
     flexDirection: 'row',

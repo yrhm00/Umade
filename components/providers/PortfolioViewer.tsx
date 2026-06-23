@@ -18,10 +18,12 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   FadeIn,
   FadeOut,
+  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface PortfolioViewerImage {
@@ -53,6 +55,11 @@ function ZoomableSlide({ uri }: { uri: string }) {
   const baseTx = useSharedValue(0);
   const baseTy = useSharedValue(0);
 
+  // Track zoom state on JS side so the pan gesture can be enabled only
+  // while the image is actually zoomed in — otherwise the surrounding
+  // FlatList must keep its swipe-to-paginate behavior.
+  const [isZoomed, setIsZoomed] = useState(false);
+
   const pinchGesture = useMemo(
     () =>
       Gesture.Pinch()
@@ -67,9 +74,11 @@ function ZoomableSlide({ uri }: { uri: string }) {
             ty.value = withTiming(0);
             baseTx.value = 0;
             baseTy.value = 0;
+            runOnJS(setIsZoomed)(false);
             return;
           }
           baseScale.value = scale.value;
+          runOnJS(setIsZoomed)(true);
         }),
     [baseScale, baseTx, baseTy, scale, tx, ty]
   );
@@ -77,6 +86,7 @@ function ZoomableSlide({ uri }: { uri: string }) {
   const panGesture = useMemo(
     () =>
       Gesture.Pan()
+        .enabled(isZoomed)
         .onUpdate((event) => {
           if (scale.value <= 1) return;
           const maxOffset = ((scale.value - 1) * Layout.window.width) / 2;
@@ -94,7 +104,7 @@ function ZoomableSlide({ uri }: { uri: string }) {
           baseTx.value = tx.value;
           baseTy.value = ty.value;
         }),
-    [baseTx, baseTy, scale, tx, ty]
+    [baseTx, baseTy, scale, tx, ty, isZoomed]
   );
 
   const doubleTapGesture = useMemo(
@@ -109,9 +119,11 @@ function ZoomableSlide({ uri }: { uri: string }) {
             ty.value = withTiming(0, { duration: 170 });
             baseTx.value = 0;
             baseTy.value = 0;
+            runOnJS(setIsZoomed)(false);
           } else {
             scale.value = withTiming(2, { duration: 170 });
             baseScale.value = 2;
+            runOnJS(setIsZoomed)(true);
           }
         }),
     [baseScale, baseTx, baseTy, scale, tx, ty]
@@ -174,6 +186,13 @@ export function PortfolioViewer({
             <Pressable onPress={onClose} style={styles.closeButton} hitSlop={12}>
               <X size={22} color="#FFFFFF" />
             </Pressable>
+            {images.length > 1 ? (
+              <View style={styles.counterChip}>
+                <Text style={styles.counterText}>
+                  {currentIndex + 1} / {images.length}
+                </Text>
+              </View>
+            ) : null}
           </View>
 
           <FlatList
@@ -199,12 +218,6 @@ export function PortfolioViewer({
             )}
           />
 
-          <View style={styles.counterChip} pointerEvents="none">
-            <Animated.Text style={styles.counterText}>
-              {currentIndex + 1}/{images.length}
-            </Animated.Text>
-          </View>
-
           <View style={styles.contactFloating}>
             <Button title="Contacter" onPress={onContact} size="lg" />
           </View>
@@ -225,7 +238,9 @@ const styles = StyleSheet.create({
   headerRow: {
     paddingHorizontal: Layout.spacing.lg,
     paddingTop: Layout.spacing.md,
-    alignItems: 'flex-start',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   closeButton: {
     width: 40,
@@ -251,11 +266,8 @@ const styles = StyleSheet.create({
     height: Layout.window.height * 0.74,
   },
   counterChip: {
-    position: 'absolute',
-    top: Layout.spacing.lg + 4,
-    right: Layout.spacing.lg,
     backgroundColor: 'rgba(255,255,255,0.14)',
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: Layout.radius.full,
   },
