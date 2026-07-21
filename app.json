@@ -12,7 +12,7 @@
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/b3110847-2086-41ed-a420-5e75c6c0cbac",
+      "url": "https://u.expo.dev/1132b65b-3b07-4988-a65f-202a4195f732",
       "checkAutomatically": "ON_LOAD",
       "fallbackToCacheTimeout": 3000,
       "requestHeaders": {
@@ -56,7 +56,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "b3110847-2086-41ed-a420-5e75c6c0cbac"
+        "projectId": "1132b65b-3b07-4988-a65f-202a4195f732"
       }
     }
   }
