@@ -29,6 +29,7 @@ import {
     Platform,
     ScrollView,
     StyleSheet,
+    Switch,
     Text,
     TextInput,
     TouchableOpacity,
@@ -48,6 +49,10 @@ interface ProviderData {
     city: string | null;
     postal_code: string | null;
     website: string | null;
+    // Optionnels : absents des types générés tant que la migration
+    // wewed_features n'a pas été appliquée + types régénérés.
+    instant_booking_enabled?: boolean | null;
+    service_radius_km?: number | null;
 }
 
 interface FormData {
@@ -64,6 +69,8 @@ interface FormData {
     city: string;
     postal_code: string;
     website: string;
+    instant_booking_enabled: boolean;
+    travels_nationwide: boolean;
 }
 
 export default function ProviderProfileEditScreen() {
@@ -84,6 +91,8 @@ export default function ProviderProfileEditScreen() {
         city: '',
         postal_code: '',
         website: '',
+        instant_booking_enabled: false,
+        travels_nationwide: false,
     });
 
     // Fetch provider data
@@ -94,7 +103,7 @@ export default function ProviderProfileEditScreen() {
 
             const { data, error } = await supabase
                 .from('providers')
-                .select('id, business_name, description, business_email, business_phone, address, city, postal_code, website')
+                .select('*')
                 .eq('user_id', profile.id)
                 .single();
 
@@ -128,6 +137,8 @@ export default function ProviderProfileEditScreen() {
                 city: providerData.city || '',
                 postal_code: providerData.postal_code || '',
                 website: providerData.website || '',
+                instant_booking_enabled: !!providerData.instant_booking_enabled,
+                travels_nationwide: (providerData.service_radius_km ?? 0) >= 100,
             }));
         }
     }, [providerData]);
@@ -153,19 +164,26 @@ export default function ProviderProfileEditScreen() {
             if (profileError) throw profileError;
 
             // Update provider
+            const providerUpdates: Record<string, unknown> = {
+                business_name: data.business_name,
+                description: data.description || null,
+                business_email: data.business_email || null,
+                business_phone: data.business_phone || null,
+                address: data.address || null,
+                city: data.city || null,
+                postal_code: data.postal_code || null,
+                website: data.website || null,
+                service_radius_km: data.travels_nationwide ? 999 : null,
+                updated_at: new Date().toISOString(),
+            };
+            // Colonne présente uniquement après la migration wewed_features
+            if (providerData.instant_booking_enabled !== undefined) {
+                providerUpdates.instant_booking_enabled = data.instant_booking_enabled;
+            }
+
             const { error: providerError } = await supabase
                 .from('providers')
-                .update({
-                    business_name: data.business_name,
-                    description: data.description || null,
-                    business_email: data.business_email || null,
-                    business_phone: data.business_phone || null,
-                    address: data.address || null,
-                    city: data.city || null,
-                    postal_code: data.postal_code || null,
-                    website: data.website || null,
-                    updated_at: new Date().toISOString(),
-                })
+                .update(providerUpdates)
                 .eq('id', providerData.id);
 
             if (providerError) throw providerError;
@@ -295,7 +313,7 @@ export default function ProviderProfileEditScreen() {
         updateMutation.mutate(formData);
     };
 
-    const updateField = (field: keyof FormData, value: string) => {
+    const updateField = (field: keyof FormData, value: string | boolean) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
     };
 
@@ -521,6 +539,43 @@ export default function ProviderProfileEditScreen() {
                             </View>
                         </View>
                     </View>
+
+                    {/* Options de réservation */}
+                    <View style={styles.section}>
+                        <Text style={styles.sectionTitle}>Options de réservation</Text>
+
+                        <View style={styles.toggleRow}>
+                            <View style={styles.toggleCopy}>
+                                <Text style={styles.toggleLabel}>⚡ Réservation instantanée</Text>
+                                <Text style={styles.toggleHint}>
+                                    Les demandes sur vos créneaux libres sont confirmées automatiquement,
+                                    sans validation manuelle. Gardez vos disponibilités à jour.
+                                </Text>
+                            </View>
+                            <Switch
+                                value={formData.instant_booking_enabled}
+                                onValueChange={(value) => updateField('instant_booking_enabled', value)}
+                                trackColor={{ false: Colors.gray[200], true: Colors.primary.light }}
+                                thumbColor={formData.instant_booking_enabled ? Colors.primary.DEFAULT : Colors.gray[100]}
+                            />
+                        </View>
+
+                        <View style={styles.toggleRow}>
+                            <View style={styles.toggleCopy}>
+                                <Text style={styles.toggleLabel}>🚗 Se déplace partout en Belgique</Text>
+                                <Text style={styles.toggleHint}>
+                                    Affiche un badge sur votre profil et vous rend visible dans les
+                                    recherches en dehors de votre ville.
+                                </Text>
+                            </View>
+                            <Switch
+                                value={formData.travels_nationwide}
+                                onValueChange={(value) => updateField('travels_nationwide', value)}
+                                trackColor={{ false: Colors.gray[200], true: Colors.primary.light }}
+                                thumbColor={formData.travels_nationwide ? Colors.primary.DEFAULT : Colors.gray[100]}
+                            />
+                        </View>
+                    </View>
                 </ScrollView>
             </KeyboardAvoidingView>
         </SafeAreaView>
@@ -614,6 +669,30 @@ const styles = StyleSheet.create({
     },
     section: {
         marginBottom: 24,
+    },
+    toggleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: Colors.white,
+        borderRadius: 18,
+        marginBottom: 12,
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+        gap: 12,
+    },
+    toggleCopy: {
+        flex: 1,
+    },
+    toggleLabel: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: Colors.text.primary,
+        marginBottom: 2,
+    },
+    toggleHint: {
+        fontSize: 12,
+        color: Colors.text.secondary,
+        lineHeight: 17,
     },
     sectionTitle: {
         fontSize: 14,

@@ -8,7 +8,7 @@ import { Layout } from '@/constants/Layout';
 import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { ProviderListItem } from '@/types';
 import { useRouter } from 'expo-router';
-import { User } from 'lucide-react-native';
+import { BadgeCheck, User } from 'lucide-react-native';
 import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
@@ -49,9 +49,14 @@ export function ProviderCardSmall({ provider }: ProviderCardSmallProps) {
       )}
 
       {/* Business name */}
-      <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
-        {provider.business_name}
-      </Text>
+      <View style={styles.nameRow}>
+        <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
+          {provider.business_name}
+        </Text>
+        {provider.is_verified ? (
+          <BadgeCheck size={14} color={colors.primary} fill={`${colors.primary}22`} />
+        ) : null}
+      </View>
 
       {/* Category */}
       <Text style={[styles.category, { color: colors.textSecondary }]} numberOfLines={1}>
@@ -94,11 +99,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    marginBottom: 2,
+    maxWidth: '100%',
+  },
   name: {
     fontSize: Layout.fontSize.sm,
     fontWeight: '700',
     textAlign: 'center',
-    marginBottom: 2,
+    flexShrink: 1,
   },
   category: {
     fontSize: Layout.fontSize.xs,

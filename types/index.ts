@@ -41,6 +41,11 @@ export interface ProviderListItem {
   review_count: number | null;
   min_price: number | null;
   portfolio_image: string | null;
+  // Champs présents uniquement via search_providers_v2 (fallback v1 = undefined)
+  is_verified?: boolean | null;
+  service_radius_km?: number | null;
+  instant_booking_enabled?: boolean | null;
+  match_score?: number | null;
 }
 
 // Review avec infos client
@@ -60,6 +65,7 @@ export interface ProviderFilters {
   maxPrice?: number;
   minRating?: number;
   searchQuery?: string;
+  instantOnly?: boolean;
 }
 
 // Pagination

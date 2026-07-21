@@ -34,12 +34,28 @@ interface ProviderWithRelations extends Provider {
 // Fonctions de fetch
 // ============================================
 
-// Recherche de providers avec filtres (utilise la fonction RPC)
+// Recherche de providers avec filtres.
+// Essaie search_providers_v2 (badges vérifié/instantané/déplacement) puis
+// retombe sur search_providers si la migration n'est pas encore appliquée.
 async function searchProviders(
   filters: ProviderFilters,
   limit: number = Config.pageSize,
   offset: number = 0
 ): Promise<ProviderListItem[]> {
+  const { data: v2Data, error: v2Error } = await supabase.rpc('search_providers_v2' as any, {
+    p_category_slug: filters.categorySlug,
+    p_city: filters.city,
+    p_min_price: filters.minPrice,
+    p_max_price: filters.maxPrice,
+    p_min_rating: filters.minRating,
+    p_search_query: filters.searchQuery,
+    p_instant_only: filters.instantOnly || null,
+    p_limit: limit,
+    p_offset: offset,
+  } as any);
+
+  if (!v2Error) return (v2Data || []) as ProviderListItem[];
+
   const { data, error } = await supabase.rpc('search_providers', {
     p_category_slug: filters.categorySlug,
     p_city: filters.city,
@@ -49,6 +65,22 @@ async function searchProviders(
     p_search_query: filters.searchQuery,
     p_limit: limit,
     p_offset: offset,
+  } as any);
+
+  if (error) throw error;
+  return (data || []) as ProviderListItem[];
+}
+
+// Recommandations personnalisées (RPC scorée par ville / budget / vérifié)
+async function fetchRecommendedProviders(
+  city: string | null,
+  maxBudget: number | null,
+  limit: number = 10
+): Promise<ProviderListItem[]> {
+  const { data, error } = await supabase.rpc('get_recommended_providers' as any, {
+    p_city: city,
+    p_max_budget: maxBudget,
+    p_limit: limit,
   } as any);
 
   if (error) throw error;
@@ -152,6 +184,21 @@ export function useTopProviders(limit: number = 10) {
   return useQuery({
     queryKey: [Config.cacheKeys.providers, 'top', limit],
     queryFn: () => fetchTopProviders(limit),
+  });
+}
+
+// Hook recommandations personnalisées pour la Home.
+// city vient du profil, budget des préférences d'onboarding.
+export function useRecommendedProviders(
+  city: string | null | undefined,
+  maxBudget: number | null | undefined,
+  limit: number = 10
+) {
+  return useQuery({
+    queryKey: [Config.cacheKeys.providers, 'recommended', city ?? null, maxBudget ?? null, limit],
+    queryFn: () => fetchRecommendedProviders(city ?? null, maxBudget ?? null, limit),
+    // RPC absente tant que la migration n'est pas passée : pas de retry agressif
+    retry: 1,
   });
 }
 

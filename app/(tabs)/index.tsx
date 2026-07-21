@@ -11,6 +11,7 @@ import {
   ChecklistPreview,
   ArticlesSection,
   PopularProvidersSection,
+  RecommendedProvidersSection,
 } from '@/components/home';
 import { FilterSheet, MasonryGrid } from '@/components/inspirations';
 import { StoriesStrip } from '@/components/stories';
@@ -282,6 +283,7 @@ export default function HomeScreen() {
             <CountdownCard />
             <ChecklistPreview />
 
+            <RecommendedProvidersSection />
             <PopularProvidersSection />
             <ArticlesSection />
 

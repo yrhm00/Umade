@@ -31,6 +31,7 @@ import {
   Bell,
   Grid,
   List,
+  Map as MapIcon,
   Search as SearchIcon,
   SlidersHorizontal,
   X,
@@ -263,6 +264,22 @@ export default function SearchScreen() {
                   <Text style={styles.filterBadgeText}>{activeFiltersCount}</Text>
                 </View>
               )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.filterButton, { backgroundColor: cardBg }]}
+              onPress={() =>
+                router.push({
+                  pathname: '/providers-map',
+                  params: {
+                    categorySlug: filters.categorySlug || '',
+                    city: filters.city || '',
+                  },
+                } as any)
+              }
+              accessibilityLabel="Voir les prestataires sur la carte"
+            >
+              <MapIcon size={20} color={colors.primary} />
             </TouchableOpacity>
           </View>
 

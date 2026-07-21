@@ -94,6 +94,7 @@ export const FiltersBottomSheet = forwardRef<BottomSheetModal, FiltersBottomShee
       localFilters.city,
       localFilters.minRating,
       localFilters.maxPrice,
+      localFilters.instantOnly,
     ].filter(Boolean).length;
 
     return (
@@ -178,6 +179,34 @@ export const FiltersBottomSheet = forwardRef<BottomSheetModal, FiltersBottomShee
                 />
               ))}
             </View>
+          </View>
+
+          {/* Réservation instantanée */}
+          <View style={styles.filterSection}>
+            <Text style={styles.filterLabel}>Réservation</Text>
+            <TouchableOpacity
+              style={[
+                styles.instantToggle,
+                localFilters.instantOnly && styles.instantToggleActive,
+              ]}
+              onPress={() =>
+                setLocalFilters((f) => ({
+                  ...f,
+                  instantOnly: f.instantOnly ? undefined : true,
+                }))
+              }
+              accessibilityRole="switch"
+              accessibilityState={{ checked: !!localFilters.instantOnly }}
+            >
+              <Text
+                style={[
+                  styles.instantToggleText,
+                  localFilters.instantOnly && styles.instantToggleTextActive,
+                ]}
+              >
+                ⚡ Réservation instantanée uniquement
+              </Text>
+            </TouchableOpacity>
           </View>
 
           {/* Note minimum */}
@@ -316,6 +345,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: Layout.spacing.sm,
+  },
+  instantToggle: {
+    paddingVertical: Layout.spacing.sm,
+    paddingHorizontal: Layout.spacing.md,
+    borderRadius: Layout.radius.md,
+    borderWidth: 1.5,
+    borderColor: Colors.gray[200],
+    backgroundColor: Colors.white,
+    alignSelf: 'flex-start',
+  },
+  instantToggleActive: {
+    borderColor: Colors.warning.dark,
+    backgroundColor: Colors.warning[50],
+  },
+  instantToggleText: {
+    fontSize: Layout.fontSize.sm,
+    fontWeight: '500',
+    color: Colors.text.primary,
+  },
+  instantToggleTextActive: {
+    color: Colors.warning.dark,
+    fontWeight: '700',
   },
   ratingOptions: {
     flexDirection: 'row',

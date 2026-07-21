@@ -14,7 +14,7 @@ import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInUp } from 'react-native-reanimated';
-import { Camera, Heart, MapPin, Scale, Star } from 'lucide-react-native';
+import { BadgeCheck, Camera, Car, Heart, MapPin, Scale, Star, Zap } from 'lucide-react-native';
 import { PressableScale } from '@/components/ui/PressableScale';
 import { useToast } from '@/components/ui/Toast';
 import { useFavoriteIds, useToggleFavorite } from '@/hooks/useFavorites';
@@ -145,9 +145,14 @@ export function ProviderCard({
           {/* Content */}
           <View style={styles.listContent}>
             <View style={styles.listHeader}>
-              <Text style={[styles.businessName, { color: colors.text }]} numberOfLines={1}>
-                {provider.business_name}
-              </Text>
+              <View style={[styles.nameRow, { flex: 1 }]}>
+                <Text style={[styles.businessName, { color: colors.text }]} numberOfLines={1}>
+                  {provider.business_name}
+                </Text>
+                {provider.is_verified ? (
+                  <BadgeCheck size={16} color={colors.primary} fill={`${colors.primary}22`} />
+                ) : null}
+              </View>
               <View style={styles.trailingActions}>
                 <PressableScale
                   scale={0.9}
@@ -189,6 +194,23 @@ export function ProviderCard({
                 <Text style={[styles.locationText, { color: secondaryTextColor }]} numberOfLines={1}>
                   {provider.city}
                 </Text>
+              </View>
+            )}
+
+            {(provider.instant_booking_enabled || (provider.service_radius_km ?? 0) >= 100) && (
+              <View style={styles.perksRow}>
+                {provider.instant_booking_enabled ? (
+                  <View style={[styles.perkBadge, { backgroundColor: `${Colors.warning.DEFAULT}1A` }]}>
+                    <Zap size={11} color={Colors.warning.dark} fill={Colors.warning.dark} />
+                    <Text style={[styles.perkText, { color: Colors.warning.dark }]}>Instantané</Text>
+                  </View>
+                ) : null}
+                {(provider.service_radius_km ?? 0) >= 100 ? (
+                  <View style={[styles.perkBadge, { backgroundColor: `${colors.primary}14` }]}>
+                    <Car size={11} color={colors.primary} />
+                    <Text style={[styles.perkText, { color: colors.primary }]}>Se déplace partout</Text>
+                  </View>
+                ) : null}
               </View>
             )}
 
@@ -297,9 +319,14 @@ export function ProviderCard({
 
         {/* Content */}
         <View style={styles.gridContent}>
-          <Text style={[styles.businessName, { color: colors.text }]} numberOfLines={1}>
-            {provider.business_name}
-          </Text>
+          <View style={styles.nameRow}>
+            <Text style={[styles.businessName, { color: colors.text }]} numberOfLines={1}>
+              {provider.business_name}
+            </Text>
+            {provider.is_verified ? (
+              <BadgeCheck size={14} color={colors.primary} fill={`${colors.primary}22`} />
+            ) : null}
+          </View>
 
           <Text style={[styles.categoryName, { color: secondaryTextColor }]} numberOfLines={1}>
             {provider.category_name}
@@ -440,10 +467,33 @@ const styles = StyleSheet.create({
   },
 
   // Shared styles
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
   businessName: {
     fontSize: Layout.fontSize.md,
     fontFamily: fontFamily.semiBold,
-    flex: 1,
+    flexShrink: 1,
+  },
+  perksRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 4,
+  },
+  perkBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: Layout.radius.full,
+  },
+  perkText: {
+    fontSize: 10,
+    fontFamily: fontFamily.semiBold,
   },
   categoryBadge: {
     alignSelf: 'flex-start',

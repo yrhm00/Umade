@@ -23,6 +23,8 @@ import { formatPrice } from '@/lib/utils';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import {
   ArrowLeft,
+  BadgeCheck,
+  Car,
   ChevronRight,
   Clock,
   Globe,
@@ -33,6 +35,7 @@ import {
   Share2,
   Sparkles,
   Star,
+  Zap,
 } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
@@ -256,7 +259,12 @@ export default function ProviderDetailScreen() {
           {/* Main Info */}
           <View style={styles.content}>
             <View style={styles.mainInfo}>
-              <Text style={[styles.businessName, { color: colors.text }]}>{provider.business_name}</Text>
+              <View style={styles.businessNameRow}>
+                <Text style={[styles.businessName, { color: colors.text }]}>{provider.business_name}</Text>
+                {provider.is_verified ? (
+                  <BadgeCheck size={22} color={colors.primary} fill={`${colors.primary}22`} />
+                ) : null}
+              </View>
 
             <View style={styles.categoryFollowRow}>
               <View style={[styles.categoryBadge, { backgroundColor: categoryBadgeBg }]}>
@@ -308,6 +316,28 @@ export default function ProviderDetailScreen() {
                 <Text style={[styles.locationText, { color: colors.textSecondary }]}>
                   {provider.address || provider.city}
                 </Text>
+              </View>
+            )}
+
+            {/* Instant booking + travel badges */}
+            {((provider as any).instant_booking_enabled || (provider.service_radius_km ?? 0) >= 100) && (
+              <View style={styles.perksDetailRow}>
+                {(provider as any).instant_booking_enabled ? (
+                  <View style={[styles.perkDetailBadge, { backgroundColor: 'rgba(217, 119, 6, 0.10)' }]}>
+                    <Zap size={14} color="#D97706" fill="#D97706" />
+                    <Text style={[styles.perkDetailText, { color: '#B45309' }]}>
+                      Réservation instantanée
+                    </Text>
+                  </View>
+                ) : null}
+                {(provider.service_radius_km ?? 0) >= 100 ? (
+                  <View style={[styles.perkDetailBadge, { backgroundColor: `${colors.primary}12` }]}>
+                    <Car size={14} color={colors.primary} />
+                    <Text style={[styles.perkDetailText, { color: colors.primary }]}>
+                      Se déplace partout en Belgique
+                    </Text>
+                  </View>
+                ) : null}
               </View>
             )}
 
@@ -736,10 +766,34 @@ const styles = StyleSheet.create({
   mainInfo: {
     marginBottom: Layout.spacing.lg,
   },
+  businessNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: Layout.spacing.sm,
+  },
   businessName: {
     fontSize: Layout.fontSize['2xl'],
     fontWeight: '700',
-    marginBottom: Layout.spacing.sm,
+    flexShrink: 1,
+  },
+  perksDetailRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Layout.spacing.sm,
+    marginTop: Layout.spacing.sm,
+  },
+  perkDetailBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: Layout.spacing.md,
+    paddingVertical: 6,
+    borderRadius: Layout.radius.full,
+  },
+  perkDetailText: {
+    fontSize: Layout.fontSize.xs,
+    fontWeight: '600',
   },
   categoryFollowRow: {
     flexDirection: 'row',
