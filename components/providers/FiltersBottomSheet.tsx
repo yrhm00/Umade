@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
 import { useCategories } from '@/hooks/useCategories';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { ProviderFilters } from '@/types';
 import {
   BottomSheetBackdrop,
@@ -55,6 +56,8 @@ const RATING_OPTIONS = [
 export const FiltersBottomSheet = forwardRef<BottomSheetModal, FiltersBottomSheetProps>(
   ({ filters, onApply, onReset }, ref) => {
     const { data: categories } = useCategories();
+    const colors = useColors();
+    const isDark = useIsDarkTheme();
     const insets = useSafeAreaInsets();
 
     const [localFilters, setLocalFilters] = useState<ProviderFilters>(filters);
@@ -106,12 +109,12 @@ export const FiltersBottomSheet = forwardRef<BottomSheetModal, FiltersBottomShee
         enablePanDownToClose
         enableContentPanningGesture={false}
         backdropComponent={renderBackdrop}
-        backgroundStyle={styles.bottomSheetBackground}
-        handleIndicatorStyle={styles.handleIndicator}
+        backgroundStyle={[styles.bottomSheetBackground, { backgroundColor: isDark ? colors.backgroundSecondary : Colors.white }]}
+        handleIndicatorStyle={[styles.handleIndicator, { backgroundColor: isDark ? colors.border : Colors.gray[300] }]}
       >
         <BottomSheetView style={styles.container}>
           <View style={styles.header}>
-            <Text style={styles.title}>Filtres</Text>
+            <Text style={[styles.title, { color: colors.text }]}>Filtres</Text>
             <TouchableOpacity onPress={handleReset}>
               <Text style={styles.resetText}>Réinitialiser</Text>
             </TouchableOpacity>
@@ -127,7 +130,7 @@ export const FiltersBottomSheet = forwardRef<BottomSheetModal, FiltersBottomShee
           >
           {/* Catégories */}
           <View style={styles.filterSection}>
-            <Text style={styles.filterLabel}>Catégorie</Text>
+            <Text style={[styles.filterLabel, { color: colors.text }]}>Catégorie</Text>
             <View style={styles.optionsWrap}>
               <CategoryPill
                 label="Toutes"
@@ -156,7 +159,7 @@ export const FiltersBottomSheet = forwardRef<BottomSheetModal, FiltersBottomShee
 
           {/* Ville */}
           <View style={styles.filterSection}>
-            <Text style={styles.filterLabel}>Ville</Text>
+            <Text style={[styles.filterLabel, { color: colors.text }]}>Ville</Text>
             <View style={styles.optionsWrap}>
               <CategoryPill
                 label="Toutes"
@@ -183,10 +186,11 @@ export const FiltersBottomSheet = forwardRef<BottomSheetModal, FiltersBottomShee
 
           {/* Réservation instantanée */}
           <View style={styles.filterSection}>
-            <Text style={styles.filterLabel}>Réservation</Text>
+            <Text style={[styles.filterLabel, { color: colors.text }]}>Réservation</Text>
             <TouchableOpacity
               style={[
                 styles.instantToggle,
+                { backgroundColor: isDark ? colors.backgroundTertiary : Colors.white, borderColor: isDark ? colors.border : Colors.gray[200] },
                 localFilters.instantOnly && styles.instantToggleActive,
               ]}
               onPress={() =>
@@ -201,6 +205,7 @@ export const FiltersBottomSheet = forwardRef<BottomSheetModal, FiltersBottomShee
               <Text
                 style={[
                   styles.instantToggleText,
+                  { color: colors.text },
                   localFilters.instantOnly && styles.instantToggleTextActive,
                 ]}
               >
@@ -211,13 +216,14 @@ export const FiltersBottomSheet = forwardRef<BottomSheetModal, FiltersBottomShee
 
           {/* Note minimum */}
           <View style={styles.filterSection}>
-            <Text style={styles.filterLabel}>Note minimum</Text>
+            <Text style={[styles.filterLabel, { color: colors.text }]}>Note minimum</Text>
             <View style={styles.ratingOptions}>
               {RATING_OPTIONS.map((opt) => (
                 <TouchableOpacity
                   key={opt.label}
                   style={[
                     styles.ratingOption,
+                    { backgroundColor: isDark ? colors.backgroundTertiary : Colors.white, borderColor: isDark ? colors.border : Colors.gray[200] },
                     localFilters.minRating === opt.value &&
                       styles.ratingOptionSelected,
                   ]}
@@ -228,6 +234,7 @@ export const FiltersBottomSheet = forwardRef<BottomSheetModal, FiltersBottomShee
                   <Text
                     style={[
                       styles.ratingOptionText,
+                      { color: colors.text },
                       localFilters.minRating === opt.value &&
                         styles.ratingOptionTextSelected,
                     ]}
@@ -241,8 +248,8 @@ export const FiltersBottomSheet = forwardRef<BottomSheetModal, FiltersBottomShee
 
           {/* Budget maximum */}
           <View style={styles.filterSection}>
-            <Text style={styles.filterLabel}>Budget maximum</Text>
-            <Text style={styles.budgetValue}>
+            <Text style={[styles.filterLabel, { color: colors.text }]}>Budget maximum</Text>
+            <Text style={[styles.budgetValue, { color: colors.primary }]}>
               {localFilters.maxPrice
                 ? `${localFilters.maxPrice.toLocaleString('fr-BE')} €`
                 : 'Pas de limite'}
@@ -260,12 +267,12 @@ export const FiltersBottomSheet = forwardRef<BottomSheetModal, FiltersBottomShee
                 }))
               }
               minimumTrackTintColor={Colors.primary.DEFAULT}
-              maximumTrackTintColor={Colors.gray[200]}
+              maximumTrackTintColor={isDark ? colors.border : Colors.gray[200]}
               thumbTintColor={Colors.primary.DEFAULT}
             />
             <View style={styles.sliderLabels}>
-              <Text style={styles.sliderLabel}>0 €</Text>
-              <Text style={styles.sliderLabel}>5000 €</Text>
+              <Text style={[styles.sliderLabel, { color: colors.textTertiary }]}>0 €</Text>
+              <Text style={[styles.sliderLabel, { color: colors.textTertiary }]}>5000 €</Text>
             </View>
           </View>
 
@@ -357,7 +364,7 @@ const styles = StyleSheet.create({
   },
   instantToggleActive: {
     borderColor: Colors.warning.dark,
-    backgroundColor: Colors.warning[50],
+    backgroundColor: 'rgba(217, 119, 6, 0.14)',
   },
   instantToggleText: {
     fontSize: Layout.fontSize.sm,

@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Colors } from '@/constants/Colors';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { Layout } from '@/constants/Layout';
 import { UserRole } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/authStore';
@@ -22,6 +23,8 @@ import { toast } from '@/lib/toast';
 
 export default function RegisterScreen() {
   const router = useRouter();
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
   // Use individual selectors to prevent unnecessary re-renders
   const signUp = useAuthStore((state) => state.signUp);
   const isLoading = useAuthStore((state) => state.isLoading);
@@ -75,7 +78,7 @@ export default function RegisterScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -90,28 +93,29 @@ export default function RegisterScreen() {
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity
-              style={styles.backButton}
+              style={[styles.backButton, { backgroundColor: isDark ? colors.backgroundTertiary : Colors.gray[100] }]}
               onPress={() => goBackOrFallback(router)}
             >
-              <ArrowLeft size={24} color={Colors.text.primary} />
+              <ArrowLeft size={24} color={colors.text} />
             </TouchableOpacity>
           </View>
 
           {/* Title */}
           <View style={styles.titleContainer}>
-            <Text style={styles.title}>Créer un compte</Text>
-            <Text style={styles.subtitle}>
+            <Text style={[styles.title, { color: colors.text }]}>Créer un compte</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
               Rejoignez Umade et simplifiez vos événements
             </Text>
           </View>
 
           {/* Role Selector */}
           <View style={styles.roleContainer}>
-            <Text style={styles.roleLabel}>Je suis...</Text>
+            <Text style={[styles.roleLabel, { color: colors.text }]}>Je suis...</Text>
             <View style={styles.roleButtons}>
               <TouchableOpacity
                 style={[
                   styles.roleButton,
+                  { backgroundColor: isDark ? colors.card : Colors.white, borderColor: isDark ? colors.cardBorder : Colors.primary[100] },
                   role === 'client' && styles.roleButtonActive,
                 ]}
                 onPress={() => setRole('client')}
@@ -131,6 +135,7 @@ export default function RegisterScreen() {
                 <Text
                   style={[
                     styles.roleButtonSubtext,
+                    { color: colors.textSecondary },
                     role === 'client' && styles.roleButtonSubtextActive,
                   ]}
                 >
@@ -141,6 +146,7 @@ export default function RegisterScreen() {
               <TouchableOpacity
                 style={[
                   styles.roleButton,
+                  { backgroundColor: isDark ? colors.card : Colors.white, borderColor: isDark ? colors.cardBorder : Colors.primary[100] },
                   role === 'provider' && styles.roleButtonActive,
                 ]}
                 onPress={() => setRole('provider')}
@@ -160,6 +166,7 @@ export default function RegisterScreen() {
                 <Text
                   style={[
                     styles.roleButtonSubtext,
+                    { color: colors.textSecondary },
                     role === 'provider' && styles.roleButtonSubtextActive,
                   ]}
                 >
@@ -179,7 +186,7 @@ export default function RegisterScreen() {
               autoCapitalize="words"
               autoComplete="name"
               error={errors.fullName}
-              leftIcon={<User size={20} color={Colors.gray[400]} />}
+              leftIcon={<User size={20} color={colors.textTertiary} />}
             />
 
             <Input
@@ -191,7 +198,7 @@ export default function RegisterScreen() {
               autoCapitalize="none"
               autoComplete="email"
               error={errors.email}
-              leftIcon={<Mail size={20} color={Colors.gray[400]} />}
+              leftIcon={<Mail size={20} color={colors.textTertiary} />}
             />
 
             <Input
@@ -202,7 +209,7 @@ export default function RegisterScreen() {
               secureTextEntry
               autoComplete="new-password"
               error={errors.password}
-              leftIcon={<Lock size={20} color={Colors.gray[400]} />}
+              leftIcon={<Lock size={20} color={colors.textTertiary} />}
             />
 
             <Input
@@ -213,7 +220,7 @@ export default function RegisterScreen() {
               secureTextEntry
               autoComplete="new-password"
               error={errors.confirmPassword}
-              leftIcon={<Lock size={20} color={Colors.gray[400]} />}
+              leftIcon={<Lock size={20} color={colors.textTertiary} />}
             />
 
             <Button
@@ -228,9 +235,9 @@ export default function RegisterScreen() {
 
           {/* Footer */}
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Déjà un compte ?</Text>
+            <Text style={[styles.footerText, { color: colors.textSecondary }]}>Déjà un compte ?</Text>
             <TouchableOpacity onPress={() => router.replace('/(auth)/login')}>
-              <Text style={styles.footerLink}>Se connecter</Text>
+              <Text style={[styles.footerLink, { color: colors.primary }]}>Se connecter</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -242,7 +249,6 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
   },
   keyboardView: {
     flex: 1,
@@ -258,7 +264,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: Layout.radius.md,
-    backgroundColor: Colors.gray[100],
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -268,12 +273,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: Layout.fontSize['3xl'],
     fontWeight: '700',
-    color: Colors.text.primary,
     marginBottom: Layout.spacing.sm,
   },
   subtitle: {
     fontSize: Layout.fontSize.md,
-    color: Colors.text.secondary,
   },
   roleContainer: {
     marginBottom: Layout.spacing.lg,
@@ -281,7 +284,6 @@ const styles = StyleSheet.create({
   roleLabel: {
     fontSize: Layout.fontSize.sm,
     fontWeight: '500',
-    color: Colors.text.primary,
     marginBottom: Layout.spacing.sm,
   },
   roleButtons: {
@@ -312,7 +314,6 @@ const styles = StyleSheet.create({
   },
   roleButtonSubtext: {
     fontSize: Layout.fontSize.xs,
-    color: Colors.text.secondary,
     marginTop: Layout.spacing.xs,
     textAlign: 'center',
   },
@@ -334,7 +335,6 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
   },
   footerLink: {
     fontSize: Layout.fontSize.sm,

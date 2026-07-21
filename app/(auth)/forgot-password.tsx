@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Colors } from '@/constants/Colors';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { Layout } from '@/constants/Layout';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'expo-router';
@@ -21,6 +22,8 @@ import { toast } from '@/lib/toast';
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
+  const colors = useColors();
+  const isDark = useIsDarkTheme();
 
   const [email, setEmail] = useState('');
   const [errors, setErrors] = useState<{ email?: string }>({});
@@ -62,7 +65,7 @@ export default function ForgotPasswordScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -77,17 +80,17 @@ export default function ForgotPasswordScreen() {
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity
-              style={styles.backButton}
+              style={[styles.backButton, { backgroundColor: isDark ? colors.backgroundTertiary : Colors.gray[100] }]}
               onPress={() => goBackOrFallback(router)}
             >
-              <ArrowLeft size={24} color={Colors.text.primary} />
+              <ArrowLeft size={24} color={colors.text} />
             </TouchableOpacity>
           </View>
 
           {/* Title */}
           <View style={styles.titleContainer}>
-            <Text style={styles.title}>Mot de passe oublié ?</Text>
-            <Text style={styles.subtitle}>
+            <Text style={[styles.title, { color: colors.text }]}>Mot de passe oublié ?</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
               Entrez votre email et nous vous enverrons un lien pour réinitialiser votre mot de passe.
             </Text>
           </View>
@@ -103,7 +106,7 @@ export default function ForgotPasswordScreen() {
               autoCapitalize="none"
               autoComplete="email"
               error={errors.email}
-              leftIcon={<Mail size={20} color={Colors.gray[400]} />}
+              leftIcon={<Mail size={20} color={colors.textTertiary} />}
               editable={!emailSent}
             />
 
@@ -120,9 +123,9 @@ export default function ForgotPasswordScreen() {
 
           {/* Footer */}
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Vous vous souvenez ?</Text>
+            <Text style={[styles.footerText, { color: colors.textSecondary }]}>Vous vous souvenez ?</Text>
             <TouchableOpacity onPress={() => goBackOrFallback(router)}>
-              <Text style={styles.footerLink}>Retour à la connexion</Text>
+              <Text style={[styles.footerLink, { color: colors.primary }]}>Retour à la connexion</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -134,7 +137,6 @@ export default function ForgotPasswordScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
   },
   keyboardView: {
     flex: 1,
@@ -150,7 +152,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: Layout.radius.md,
-    backgroundColor: Colors.gray[100],
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -161,12 +162,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: Layout.fontSize['3xl'],
     fontWeight: '700',
-    color: Colors.text.primary,
     marginBottom: Layout.spacing.sm,
   },
   subtitle: {
     fontSize: Layout.fontSize.md,
-    color: Colors.text.secondary,
     lineHeight: 22,
   },
   form: {
@@ -184,11 +183,9 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.text.secondary,
   },
   footerLink: {
     fontSize: Layout.fontSize.sm,
-    color: Colors.primary.DEFAULT,
     fontWeight: '600',
   },
 });

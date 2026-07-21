@@ -4,6 +4,7 @@
  */
 
 import { Colors } from '@/constants/Colors';
+import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { Layout } from '@/constants/Layout';
 import { fontFamily } from '@/constants/Typography';
 import { Image } from 'expo-image';
@@ -38,13 +39,15 @@ export function parseInspirationContext(content: string): InspirationContextData
 }
 
 export function InspirationContextCard({ data, isOwn }: InspirationContextCardProps) {
+    const colors = useColors();
+    const isDark = useIsDarkTheme();
     const handlePress = () => {
         router.push(`/inspiration/${data.inspiration_id}`);
     };
 
     return (
         <View style={[styles.container, isOwn && styles.containerOwn]}>
-            <Pressable onPress={handlePress} style={styles.card}>
+            <Pressable onPress={handlePress} style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
                 {/* Image miniature */}
                 <Image
                     source={{ uri: data.image_url }}
@@ -57,27 +60,27 @@ export function InspirationContextCard({ data, isOwn }: InspirationContextCardPr
                 {/* Contenu */}
                 <View style={styles.content}>
                     <View style={styles.header}>
-                        <Sparkles size={14} color={Colors.primary.DEFAULT} />
-                        <Text style={styles.label}>Inspiration partagee</Text>
+                        <Sparkles size={14} color={colors.primary} />
+                        <Text style={[styles.label, { color: colors.primary }]}>Inspiration partagee</Text>
                     </View>
 
-                    <Text style={styles.title} numberOfLines={1}>
+                    <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
                         {data.title || 'Publication'}
                     </Text>
 
                     <View style={styles.viewLink}>
-                        <Text style={styles.viewLinkText} numberOfLines={1}>
+                        <Text style={[styles.viewLinkText, { color: colors.primary }]} numberOfLines={1}>
                             Voir la publication
                         </Text>
-                        <ExternalLink size={12} color={Colors.primary.DEFAULT} />
+                        <ExternalLink size={12} color={colors.primary} />
                     </View>
                 </View>
             </Pressable>
 
             {/* Message optionnel */}
             {data.message && (
-                <View style={[styles.messageBubble, isOwn ? styles.bubbleOwn : styles.bubbleOther]}>
-                    <Text style={[styles.messageText, isOwn && styles.messageTextOwn]}>
+                <View style={[styles.messageBubble, isOwn ? [styles.bubbleOwn, { backgroundColor: colors.primary }] : [styles.bubbleOther, { backgroundColor: isDark ? colors.backgroundTertiary : Colors.gray[100] }]]}>
+                    <Text style={[styles.messageText, { color: colors.text }, isOwn && styles.messageTextOwn]}>
                         {data.message}
                     </Text>
                 </View>
@@ -96,12 +99,10 @@ const styles = StyleSheet.create({
     },
     card: {
         flexDirection: 'row',
-        backgroundColor: Colors.white,
         borderRadius: Layout.radius.lg,
         overflow: 'hidden',
         width: '100%',
         borderWidth: 1,
-        borderColor: Colors.gray[200],
         shadowColor: Colors.black,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.05,
@@ -129,14 +130,12 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 10,
         fontFamily: fontFamily.semiBold,
-        color: Colors.primary.DEFAULT,
         textTransform: 'uppercase',
         letterSpacing: 0.3,
     },
     title: {
         fontSize: 13,
         fontFamily: fontFamily.semiBold,
-        color: Colors.text.primary,
         lineHeight: 17,
     },
     viewLink: {
@@ -148,7 +147,6 @@ const styles = StyleSheet.create({
     },
     viewLinkText: {
         fontSize: 11,
-        color: Colors.primary.DEFAULT,
         fontFamily: fontFamily.medium,
         flexShrink: 1,
     },
@@ -160,16 +158,13 @@ const styles = StyleSheet.create({
         maxWidth: '100%',
     },
     bubbleOwn: {
-        backgroundColor: Colors.primary.DEFAULT,
         borderBottomRightRadius: 4,
     },
     bubbleOther: {
-        backgroundColor: Colors.gray[100],
         borderBottomLeftRadius: 4,
     },
     messageText: {
         fontSize: Layout.fontSize.md,
-        color: Colors.text.primary,
         lineHeight: 22,
     },
     messageTextOwn: {
