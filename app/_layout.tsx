@@ -18,7 +18,10 @@ import { GlobalToast } from '@/components/ui/GlobalToast';
 import { OfflineIndicator } from '@/components/ui/OfflineIndicator';
 import { goBackOrFallback } from '@/lib/navigation';
 import { queryClient } from '@/lib/queryClient';
+import { initSentry, Sentry, sentryEnabled } from '@/lib/sentry';
 import { useAuthStore } from '@/stores/authStore';
+
+initSentry();
 
 SplashScreen.preventAutoHideAsync();
 
@@ -55,7 +58,7 @@ const fadeScreenOptions = {
   animation: 'fade',
 } as const;
 
-export default function RootLayout() {
+function RootLayout() {
   const router = useRouter();
   const isInitialized = useAuthStore((state) => state.isInitialized);
   const [showOpeningVideo, setShowOpeningVideo] = useState(true);
@@ -276,3 +279,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+
+// Sentry.wrap ajoute le suivi des erreurs au niveau racine (no-op sans DSN)
+export default sentryEnabled ? Sentry.wrap(RootLayout) : RootLayout;
