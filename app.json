@@ -12,7 +12,7 @@
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/1132b65b-3b07-4988-a65f-202a4195f732",
+      "url": "https://u.expo.dev/1132b65b-3b07-4988-a65d-202a4195f732",
       "checkAutomatically": "ON_LOAD",
       "fallbackToCacheTimeout": 3000,
       "requestHeaders": {
@@ -56,8 +56,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "1132b65b-3b07-4988-a65f-202a4195f732"
+        "projectId": "1132b65b-3b07-4988-a65d-202a4195f732"
       }
-    }
+    },
+    "owner": "umade"
   }
 }
