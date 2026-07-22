@@ -24,7 +24,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { Text } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface PortfolioViewerImage {
   id: string;
@@ -160,6 +160,7 @@ export function PortfolioViewer({
 }: PortfolioViewerProps) {
   const listRef = useRef<FlatList<PortfolioViewerImage>>(null);
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     if (!visible) return;
@@ -181,8 +182,17 @@ export function PortfolioViewer({
       onRequestClose={onClose}
     >
       <Animated.View entering={FadeIn.duration(170)} exiting={FadeOut.duration(140)} style={styles.overlay}>
-        <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-          <View style={styles.headerRow}>
+        <View style={styles.safeArea}>
+          <View
+            style={[
+              styles.headerRow,
+              // Marges appliquées à la main : un SafeAreaView placé dans un
+              // Modal est rendu hors du SafeAreaProvider et ne reçoit pas
+              // toujours les bons insets — la croix passait alors sous
+              // l'heure et la batterie.
+              { paddingTop: Math.max(insets.top, 12) + Layout.spacing.sm },
+            ]}
+          >
             <Pressable onPress={onClose} style={styles.closeButton} hitSlop={12}>
               <X size={22} color="#FFFFFF" />
             </Pressable>
@@ -218,10 +228,15 @@ export function PortfolioViewer({
             )}
           />
 
-          <View style={styles.contactFloating}>
+          <View
+            style={[
+              styles.contactFloating,
+              { bottom: Math.max(insets.bottom, Layout.spacing.lg) },
+            ]}
+          >
             <Button title="Contacter" onPress={onContact} size="lg" />
           </View>
-        </SafeAreaView>
+        </View>
       </Animated.View>
     </Modal>
   );
@@ -236,8 +251,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerRow: {
+    // paddingTop est fourni en ligne à partir des insets réels.
     paddingHorizontal: Layout.spacing.lg,
-    paddingTop: Layout.spacing.md,
+    paddingBottom: Layout.spacing.sm,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -277,9 +293,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   contactFloating: {
+    // bottom est fourni en ligne à partir des insets réels.
     position: 'absolute',
     left: Layout.spacing.lg,
     right: Layout.spacing.lg,
-    bottom: Layout.spacing.lg,
   },
 });

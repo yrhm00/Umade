@@ -52,6 +52,14 @@ const modalScreenOptions = {
   animation: 'slide_from_bottom',
 } as const;
 
+// Modal dont l'écran dessine déjà son propre en-tête : afficher le header
+// natif en plus donnerait deux barres de retour et le nom de route brut.
+const bareModalScreenOptions = {
+  presentation: 'modal',
+  headerShown: false,
+  animation: 'slide_from_bottom',
+} as const;
+
 // Options pour les écrans qui s'ouvrent en fade
 const fadeScreenOptions = {
   headerShown: false,
@@ -198,7 +206,7 @@ function RootLayout() {
                   <Stack.Screen name="provider/[id]" options={providerScreenOptions} />
                   <Stack.Screen name="event/create" options={modalScreenOptions} />
                   <Stack.Screen name="event/[id]" />
-                  <Stack.Screen name="booking/[providerId]" options={modalScreenOptions} />
+                  <Stack.Screen name="booking/[providerId]" options={bareModalScreenOptions} />
                   <Stack.Screen name="booking/[id]/details" />
                   <Stack.Screen name="booking/[id]/quote" />
                   <Stack.Screen name="compare" />
