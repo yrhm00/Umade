@@ -100,7 +100,10 @@ export function ChatInput({
         setText('');
         clearDraft(conversationId);
         setPendingImage(null);
-      } catch {
+      } catch (error) {
+        // Sans ce log, l'erreur réelle de Storage (bucket manquant, RLS,
+        // taille, type MIME) est invisible et le bug indiagnosticable.
+        if (__DEV__) console.error('[ChatInput] upload image échoué:', error);
         toast.error("L'image n'a pas pu être envoyée. Réessaie dans quelques instants.");
       } finally {
         setIsUploading(false);
