@@ -3,6 +3,7 @@
  * Dark Mode Support
  */
 
+import { CategoryIcon } from '@/components/common/CategoryIcon';
 import { CategoryPill } from '@/components/common/CategoryPill';
 import { ClientHeader } from '@/components/client/ClientHeader';
 import { ClientSearchField } from '@/components/client/ClientSearchField';
@@ -436,7 +437,7 @@ export default function SearchScreen() {
                 <CategoryPill
                   key={category.id}
                   label={category.name}
-                  icon={category.icon || undefined}
+                  categorySlug={category.slug}
                   onPress={() => handleCategoryPress(category.slug)}
                 />
               ))}
@@ -497,9 +498,11 @@ export default function SearchScreen() {
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
                     >
-                      <Text style={styles.categoryGridIcon}>
-                        {category.icon || '📌'}
-                      </Text>
+                      <CategoryIcon
+                        slug={category.slug}
+                        size={30}
+                        style={styles.categoryGridIcon}
+                      />
                       <Text style={[styles.categoryGridName, { color: colors.text }]} numberOfLines={2}>
                         {category.name}
                       </Text>

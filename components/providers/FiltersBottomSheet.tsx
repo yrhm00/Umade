@@ -143,7 +143,7 @@ export const FiltersBottomSheet = forwardRef<BottomSheetModal, FiltersBottomShee
                 <CategoryPill
                   key={cat.id}
                   label={cat.name}
-                  icon={cat.icon || undefined}
+                  categorySlug={cat.slug}
                   isSelected={localFilters.categorySlug === cat.slug}
                   onPress={() =>
                     setLocalFilters((f) => ({

@@ -2,6 +2,7 @@
  * Étape 1 prestataire : quel métier ?
  */
 
+import { CategoryIcon } from '@/components/common/CategoryIcon';
 import { OnboardingProgress } from '@/components/onboarding';
 import { Button } from '@/components/ui/Button';
 import { Layout } from '@/constants/Layout';
@@ -78,7 +79,12 @@ export default function ProviderCategoryScreen() {
                       },
                     ]}
                   >
-                    <Text style={styles.emoji}>{cat.icon || '✨'}</Text>
+                    <CategoryIcon
+                      slug={cat.slug}
+                      size={30}
+                      color={selected ? colors.primary : colors.textSecondary}
+                      style={styles.emoji}
+                    />
                     <Text
                       style={[
                         styles.cardLabel,

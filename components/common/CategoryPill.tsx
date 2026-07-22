@@ -7,11 +7,15 @@ import {
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
 import { useColors, useIsDarkTheme } from '@/hooks/useColors';
+import { CategoryIcon } from '@/components/common/CategoryIcon';
 import { PressableScale } from '@/components/ui/PressableScale';
 
 interface CategoryPillProps {
   label: string;
+  /** Emoji hérité — utilisé seulement si categorySlug n'est pas fourni. */
   icon?: string;
+  /** Slug de catégorie : affiche l'icône Phosphor plutôt qu'un emoji. */
+  categorySlug?: string | null;
   isSelected?: boolean;
   onPress?: () => void;
   style?: ViewStyle;
@@ -20,6 +24,7 @@ interface CategoryPillProps {
 export function CategoryPill({
   label,
   icon,
+  categorySlug,
   isSelected = false,
   onPress,
   style,
@@ -55,7 +60,12 @@ export function CategoryPill({
         style,
       ]}
     >
-      {icon && <Text style={styles.icon}>{icon}</Text>}
+      {categorySlug ? (
+        // Pas de style : le conteneur applique déjà un `gap`.
+        <CategoryIcon slug={categorySlug} size={16} color={textColor} />
+      ) : icon ? (
+        <Text style={styles.icon}>{icon}</Text>
+      ) : null}
       <Text style={[styles.label, { color: textColor }]}>
         {label}
       </Text>
