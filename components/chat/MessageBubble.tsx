@@ -186,7 +186,7 @@ export const MessageBubble = React.memo(function MessageBubble({
       onLongPress={onLongPress ? () => onLongPress(message) : undefined}
       delayLongPress={280}
     >
-      <View>
+      <View style={styles.bubbleWrapper}>
         <View
           style={[
             styles.bubble,
@@ -247,8 +247,15 @@ const styles = StyleSheet.create({
   containerOwn: {
     justifyContent: 'flex-end',
   },
+  // La contrainte de largeur vit ici, sur l'enfant direct du conteneur en
+  // ligne : le pourcentage se résout alors sur la largeur de la conversation.
+  // Placée sur .bubble, elle se calculait sur une View auto-dimensionnée,
+  // ce qui écrasait la bulle et coupait des messages très courts.
+  bubbleWrapper: {
+    maxWidth: '82%',
+    flexShrink: 1,
+  },
   bubble: {
-    maxWidth: '80%',
     paddingVertical: Layout.spacing.sm,
     paddingHorizontal: Layout.spacing.md,
     borderRadius: Layout.radius.lg,
