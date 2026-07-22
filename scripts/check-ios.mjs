@@ -137,6 +137,41 @@ if (appJsonRaw === null) {
 }
 
 // ─────────────────────────────────────────────────────────────
+// 4. NODE_BINARY : les phases de script Xcode (Hermes, RNDeps, bundle RN)
+//    l'exécutent. Un binaire cassé fait échouer le build avec un
+//    "PhaseScriptExecution failed" opaque, sans jamais nommer Node.
+//    Déjà vu : le node Homebrew référençant une libsimdjson supprimée.
+// ─────────────────────────────────────────────────────────────
+const envLocal = read(join(ROOT, 'ios/.xcode.env.local')) ?? read(join(ROOT, 'ios/.xcode.env'));
+if (envLocal) {
+  const match = envLocal.match(/^\s*export\s+NODE_BINARY=(.+)$/m);
+  const nodePath = match?.[1]?.trim().replace(/^["']|["']$/g, '');
+
+  if (!nodePath || nodePath.includes('$(')) {
+    pass('NODE_BINARY résolu dynamiquement (pas de chemin figé)');
+  } else if (!existsSync(nodePath)) {
+    fail(
+      `NODE_BINARY pointe vers un binaire inexistant : ${nodePath}`,
+      'Corrigez ios/.xcode.env.local avec le chemin de `which node`.'
+    );
+  } else {
+    // Existe ≠ fonctionne : une lib système manquante le fait planter.
+    const { spawnSync } = await import('node:child_process');
+    const res = spawnSync(nodePath, ['-v'], { encoding: 'utf8' });
+    if (res.status === 0) {
+      pass(`NODE_BINARY fonctionnel (${res.stdout.trim()})`);
+    } else {
+      fail(
+        `NODE_BINARY existe mais plante : ${nodePath}`,
+        'Les phases de script Xcode échoueront. Pointez ios/.xcode.env.local ' +
+          'vers un node valide (`which node`).\n     ' +
+          (res.stderr || '').split('\n')[0]
+      );
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
 console.log('');
 if (failures > 0) {
   console.log(c.red(c.bold(`${failures} problème(s) bloquant(s)`)) + (warnings ? c.dim(` · ${warnings} avertissement(s)`) : ''));
