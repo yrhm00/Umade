@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Umade — Le bon prestataire pour chaque événement</title>
+<meta name="description" content="Umade réunit les meilleurs prestataires événementiels de Belgique. Comparez, échangez et réservez pour vos mariages, anniversaires, baptêmes et soirées." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --cream: #f7f5f1;
+    --white: #ffffff;
+    --ink: #101010;
+    --ink-2: #1b1b1b;
+    --grey: #6f6b64;
+    --grey-light: #a9a49b;
+    --amber: #a88a2c;
+    --olive: #b7b03f;
+    --line: rgba(16,16,16,0.08);
+    --display: "Instrument Sans", -apple-system, sans-serif;
+    --body: "Inter", -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+  body { font-family: var(--body); background: var(--cream); color: var(--ink); overflow-x: hidden; }
+  a { color: inherit; text-decoration: none; }
+  img { display: block; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 46px; }
+  h1,h2,h3 { font-family: var(--display); font-weight: 500; letter-spacing: -0.025em; line-height: 1.06; }
+
+  /* ============ reveals ============ */
+  .rv { opacity: 0; transform: translateY(26px); transition: opacity .7s cubic-bezier(.2,.6,.2,1), transform .7s cubic-bezier(.2,.6,.2,1); }
+  .rv.in { opacity: 1; transform: none; }
+  .rv-d1 { transition-delay: .08s; } .rv-d2 { transition-delay: .16s; } .rv-d3 { transition-delay: .24s; }
+
+  /* ============ buttons ============ */
+  .btn { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14.5px; padding: 13px 22px; border-radius: 999px; cursor: pointer; border: none; transition: transform .18s ease, background .18s, color .18s; white-space: nowrap; font-family: var(--body); }
+  .btn .ar { transition: transform .18s ease; }
+  .btn:hover .ar { transform: translateX(3px); }
+  .btn-white { background: #fff; color: var(--ink); }
+  .btn-white:hover { transform: scale(1.03); }
+  .btn-dark { background: rgba(20,20,20,0.55); color: #fff; backdrop-filter: blur(6px); }
+  .btn-dark:hover { background: rgba(20,20,20,0.75); }
+  .btn-black { background: var(--ink); color: #fff; }
+  .btn-black:hover { background: #000; transform: scale(1.02); }
+
+  .eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--amber); margin-bottom: 20px; }
+
+  /* ============ nav ============ */
+  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; transition: background .3s ease, box-shadow .3s ease; }
+  .nav-in { display: flex; align-items: center; height: 68px; }
+  .brand { font-family: var(--display); font-weight: 600; font-size: 19px; letter-spacing: -0.01em; color: #fff; transition: color .3s; }
+  .brand span { font-size: 11px; vertical-align: super; opacity: .7; }
+  .nav-links { margin-left: auto; display: flex; gap: 30px; }
+  .nav-links a { font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.85); transition: color .2s; }
+  .nav-links a:hover { color: #fff; }
+  nav.solid { background: var(--cream); box-shadow: 0 1px 0 var(--line); }
+  nav.solid .brand { color: var(--ink); }
+  nav.solid .nav-links a { color: var(--grey); }
+  nav.solid .nav-links a:hover { color: var(--ink); }
+
+  /* ============ hero ============ */
+  .hero { position: relative; min-height: 104vh; display: flex; align-items: flex-end; }
+  .hero-bg { position: absolute; inset: 0; overflow: hidden; }
+  .hero-bg img { width: 100%; height: 100%; object-fit: cover; }
+  .hero-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.18) 45%, rgba(0,0,0,0.62) 100%); }
+  .hero-in { position: relative; z-index: 2; width: 100%; padding-bottom: 84px; }
+  .hero h1 { font-size: clamp(42px, 5.6vw, 74px); color: rgba(255,255,255,0.92); max-width: 830px; }
+  .hero h1 em { font-style: normal; color: rgba(255,255,255,0.55); }
+  .hero .lede { color: rgba(255,255,255,0.82); font-size: 16.5px; line-height: 1.55; max-width: 470px; margin: 22px 0 30px; }
+  .hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; }
+
+  /* ============ trusted (pinned zoom-out) ============ */
+  .trusted { height: 180vh; position: relative; text-align: center; }
+  .trusted-sticky { position: sticky; top: 0; height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .trusted-inner { will-change: transform, opacity; }
+  .chips { display: flex; gap: 10px; justify-content: center; margin-bottom: 30px; flex-wrap: wrap; }
+  .chip { font-size: 12.5px; font-weight: 600; color: var(--amber); background: #fff; border: 1px solid var(--line); padding: 7px 14px; border-radius: 999px; }
+  .trusted h2 { font-size: clamp(30px, 3.8vw, 46px); }
+  .trusted h2 .dim { color: var(--grey-light); display: block; }
+  .cats-row { display: flex; gap: 38px; justify-content: center; margin-top: 44px; flex-wrap: wrap; }
+  .cats-row span { font-family: var(--display); font-weight: 600; font-size: 16.5px; color: var(--grey-light); display: inline-flex; align-items: center; gap: 9px; }
+
+  /* ============ founder ============ */
+  .founder { padding: 20px 0 120px; }
+  .founder-card { position: relative; max-width: 620px; margin-left: auto; border-radius: 16px; overflow: hidden; }
+  .founder-card > img { width: 100%; height: 460px; object-fit: cover; }
+  .quote-box { position: absolute; left: 22px; right: 22px; bottom: 22px; background: #fff; border-radius: 12px; padding: 24px 26px; }
+  .quote-box p { font-size: 15px; line-height: 1.55; color: var(--ink-2); }
+  .quote-meta { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; gap: 12px; }
+  .quote-meta .who { font-size: 13.5px; }
+  .quote-meta .who b { font-weight: 600; }
+  .quote-meta .who span { color: var(--grey-light); }
+  .handle { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; border: 1px solid var(--line); border-radius: 999px; padding: 7px 13px; transition: background .18s; }
+  .handle:hover { background: var(--cream); }
+
+  /* ============ services ============ */
+  .services { position: relative; padding: 120px 0 110px; color: #fff; }
+  .services-bg { position: absolute; inset: 0; overflow: hidden; }
+  .services-bg img { width: 100%; height: 100%; object-fit: cover; }
+  .services-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0.25) 40%, rgba(0,0,0,0.45)); }
+  .services .wrap { position: relative; z-index: 2; }
+  .services .eyebrow { color: var(--olive); }
+  .services h2 { font-size: clamp(30px, 3.8vw, 46px); color: #fff; max-width: 640px; margin-bottom: 64px; }
+  .svc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .svc { position: relative; height: 300px; border-radius: 12px; background: rgba(16,16,16,0.72); backdrop-filter: blur(10px); padding: 20px; display: flex; flex-direction: column; justify-content: flex-end; transition: background .28s ease, color .28s ease, transform .28s ease; cursor: pointer; color: #fff; }
+  .svc .ar { position: absolute; top: 18px; right: 18px; font-size: 18px; opacity: .9; transition: transform .28s; }
+  .svc .nm { font-family: var(--display); font-weight: 500; font-size: 16.5px; }
+  .svc .ds { font-size: 13px; color: currentColor; opacity: 0; max-height: 0; overflow: hidden; transition: opacity .28s, max-height .28s; line-height: 1.5; }
+  .svc:hover { background: rgba(250,248,244,0.94); color: var(--ink); transform: translateY(-4px); }
+  .svc:hover .ar { transform: translate(3px,-3px); }
+  .svc:hover .ds { opacity: .75; max-height: 80px; margin-top: 6px; }
+
+  /* ============ who ============ */
+  .who { padding: 120px 0 0; }
+  .who h2 { font-size: clamp(30px, 3.8vw, 46px); max-width: 760px; }
+  .strip-wrap { margin-top: 60px; overflow-x: auto; scrollbar-width: none; cursor: grab; }
+  .strip-wrap::-webkit-scrollbar { display: none; }
+  .strip { display: flex; }
+  .cell { position: relative; flex: 0 0 340px; height: 480px; overflow: hidden; }
+  .cell img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
+  .cell:hover img { transform: scale(1.045); }
+  .cell::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 55%, rgba(0,0,0,0.55)); }
+  .cell .lb { position: absolute; left: 18px; bottom: 16px; z-index: 2; color: #fff; font-size: 14.5px; font-weight: 500; }
+
+  /* ============ projects ============ */
+  .projects { background: #0d0d0d; color: #fff; padding: 130px 0; }
+  .projects .eyebrow { color: var(--olive); text-align: center; }
+  .projects h2 { font-size: clamp(30px, 3.8vw, 46px); color: #fff; text-align: center; max-width: 700px; margin: 0 auto 80px; }
+  .proj { margin-bottom: 90px; }
+  .proj.right { display: flex; justify-content: flex-end; }
+  .proj-inner { width: 72%; }
+  .proj-inner.small { width: 54%; }
+  .proj-img { border-radius: 6px; overflow: hidden; }
+  .proj-img img { width: 100%; height: auto; aspect-ratio: 16/10; object-fit: cover; transition: transform .6s ease; }
+  .proj-inner:hover .proj-img img { transform: scale(1.03); }
+  .proj-cap { display: flex; justify-content: space-between; margin-top: 16px; font-size: 14.5px; }
+  .proj-cap .cat { color: rgba(255,255,255,0.45); }
+  .all-link { display: inline-flex; align-items: center; gap: 8px; font-size: 14.5px; font-weight: 500; border-bottom: 1px solid rgba(255,255,255,0.4); padding-bottom: 3px; transition: gap .18s; }
+  .all-link:hover { gap: 13px; }
+
+  /* ============ testimonials ============ */
+  .testi { padding: 130px 0 60px; }
+  .testi h2 { font-size: clamp(30px, 3.8vw, 46px); max-width: 700px; margin-bottom: 70px; }
+  .t-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .t-card { position: relative; background: #fff; border-radius: 12px; padding: 34px 22px 20px; display: flex; flex-direction: column; }
+  .t-chip { position: absolute; top: -13px; left: 50%; transform: translateX(-50%); background: #fff; border: 1px solid var(--line); font-size: 11.5px; font-weight: 600; padding: 5px 12px; border-radius: 999px; white-space: nowrap; }
+  .t-card .qm { font-family: var(--display); font-size: 26px; color: var(--grey-light); line-height: 1; margin-bottom: 10px; }
+  .t-card p { font-size: 13.5px; line-height: 1.55; color: var(--ink-2); flex: 1; }
+  .t-foot { display: flex; align-items: center; gap: 9px; margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--line); }
+  .t-foot .av { width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(145deg, #8f77b8, #5f4a8b); color: #fff; font-size: 11px; font-weight: 700; display: grid; place-items: center; }
+  .t-foot .nm { font-size: 12.5px; font-weight: 500; }
+
+  /* ============ pricing ============ */
+  .pricing { padding: 110px 0; }
+  .pricing h2 { font-size: clamp(30px, 3.8vw, 46px); max-width: 640px; margin-bottom: 70px; }
+  .p-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .p-card { background: #fff; border-radius: 12px; padding: 26px 22px; display: flex; flex-direction: column; }
+  .p-card .pl { font-size: 13px; font-weight: 600; color: var(--grey); }
+  .p-card .pr { font-family: var(--display); font-size: 42px; font-weight: 500; letter-spacing: -0.03em; margin: 12px 0 4px; }
+  .p-card .pr small { font-size: 15px; color: var(--grey-light); font-family: var(--body); letter-spacing: 0; }
+  .p-card .btn { justify-content: center; width: 100%; margin: 18px 0 22px; }
+  .p-feats { display: flex; flex-direction: column; gap: 11px; }
+  .p-feats div { display: flex; gap: 9px; font-size: 13px; color: var(--ink-2); line-height: 1.45; }
+  .p-feats .ck { flex-shrink: 0; width: 17px; height: 17px; border: 1px solid var(--line); border-radius: 50%; display: grid; place-items: center; font-size: 9px; color: var(--amber); margin-top: 1px; }
+
+  /* ============ faq ============ */
+  .faq { padding: 90px 0 130px; }
+  .faq-in { display: grid; grid-template-columns: 1fr 1.15fr; gap: 60px; align-items: start; }
+  .faq h2 { font-size: clamp(30px, 3.8vw, 46px); }
+  .acc { display: flex; flex-direction: column; gap: 10px; }
+  .acc-item { background: #fff; border-radius: 12px; overflow: hidden; }
+  .acc-q { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 22px; background: none; border: none; cursor: pointer; font-family: var(--body); font-size: 14.5px; font-weight: 500; color: var(--ink); text-align: left; }
+  .acc-q .ic { font-size: 18px; color: var(--grey); transition: transform .25s; flex-shrink: 0; }
+  .acc-a { max-height: 0; overflow: hidden; transition: max-height .32s ease; }
+  .acc-a p { padding: 0 22px 18px; font-size: 13.5px; line-height: 1.6; color: var(--grey); }
+  .acc-item.open .ic { transform: rotate(45deg); }
+
+  /* ============ final cta + footer ============ */
+  .final { position: relative; padding: 140px 0 46px; color: #fff; }
+  .final-bg { position: absolute; inset: 0; overflow: hidden; }
+  .final-bg img { width: 100%; height: 100%; object-fit: cover; }
+  .final-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.3), rgba(0,0,0,0.55)); }
+  .final .wrap { position: relative; z-index: 2; }
+  .final h2 { font-size: clamp(36px, 4.6vw, 58px); color: #fff; max-width: 560px; }
+  .final-ctas { display: flex; gap: 12px; margin: 30px 0 120px; flex-wrap: wrap; }
+  .foot-card { background: rgba(12,12,12,0.55); backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 38px 40px; display: flex; justify-content: space-between; gap: 40px; flex-wrap: wrap; }
+  .foot-brand .brand { color: #fff; font-size: 20px; }
+  .foot-brand p { color: rgba(255,255,255,0.55); font-size: 13.5px; margin-top: 8px; max-width: 260px; }
+  .foot-cols { display: flex; gap: 60px; flex-wrap: wrap; }
+  .foot-col h4 { font-size: 12.5px; font-weight: 600; color: rgba(255,255,255,0.45); margin-bottom: 14px; }
+  .foot-col a { display: block; font-size: 13.5px; color: rgba(255,255,255,0.85); margin-bottom: 10px; transition: color .15s; }
+  .foot-col a:hover { color: #fff; }
+  .foot-legal { position: relative; z-index: 2; text-align: center; color: rgba(255,255,255,0.4); font-size: 12px; margin-top: 22px; }
+
+  /* ============ responsive ============ */
+  @media (max-width: 1000px) {
+    .svc-grid, .t-grid, .p-grid { grid-template-columns: repeat(2, 1fr); }
+    .t-grid { row-gap: 28px; }
+    .faq-in { grid-template-columns: 1fr; }
+    .proj-inner, .proj-inner.small { width: 100%; }
+  }
+  @media (max-width: 620px) {
+    .wrap { padding: 0 22px; }
+    .nav-links { display: none; }
+    .svc-grid, .t-grid, .p-grid { grid-template-columns: 1fr; }
+    .cell { flex-basis: 260px; height: 380px; }
+    .founder-card > img { height: 380px; }
+    .foot-card { padding: 28px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="#top">Umade <span>®</span></a>
+    <div class="nav-links">
+      <a href="#services">Événements</a>
+      <a href="#inspirations">Inspirations</a>
+      <a href="#tarifs">Tarifs</a>
+      <a href="#contact">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero" id="top">
+  <div class="hero-bg">
+    <img src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=2400&auto=format&fit=crop" alt="Fête avec confettis" />
+  </div>
+  <div class="wrap hero-in">
+    <h1 class="rv">Le bon prestataire pour <em>chaque événement inoubliable</em></h1>
+    <p class="lede rv rv-d1">Umade réunit les meilleurs prestataires événementiels de Belgique. Comparez, échangez et réservez — le tout depuis une seule application.</p>
+    <div class="hero-ctas rv rv-d2">
+      <a class="btn btn-white" href="#tarifs">Télécharger l'app <span class="ar">→</span></a>
+      <a class="btn btn-dark" href="#services">Découvrir Umade</a>
+    </div>
+  </div>
+</header>
+
+<!-- TRUSTED (pinned zoom-out) -->
+<section class="trusted" id="trusted">
+  <div class="trusted-sticky">
+    <div class="trusted-inner wrap" id="trustedInner">
+      <div class="chips">
+        <span class="chip">127+ prestataires vérifiés</span>
+        <span class="chip">+500 événements organisés</span>
+      </div>
+      <h2><span class="dim">Des événements bien préparés,</span> approuvés par nos utilisateurs</h2>
+      <div class="cats-row">
+        <span>📸 Photographes</span>
+        <span>🍽️ Traiteurs</span>
+        <span>🎵 DJs</span>
+        <span>💐 Fleuristes</span>
+        <span>🏰 Lieux</span>
+        <span>💍 Planners</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOUNDER -->
+<section class="founder">
+  <div class="wrap">
+    <div class="founder-card rv">
+      <img src="https://images.unsplash.com/photo-1511578314322-379afb476865?q=80&w=1600&auto=format&fit=crop" alt="Réception élégante" />
+      <div class="quote-box">
+        <p>« Chaque événement raconte une histoire. Notre mission, c'est de vous connecter aux artisans qui la rendront inoubliable — sans stress, sans détour. »</p>
+        <div class="quote-meta">
+          <div class="who"><b>Yassin R.,</b> <span>fondateur d'Umade</span></div>
+          <a class="handle" href="#contact">@umade <span>→</span></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section class="services" id="services">
+  <div class="services-bg">
+    <img src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=2400&auto=format&fit=crop" alt="Amis célébrant ensemble" />
+  </div>
+  <div class="wrap">
+    <div class="eyebrow rv">Événements</div>
+    <h2 class="rv rv-d1">Des moments de joie pour chaque occasion qui compte</h2>
+    <div class="svc-grid">
+      <div class="svc rv"><span class="ar">↗</span><div class="nm">Mariages</div><div class="ds">Lieu, photographe, traiteur, fleurs — tous les artisans du plus beau jour.</div></div>
+      <div class="svc rv rv-d1"><span class="ar">↗</span><div class="nm">Anniversaires</div><div class="ds">Des fêtes mémorables, de 1 à 100 ans, clé en main.</div></div>
+      <div class="svc rv rv-d2"><span class="ar">↗</span><div class="nm">Baptêmes</div><div class="ds">Un moment doux et soigné, entouré de vos proches.</div></div>
+      <div class="svc rv rv-d3"><span class="ar">↗</span><div class="nm">Soirées &amp; Pro</div><div class="ds">Événements privés ou d'entreprise, l'ambiance sur mesure.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- WHO -->
+<section class="who">
+  <div class="wrap">
+    <div class="eyebrow rv">Pour qui</div>
+    <h2 class="rv rv-d1">Nos utilisateurs sont aussi variés que les événements qu'ils organisent, chacun accompagné avec soin</h2>
+  </div>
+  <div class="strip-wrap rv rv-d2" id="strip">
+    <div class="strip">
+      <div class="cell"><img src="https://images.unsplash.com/photo-1522673607200-164d1b6ce486?q=80&w=1200&auto=format&fit=crop" alt="" /><span class="lb">Couples &amp; futurs mariés</span></div>
+      <div class="cell"><img src="https://images.unsplash.com/photo-1511895426328-dc8714191300?q=80&w=1200&auto=format&fit=crop" alt="" /><span class="lb">Familles &amp; amis</span></div>
+      <div class="cell"><img src="https://images.unsplash.com/photo-1515187029135-18ee286d815b?q=80&w=1200&auto=format&fit=crop" alt="" /><span class="lb">Entreprises &amp; équipes</span></div>
+      <div class="cell"><img src="https://images.unsplash.com/photo-1496843916299-590492c751f4?q=80&w=1200&auto=format&fit=crop" alt="" /><span class="lb">Amateurs de fêtes</span></div>
+      <div class="cell"><img src="https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?q=80&w=1200&auto=format&fit=crop" alt="" /><span class="lb">Artistes &amp; animateurs</span></div>
+      <div class="cell"><img src="https://images.unsplash.com/photo-1556761175-b413da4baf72?q=80&w=1200&auto=format&fit=crop" alt="" /><span class="lb">Prestataires pro</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<section class="projects" id="inspirations">
+  <div class="wrap">
+    <div class="eyebrow rv">Inspirations</div>
+    <h2 class="rv rv-d1">Un aperçu des événements créés avec nos prestataires</h2>
+    <div class="proj rv">
+      <div class="proj-inner">
+        <div class="proj-img"><img src="https://images.unsplash.com/photo-1519225421980-715cb0215aed?q=80&w=2000&auto=format&fit=crop" alt="Mariage en plein air" /></div>
+        <div class="proj-cap"><span>Mariage élégant au bord de la Meuse</span><span class="cat">Mariage</span></div>
+      </div>
+    </div>
+    <div class="proj right rv">
+      <div class="proj-inner small">
+        <div class="proj-img"><img src="https://images.unsplash.com/photo-1530103862676-de8c9debad1d?q=80&w=1600&auto=format&fit=crop" alt="Fête d'anniversaire" /></div>
+        <div class="proj-cap"><span>30 ans vintage à Bruxelles</span><span class="cat">Soirée privée</span></div>
+      </div>
+    </div>
+    <a class="all-link rv" href="#tarifs">Toutes les inspirations <span>→</span></a>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testi">
+  <div class="wrap">
+    <div class="eyebrow rv">Témoignages</div>
+    <h2 class="rv rv-d1">Ils ont organisé leur événement avec Umade</h2>
+    <div class="t-grid">
+      <div class="t-card rv"><span class="t-chip">Mariage</span><div class="qm">❝</div><p>Nous avons trouvé notre photographe et notre traiteur en une soirée. Tout était géré depuis l'app, jusqu'au jour J.</p><div class="t-foot"><span class="av">SL</span><span class="nm">Sophie &amp; Lucas</span></div></div>
+      <div class="t-card rv rv-d1"><span class="t-chip">Anniversaire</span><div class="qm">❝</div><p>Le DJ réservé via Umade a mis le feu à la soirée. La réservation instantanée, c'est un vrai game changer.</p><div class="t-foot"><span class="av">IM</span><span class="nm">Iman</span></div></div>
+      <div class="t-card rv rv-d2"><span class="t-chip">Baptême</span><div class="qm">❝</div><p>Fleuriste adorable, salle parfaite, zéro stress. La checklist intégrée m'a sauvé la vie.</p><div class="t-foot"><span class="av">MD</span><span class="nm">Marie D.</span></div></div>
+      <div class="t-card rv rv-d3"><span class="t-chip">Entreprise</span><div class="qm">❝</div><p>Nous organisons nos événements d'équipe via Umade. Comparer les devis n'a jamais été aussi simple.</p><div class="t-foot"><span class="av">TB</span><span class="nm">Thomas B.</span></div></div>
+      <div class="t-card rv"><span class="t-chip">Mariage</span><div class="qm">❝</div><p>Les avis vérifiés nous ont mis en confiance. Notre wedding planner était exactement comme décrite.</p><div class="t-foot"><span class="av">GD</span><span class="nm">Grace &amp; Daniel</span></div></div>
+      <div class="t-card rv rv-d1"><span class="t-chip">Soirée</span><div class="qm">❝</div><p>Un lieu trouvé en 10 minutes pour 80 personnes, un vendredi. Je ne cherche plus ailleurs.</p><div class="t-foot"><span class="av">KA</span><span class="nm">Karim A.</span></div></div>
+      <div class="t-card rv rv-d2"><span class="t-chip">Prestataire</span><div class="qm">❝</div><p>Côté pro : des demandes qualifiées chaque semaine et un calendrier qui se remplit tout seul.</p><div class="t-foot"><span class="av">LL</span><span class="nm">Lens &amp; Light</span></div></div>
+      <div class="t-card rv rv-d3"><span class="t-chip">Anniversaire</span><div class="qm">❝</div><p>La messagerie intégrée évite les allers-retours par mail. Tout est au même endroit, enfin.</p><div class="t-foot"><span class="av">NV</span><span class="nm">Nadia V.</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="tarifs">
+  <div class="wrap">
+    <div class="eyebrow rv">Tarifs</div>
+    <h2 class="rv rv-d1">Des formules flexibles, pensées pour chaque besoin</h2>
+    <div class="p-grid">
+      <div class="p-card rv">
+        <div class="pl">Clients</div>
+        <div class="pr">0€ <small>pour toujours</small></div>
+        <a class="btn btn-black" href="#contact">Télécharger l'app</a>
+        <div class="p-feats">
+          <div><span class="ck">✓</span>Recherche &amp; comparaison illimitées</div>
+          <div><span class="ck">✓</span>Messagerie avec les prestataires</div>
+          <div><span class="ck">✓</span>Checklist, budget &amp; invités</div>
+          <div><span class="ck">✓</span>Avis vérifiés</div>
+        </div>
+      </div>
+      <div class="p-card rv rv-d1">
+        <div class="pl">Prestataire — Découverte</div>
+        <div class="pr">0€ <small>/mois</small></div>
+        <a class="btn btn-black" href="#contact">Créer mon profil</a>
+        <div class="p-feats">
+          <div><span class="ck">✓</span>Profil &amp; portfolio</div>
+          <div><span class="ck">✓</span>Réception de demandes</div>
+          <div><span class="ck">✓</span>Messagerie clients</div>
+          <div><span class="ck">✓</span>Gestion des disponibilités</div>
+        </div>
+      </div>
+      <div class="p-card rv rv-d2">
+        <div class="pl">Prestataire — Pro</div>
+        <div class="pr">29€ <small>/mois</small></div>
+        <a class="btn btn-black" href="#contact">Passer Pro</a>
+        <div class="p-feats">
+          <div><span class="ck">✓</span>Badge vérifié prioritaire</div>
+          <div><span class="ck">✓</span>Réservation instantanée</div>
+          <div><span class="ck">✓</span>Statistiques avancées</div>
+          <div><span class="ck">✓</span>Mise en avant dans la recherche</div>
+        </div>
+      </div>
+      <div class="p-card rv rv-d3">
+        <div class="pl">Prestataire — Premium</div>
+        <div class="pr">59€ <small>/mois</small></div>
+        <a class="btn btn-black" href="#contact">Nous contacter</a>
+        <div class="p-feats">
+          <div><span class="ck">✓</span>Tout le plan Pro</div>
+          <div><span class="ck">✓</span>Placement en tête de catégorie</div>
+          <div><span class="ck">✓</span>Accompagnement dédié</div>
+          <div><span class="ck">✓</span>Accès anticipé aux nouveautés</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq">
+  <div class="wrap faq-in">
+    <div>
+      <div class="eyebrow rv">Questions fréquentes</div>
+      <h2 class="rv rv-d1">Les questions les plus courantes sur Umade</h2>
+    </div>
+    <div class="acc rv rv-d2">
+      <div class="acc-item open">
+        <button class="acc-q">Comment réserver un prestataire ?<span class="ic">+</span></button>
+        <div class="acc-a"><p>Recherchez par catégorie, ville ou budget, comparez les profils et envoyez votre demande directement depuis l'app. Le prestataire confirme — ou instantanément s'il a activé la réservation instantanée.</p></div>
+      </div>
+      <div class="acc-item">
+        <button class="acc-q">Les prestataires sont-ils vérifiés ?<span class="ic">+</span></button>
+        <div class="acc-a"><p>Les profils portant le badge ✓ ont été vérifiés par notre équipe. Les avis, eux, ne peuvent être laissés que par des clients ayant réellement réservé.</p></div>
+      </div>
+      <div class="acc-item">
+        <button class="acc-q">Qu'est-ce que la réservation instantanée ?<span class="ic">+</span></button>
+        <div class="acc-a"><p>Chez les prestataires ⚡, votre date est confirmée automatiquement si le créneau est libre — sans attendre de validation manuelle.</p></div>
+      </div>
+      <div class="acc-item">
+        <button class="acc-q">Combien coûte Umade pour les clients ?<span class="ic">+</span></button>
+        <div class="acc-a"><p>Rien. La recherche, la messagerie, la checklist et le suivi de budget sont gratuits, sans limite.</p></div>
+      </div>
+      <div class="acc-item">
+        <button class="acc-q">Comment devenir prestataire sur Umade ?<span class="ic">+</span></button>
+        <div class="acc-a"><p>Téléchargez l'app, créez un compte prestataire, complétez votre profil et votre portfolio. Vous recevez des demandes dès la mise en ligne.</p></div>
+      </div>
+      <div class="acc-item">
+        <button class="acc-q">Puis-je annuler une réservation ?<span class="ic">+</span></button>
+        <div class="acc-a"><p>Oui, chaque prestataire affiche ses conditions d'annulation sur son profil. La messagerie intégrée facilite les arrangements directs.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA + FOOTER -->
+<section class="final" id="contact">
+  <div class="final-bg">
+    <img src="https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?q=80&w=2400&auto=format&fit=crop" alt="Couple heureux en fête" />
+  </div>
+  <div class="wrap">
+    <h2 class="rv">Votre événement de rêve est à portée de main</h2>
+    <div class="final-ctas rv rv-d1">
+      <a class="btn btn-white" href="#top">Télécharger l'app <span class="ar">→</span></a>
+      <a class="btn btn-dark" href="mailto:hello@umade.be">Nous écrire</a>
+    </div>
+    <div class="foot-card rv rv-d2">
+      <div class="foot-brand">
+        <div class="brand">Umade <span>®</span></div>
+        <p>Votre partenaire de confiance pour des événements extraordinaires, partout en Belgique.</p>
+      </div>
+      <div class="foot-cols">
+        <div class="foot-col">
+          <h4>Événements</h4>
+          <a href="#services">Mariages</a>
+          <a href="#services">Anniversaires</a>
+          <a href="#services">Baptêmes</a>
+          <a href="#services">Soirées &amp; Pro</a>
+        </div>
+        <div class="foot-col">
+          <h4>Umade</h4>
+          <a href="#inspirations">Inspirations</a>
+          <a href="#tarifs">Tarifs</a>
+          <a href="#contact">Contact</a>
+        </div>
+        <div class="foot-col">
+          <h4>Suivez-nous</h4>
+          <a href="#" rel="noopener">Instagram</a>
+          <a href="#" rel="noopener">TikTok</a>
+          <a href="mailto:hello@umade.be">Email</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot-legal">© 2026 Umade — Tous droits réservés</div>
+</section>
+
+<script>
+  // Sticky nav: transparent over hero, solid after
+  var nav = document.getElementById('nav');
+  var hero = document.querySelector('.hero');
+
+  // Pinned zoom-out: the "trusted" block scales down + fades as you scroll
+  // through its extra height, then the next section rises from below.
+  var trusted = document.getElementById('trusted');
+  var trustedInner = document.getElementById('trustedInner');
+
+  var onScroll = function () {
+    nav.classList.toggle('solid', window.scrollY > hero.offsetHeight - 90);
+
+    if (trusted && trustedInner) {
+      var rect = trusted.getBoundingClientRect();
+      var travel = trusted.offsetHeight - window.innerHeight; // scrollable distance while pinned
+      // progress 0 (section top hits viewport top) → 1 (section bottom reaches viewport bottom)
+      var p = Math.min(1, Math.max(0, -rect.top / travel));
+      var scale = 1 - p * 0.42;          // 1 → 0.58, le texte "s'éloigne"
+      var opacity = 1 - Math.pow(p, 1.4); // fond plus longtemps visible, disparaît vers la fin
+      trustedInner.style.transform = 'scale(' + scale + ')';
+      trustedInner.style.opacity = opacity.toFixed(3);
+    }
+  };
+  window.addEventListener('scroll', onScroll, { passive: true }); onScroll();
+
+  // Scroll reveals
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.14 });
+  document.querySelectorAll('.rv').forEach(function (el) { io.observe(el); });
+
+  // FAQ accordion
+  document.querySelectorAll('.acc-item').forEach(function (item) {
+    var q = item.querySelector('.acc-q');
+    var a = item.querySelector('.acc-a');
+    var sync = function () { a.style.maxHeight = item.classList.contains('open') ? a.scrollHeight + 'px' : '0'; };
+    q.addEventListener('click', function () {
+      document.querySelectorAll('.acc-item.open').forEach(function (o) {
+        if (o !== item) { o.classList.remove('open'); o.querySelector('.acc-a').style.maxHeight = '0'; }
+      });
+      item.classList.toggle('open');
+      sync();
+    });
+    sync();
+  });
+
+  // Drag-to-scroll strip
+  var strip = document.getElementById('strip');
+  var isDown = false, startX = 0, scrollLeft = 0;
+  strip.addEventListener('mousedown', function (e) { isDown = true; startX = e.pageX; scrollLeft = strip.scrollLeft; strip.style.cursor = 'grabbing'; });
+  window.addEventListener('mouseup', function () { isDown = false; strip.style.cursor = 'grab'; });
+  window.addEventListener('mousemove', function (e) { if (!isDown) return; strip.scrollLeft = scrollLeft - (e.pageX - startX); });
+</script>
+</body>
+</html>
