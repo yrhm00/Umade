@@ -15,7 +15,6 @@ import {
     FileText,
     HelpCircle,
     LogOut,
-    Palette,
     Shield,
     Star,
     User,
@@ -107,13 +106,6 @@ export default function ProviderSettingsScreen() {
                     label: 'Notifications',
                     description: 'Gérer vos préférences de notifications',
                     onPress: () => router.push('/settings/notifications'),
-                    showChevron: true,
-                },
-                {
-                    icon: Palette,
-                    label: 'Apparence',
-                    description: 'Mode clair, sombre, OLED ou système',
-                    onPress: () => router.push('/settings/appearance'),
                     showChevron: true,
                 },
                 {

@@ -1,71 +1,32 @@
 /**
- * Hook useColors - Retourne les couleurs du thème actif
+ * Hook useColors — Umade est en thème clair uniquement.
+ *
+ * Les thèmes sombre et OLED ont été retirés : l'app doit avoir un rendu
+ * unique et maîtrisé. Plutôt que de supprimer les centaines de conditions
+ * `isDark ? … : …` disséminées dans les écrans (long et propice aux
+ * régressions), ces hooks renvoient désormais toujours le thème clair :
+ * chaque condition existante retombe donc naturellement sur sa branche
+ * claire, sans qu'aucun écran n'ait à être modifié.
+ *
+ * Pour réintroduire un jour le mode sombre, il suffit de rebrancher
+ * useThemeStore ici — le reste du code est déjà prêt à le gérer.
  */
 
-import { DarkColors, LightColors, OLEDColors, type ThemeColors } from '@/constants/Colors';
-import { useThemeStore } from '@/stores/themeStore';
-import { useColorScheme } from 'react-native';
+import { LightColors, type ThemeColors } from '@/constants/Colors';
 
 export type { ThemeColors };
 
-type EffectiveTheme = 'light' | 'dark' | 'oled';
-
-/**
- * Hook pour obtenir les couleurs du thème actif
- * Prend en compte la préférence utilisateur et le thème système
- */
+/** Couleurs du thème — toujours claires. */
 export function useColors(): ThemeColors {
-    const mode = useThemeStore((state) => state.mode);
-    const systemColorScheme = useColorScheme();
-
-    // Déterminer le thème effectif
-    let effectiveTheme: EffectiveTheme;
-
-    if (mode === 'system') {
-        effectiveTheme = systemColorScheme === 'dark' ? 'dark' : 'light';
-    } else if (mode === 'oled') {
-        effectiveTheme = 'oled';
-    } else {
-        effectiveTheme = mode;
-    }
-
-    switch (effectiveTheme) {
-        case 'oled':
-            return OLEDColors;
-        case 'dark':
-            return DarkColors;
-        default:
-            return LightColors;
-    }
+    return LightColors;
 }
 
-/**
- * Hook pour obtenir le thème actif (pour StatusBar, etc.)
- */
+/** Thème actif (StatusBar, etc.) — toujours clair. */
 export function useTheme(): 'light' | 'dark' {
-    const mode = useThemeStore((state) => state.mode);
-    const systemColorScheme = useColorScheme();
-
-    if (mode === 'system') {
-        return systemColorScheme ?? 'light';
-    }
-    // OLED is considered 'dark' for StatusBar purposes
-    if (mode === 'oled') {
-        return 'dark';
-    }
-    return mode;
+    return 'light';
 }
 
-/**
- * Hook pour vérifier si le thème sombre est actif
- * (inclut OLED)
- */
+/** Toujours faux : le thème sombre n'existe plus. */
 export function useIsDarkTheme(): boolean {
-    const mode = useThemeStore((state) => state.mode);
-    const systemColorScheme = useColorScheme();
-
-    if (mode === 'system') {
-        return systemColorScheme === 'dark';
-    }
-    return mode === 'dark' || mode === 'oled';
+    return false;
 }

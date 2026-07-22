@@ -216,7 +216,6 @@ function RootLayout() {
                   <Stack.Screen name="reviews/provider/[providerId]" />
                   <Stack.Screen name="reviews/user" />
                   <Stack.Screen name="notifications/index" options={{ animation: 'slide_from_right' }} />
-                  <Stack.Screen name="settings/appearance" />
                   <Stack.Screen name="settings/notifications" />
                   <Stack.Screen name="settings/delete-account" />
                 </Stack>

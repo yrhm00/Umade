@@ -12,7 +12,6 @@ import { useUserBadges, useUnseenBadgeCount } from '@/hooks/useBadges';
 import { useClientStats } from '@/hooks/useClientStats';
 import { useCredits } from '@/hooks/useReferral';
 import { useColors, useIsDarkTheme } from '@/hooks/useColors';
-import { ThemeMode, useThemeStore } from '@/stores/themeStore';
 import { useRouter } from 'expo-router';
 import {
   Bell,
@@ -24,7 +23,6 @@ import {
   HelpCircle,
   LogOut,
   Trash2,
-  Moon,
   Settings,
   Star,
   User,
@@ -40,13 +38,6 @@ import {
 } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-const THEME_LABELS: Record<ThemeMode, string> = {
-  light: 'Clair',
-  dark: 'Sombre',
-  oled: 'OLED',
-  system: 'Système',
-};
 
 interface MenuItemProps {
   icon: React.ReactNode;
@@ -98,7 +89,6 @@ export default function ProfileScreen() {
   const { data: credits } = useCredits();
   const { data: userBadges = [] } = useUserBadges();
   const { data: unseenBadgeCount = 0 } = useUnseenBadgeCount();
-  const themeMode = useThemeStore((state) => state.mode);
 
   const handleSignOut = () => {
     Alert.alert(
@@ -136,9 +126,6 @@ export default function ProfileScreen() {
           subtitle="Tes favoris, avis, préférences et réglages."
           colors={colors}
           isDark={isDark}
-          actionIcon={Settings}
-          actionLabel="Paramètres d’apparence"
-          onAction={() => router.push('/settings/appearance' as any)}
         />
 
         {/* Profile Card */}
@@ -307,15 +294,6 @@ export default function ProfileScreen() {
               icon={<Bell size={20} color={colors.primary} />}
               label="Notifications"
               onPress={() => router.push('/notifications')}
-              colors={colors}
-              isDark={isDark}
-            />
-            <View style={[styles.menuDivider, { backgroundColor: colors.border }]} />
-            <MenuItem
-              icon={<Moon size={20} color={colors.primary} />}
-              label="Apparence"
-              badge={THEME_LABELS[themeMode]}
-              onPress={() => router.push('/settings/appearance' as any)}
               colors={colors}
               isDark={isDark}
             />
