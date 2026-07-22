@@ -24,3 +24,9 @@ verify_jwt = false
 # la suppression de SON compte.
 [functions.request-account-deletion]
 verify_jwt = true
+
+# Appelée par la console Ops avec un secret partagé (ADMIN_STATS_TOKEN),
+# pas avec un JWT Supabase : la passerelle rejetterait la requête avant
+# que la fonction ne vérifie elle-même le jeton.
+[functions.admin-stats]
+verify_jwt = false
