@@ -5,9 +5,10 @@
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
-    "ios": "expo run:ios",
+    "ios": "npm run check-ios && expo run:ios",
     "web": "expo start --web",
-    "check-ios": "node scripts/check-ios.mjs"
+    "check-ios": "node scripts/check-ios.mjs",
+    "prebuild:ios": "expo prebuild -p ios && npm run check-ios"
   },
   "dependencies": {
     "@bottom-tabs/react-navigation": "^1.2.0",
