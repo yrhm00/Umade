@@ -25,6 +25,7 @@ import {
 } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
+import { PlaceAutocomplete } from '@/components/common/PlaceAutocomplete';
 import { CustomCalendar, todayISO } from '@/components/ui/CustomCalendar';
 import { Input } from '@/components/ui/Input';
 import { Colors } from '@/constants/Colors';
@@ -229,14 +230,34 @@ export function WizardEventForm({ onSubmit, isLoading }: WizardEventFormProps) {
             <Text style={[styles.stepTitle, { color: colors.text }]}>Où ça se passe ? 📍</Text>
 
             <View style={styles.inputGroup}>
-                <Input
-                    label="Lieu"
-                    placeholder="Ex: Salle des fêtes de Lyon"
-                    value={location}
-                    onChangeText={setLocation}
-                    editable={!isLocationTBD}
-                    style={isLocationTBD ? [styles.inputDisabled, { backgroundColor: colors.backgroundTertiary, color: colors.textTertiary }] : undefined}
-                />
+                {isLocationTBD ? (
+                    // Désactivé : on garde un champ inerte plutôt qu'un
+                    // champ de recherche qui suggérerait des lieux pour rien.
+                    <Input
+                        label="Lieu"
+                        placeholder="À définir"
+                        value=""
+                        onChangeText={() => {}}
+                        editable={false}
+                        style={[
+                            styles.inputDisabled,
+                            { backgroundColor: colors.backgroundTertiary, color: colors.textTertiary },
+                        ]}
+                    />
+                ) : (
+                    <PlaceAutocomplete
+                        label="Lieu"
+                        value={location}
+                        onChangeText={setLocation}
+                        onSelectPlace={(place) => {
+                            // On enregistre « Nom, Ville » : plus parlant qu'un
+                            // nom seul quand plusieurs lieux se ressemblent.
+                            setLocation(
+                                place.address ? `${place.name}, ${place.address}` : place.name
+                            );
+                        }}
+                    />
+                )}
             </View>
 
             <TouchableOpacity
