@@ -26,7 +26,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.yrhm.umade",
+      "bundleIdentifier": "be.umade.app",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "Umade utilise l'appareil photo pour vous permettre d'ajouter des photos à vos inspirations, à votre portfolio prestataire et à votre photo de profil.",

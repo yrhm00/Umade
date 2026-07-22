@@ -28,7 +28,7 @@
         <key>CFBundleURLSchemes</key>
         <array>
           <string>umade</string>
-          <string>com.yrhm.umade</string>
+          <string>be.umade.app</string>
         </array>
       </dict>
     </array>
