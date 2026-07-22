@@ -23,6 +23,7 @@ import {
   Heart,
   HelpCircle,
   LogOut,
+  Trash2,
   Moon,
   Settings,
   Star,
@@ -351,6 +352,15 @@ export default function ProfileScreen() {
               icon={<LogOut size={20} color={colors.error} />}
               label="Déconnexion"
               onPress={handleSignOut}
+              destructive
+              colors={colors}
+              isDark={isDark}
+            />
+            <View style={[styles.menuDivider, { backgroundColor: colors.border }]} />
+            <MenuItem
+              icon={<Trash2 size={20} color={colors.error} />}
+              label="Supprimer mon compte"
+              onPress={() => router.push('/settings/delete-account' as any)}
               destructive
               colors={colors}
               isDark={isDark}

@@ -19,7 +19,12 @@ interface AuthState {
 
   // Actions
   initialize: () => Promise<void>;
-  signUp: (email: string, password: string, role: UserRole, fullName: string) => Promise<void>;
+  signUp: (
+    email: string,
+    password: string,
+    role: UserRole,
+    fullName: string
+  ) => Promise<{ needsEmailConfirmation: boolean }>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -183,14 +188,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             full_name: fullName,
             role: role,
           },
+          emailRedirectTo: 'umade://auth-callback',
         },
       });
 
       if (error) throw error;
 
+      // Confirmation d'email activée : signUp n'ouvre aucune session.
+      // On ne peut donc rien écrire dans profiles ici (RLS) — c'est le trigger
+      // handle_new_user qui pose full_name et role depuis les métadonnées.
+      if (!data.session) {
+        set({ isLoading: false });
+        return { needsEmailConfirmation: true };
+      }
+
       if (data.user) {
-        // Le trigger handle_new_user crée automatiquement le profil
-        // Mais on met à jour le role et le nom
+        // Session ouverte (confirmation désactivée) : on complète le profil.
         const { error: updateError } = await supabase
           .from('profiles')
           .update({
@@ -206,6 +219,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
 
       set({ isLoading: false });
+      return { needsEmailConfirmation: false };
     } catch (error) {
       console.error('Sign up error:', error);
       set({

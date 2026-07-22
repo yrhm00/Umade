@@ -70,8 +70,17 @@ export default function RegisterScreen() {
     if (!validate()) return;
 
     try {
-      await signUp(email, password, role, fullName);
-      // La redirection est gérée par AuthGuard -> onboarding
+      const { needsEmailConfirmation } = await signUp(email, password, role, fullName);
+
+      if (needsEmailConfirmation) {
+        // Aucune session tant que le lien n'est pas cliqué : on explique l'étape.
+        router.replace({
+          pathname: '/(auth)/verify-email',
+          params: { email },
+        } as any);
+        return;
+      }
+      // Sinon la redirection est gérée par les layouts -> onboarding
     } catch (err: any) {
       toast.error(err.message || 'Une erreur est survenue. Veuillez réessayer.');
     }
