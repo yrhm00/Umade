@@ -28,26 +28,67 @@ async function sha256Hex(input: string): Promise<string> {
     .join('');
 }
 
+// Même charte que les templates supabase/email-templates/ : tables + styles
+// inline, polices système, largeur 520px, color-scheme verrouillé en clair.
 function emailHtml(confirmUrl: string): string {
-  return `<!doctype html><html lang="fr"><body style="margin:0;background:#f7f5f1;font-family:-apple-system,Segoe UI,Inter,sans-serif;padding:32px 16px">
-<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:16px;padding:36px">
-  <h1 style="margin:0 0 14px;font-size:21px;color:#101010">Confirmer la suppression de votre compte</h1>
-  <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#444">
-    Vous avez demandé la suppression définitive de votre compte Umade.
-    Cette action est <strong>irréversible</strong> : vos événements, réservations,
-    messages et photos seront effacés.
-  </p>
-  <p style="margin:0 0 26px;font-size:15px;line-height:1.6;color:#444">
-    Ce lien expire dans ${TOKEN_TTL_MINUTES} minutes.
-  </p>
-  <a href="${confirmUrl}" style="display:inline-block;background:#b42318;color:#fff;text-decoration:none;font-weight:600;font-size:15px;padding:14px 26px;border-radius:999px">
-    Supprimer définitivement mon compte
-  </a>
-  <p style="margin:26px 0 0;font-size:13px;line-height:1.6;color:#888">
-    Vous n'êtes pas à l'origine de cette demande ? Ignorez simplement cet email,
-    votre compte restera intact.
-  </p>
-</div></body></html>`;
+  const font = "-apple-system,'Segoe UI',Inter,Helvetica,Arial,sans-serif";
+  return `<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light only">
+<meta name="supported-color-schemes" content="light only">
+<title>Confirmer la suppression de votre compte</title></head>
+<body style="margin:0;padding:0;background-color:#f7f5f1;-webkit-font-smoothing:antialiased;">
+<div style="display:none;font-size:1px;color:#f7f5f1;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">
+Confirmez la suppression définitive de votre compte Umade.</div>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#f7f5f1;">
+<tr><td align="center" style="padding:40px 16px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:520px;">
+
+<tr><td align="left" style="padding:0 4px 22px;">
+<span style="font-family:${font};font-size:21px;font-weight:700;color:#101010;letter-spacing:-0.02em;">
+Umade <span style="font-size:11px;font-weight:500;color:#8a8378;vertical-align:super;">&reg;</span></span>
+</td></tr>
+
+<tr><td style="background-color:#ffffff;border-radius:18px;padding:44px 40px;">
+<h1 style="margin:0 0 16px;font-family:${font};font-size:26px;line-height:1.25;font-weight:600;color:#101010;letter-spacing:-0.02em;">
+Confirmer la suppression</h1>
+
+<p style="margin:0 0 20px;font-family:${font};font-size:15px;line-height:1.65;color:#4a4640;">
+Vous avez demandé la suppression définitive de votre compte Umade.</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#fef3f2;border-radius:12px;margin:0 0 24px;">
+<tr><td style="padding:16px 18px;">
+<p style="margin:0;font-family:${font};font-size:14px;line-height:1.6;color:#912018;">
+<strong>Cette action est irréversible.</strong> Vos événements, réservations,
+conversations et photos seront définitivement effacés.</p>
+</td></tr></table>
+
+<p style="margin:0 0 28px;font-family:${font};font-size:15px;line-height:1.65;color:#4a4640;">
+Ce lien expire dans ${TOKEN_TTL_MINUTES} minutes et ne peut servir qu'une fois.</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0">
+<tr><td align="center" bgcolor="#b42318" style="border-radius:999px;">
+<a href="${confirmUrl}" style="display:inline-block;padding:15px 34px;font-family:${font};font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:999px;">
+Supprimer définitivement mon compte</a>
+</td></tr></table>
+
+<p style="margin:30px 0 0;font-family:${font};font-size:13px;line-height:1.6;color:#8a8378;">
+Le bouton ne fonctionne pas&nbsp;? Copiez ce lien dans votre navigateur&nbsp;:</p>
+<p style="margin:6px 0 0;font-family:${font};font-size:12px;line-height:1.5;color:#5f4a8b;word-break:break-all;">
+${confirmUrl}</p>
+</td></tr>
+
+<tr><td style="padding:26px 24px 0;">
+<p style="margin:0 0 8px;font-family:${font};font-size:12.5px;line-height:1.6;color:#8a8378;">
+Vous n'êtes pas à l'origine de cette demande&nbsp;? Ignorez simplement cet email,
+votre compte restera intact.</p>
+<p style="margin:0;font-family:${font};font-size:12px;line-height:1.6;color:#a9a49b;">
+Umade &middot; Belgique</p>
+</td></tr>
+
+</table></td></tr></table>
+</body></html>`;
 }
 
 Deno.serve(async (req: Request) => {
