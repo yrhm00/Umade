@@ -7,12 +7,25 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 interface CustomCalendarProps {
     selectedDate: string;
     onSelectDate: (date: string) => void;
+    /** Date minimale sélectionnable, au format YYYY-MM-DD (incluse). */
+    minDate?: string;
 }
 
-export function CustomCalendar({ selectedDate, onSelectDate }: CustomCalendarProps) {
+/** Date du jour en YYYY-MM-DD, en heure locale (pas d'UTC : évite le décalage). */
+export function todayISO(): string {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
+        d.getDate()
+    ).padStart(2, '0')}`;
+}
+
+export function CustomCalendar({ selectedDate, onSelectDate, minDate }: CustomCalendarProps) {
     const colors = useColors();
     const isDark = useIsDarkTheme();
     const [currentMonth, setCurrentMonth] = useState(new Date());
+
+    // Comparaison lexicographique : YYYY-MM-DD est trié comme la chronologie.
+    const isBeforeMin = (dateStr: string) => !!minDate && dateStr < minDate;
 
     const daysOfWeek = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
     const months = [
@@ -36,7 +49,19 @@ export function CustomCalendar({ selectedDate, onSelectDate }: CustomCalendarPro
 
     const { days, firstDay } = getDaysInMonth(currentMonth);
 
+    // Dernier jour du mois précédent : s'il est déjà avant minDate, ce mois
+    // n'a aucune date sélectionnable — inutile de pouvoir y aller.
+    const canGoPrev = (() => {
+        if (!minDate) return true;
+        const prev = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 0);
+        const prevLast = `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, '0')}-${String(
+            prev.getDate()
+        ).padStart(2, '0')}`;
+        return prevLast >= minDate;
+    })();
+
     const handlePrevMonth = () => {
+        if (!canGoPrev) return;
         setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
     };
 
@@ -69,22 +94,26 @@ export function CustomCalendar({ selectedDate, onSelectDate }: CustomCalendarPro
             const dateStr = `${year}-${month.toString().padStart(2, '0')}-${i.toString().padStart(2, '0')}`;
             const isSelected = selectedDate === dateStr;
             const isToday = new Date().toDateString() === new Date(year, month - 1, i).toDateString();
+            const isDisabled = isBeforeMin(dateStr);
 
             dayCells.push(
                 <TouchableOpacity
                     key={i}
+                    disabled={isDisabled}
+                    accessibilityState={{ disabled: isDisabled, selected: isSelected }}
                     style={[
                         styles.dayCell,
                         isSelected && { backgroundColor: colors.primary },
-                        !isSelected && isToday && { backgroundColor: isDark ? colors.backgroundTertiary : Colors.primary['50'] }
+                        !isSelected && isToday && !isDisabled && { backgroundColor: isDark ? colors.backgroundTertiary : Colors.primary['50'] },
+                        isDisabled && styles.dayCellDisabled
                     ]}
                     onPress={() => handleDateSelect(i)}
                 >
                     <Text style={[
                         styles.dayText,
-                        { color: colors.text },
+                        { color: isDisabled ? colors.textTertiary : colors.text },
                         isSelected && { color: Colors.white, fontWeight: 'bold' },
-                        !isSelected && isToday && { color: colors.primary, fontWeight: '600' }
+                        !isSelected && isToday && !isDisabled && { color: colors.primary, fontWeight: '600' }
                     ]}>
                         {i}
                     </Text>
@@ -99,8 +128,13 @@ export function CustomCalendar({ selectedDate, onSelectDate }: CustomCalendarPro
         <View style={[styles.container, { backgroundColor: colors.card, shadowColor: isDark ? '#000' : '#000' }]}>
             {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity onPress={handlePrevMonth} style={styles.navButton}>
-                    <ChevronLeft size={24} color={colors.text} />
+                <TouchableOpacity
+                    onPress={handlePrevMonth}
+                    disabled={!canGoPrev}
+                    accessibilityState={{ disabled: !canGoPrev }}
+                    style={[styles.navButton, !canGoPrev && styles.navButtonDisabled]}
+                >
+                    <ChevronLeft size={24} color={canGoPrev ? colors.text : colors.textTertiary} />
                 </TouchableOpacity>
                 <Text style={[styles.monthTitle, { color: colors.text }]}>
                     {months[currentMonth.getMonth()]} {currentMonth.getFullYear()}
@@ -147,6 +181,9 @@ const styles = StyleSheet.create({
     navButton: {
         padding: 4,
     },
+    navButtonDisabled: {
+        opacity: 0.35,
+    },
     weekDays: {
         flexDirection: 'row',
         marginBottom: 10,
@@ -160,6 +197,9 @@ const styles = StyleSheet.create({
     grid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
+    },
+    dayCellDisabled: {
+        opacity: 0.3,
     },
     dayCell: {
         width: '14.28%', // 100% / 7

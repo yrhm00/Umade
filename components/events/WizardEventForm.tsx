@@ -25,7 +25,7 @@ import {
 } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
-import { CustomCalendar } from '@/components/ui/CustomCalendar';
+import { CustomCalendar, todayISO } from '@/components/ui/CustomCalendar';
 import { Input } from '@/components/ui/Input';
 import { Colors } from '@/constants/Colors';
 import { useColors, useIsDarkTheme } from '@/hooks/useColors';
@@ -210,6 +210,8 @@ export function WizardEventForm({ onSubmit, isLoading }: WizardEventFormProps) {
                 <CustomCalendar
                     selectedDate={selectedDate}
                     onSelectDate={setSelectedDate}
+                    // Un événement ne peut pas être planifié dans le passé.
+                    minDate={todayISO()}
                 />
             </View>
             {selectedDate && (

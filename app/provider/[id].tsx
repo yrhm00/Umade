@@ -192,6 +192,14 @@ export default function ProviderDetailScreen() {
     setIsGalleryViewerOpen(false);
   };
 
+  // Depuis la visionneuse : fermer d'abord, sinon la conversation s'ouvre
+  // derrière le modal plein écran et l'utilisateur croit que rien ne s'est
+  // passé jusqu'à ce qu'il ferme la photo.
+  const handleContactFromGallery = () => {
+    setIsGalleryViewerOpen(false);
+    handleContact();
+  };
+
   return (
     <>
       <Stack.Screen
@@ -648,7 +656,7 @@ export default function ProviderDetailScreen() {
         images={images}
         initialIndex={galleryViewerIndex}
         onClose={closeGalleryViewer}
-        onContact={handleContact}
+        onContact={handleContactFromGallery}
       />
     </>
   );
