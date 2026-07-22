@@ -14,3 +14,13 @@ verify_jwt = false
 
 [functions.provider-request-payout]
 verify_jwt = false
+
+# Lien ouvert depuis un email dans un navigateur : aucun JWT possible.
+# La sécurité repose sur le jeton à usage unique (haché, expiration 1h).
+[functions.confirm-account-deletion]
+verify_jwt = false
+
+# Doit rester protégée : seul l'utilisateur connecté peut demander
+# la suppression de SON compte.
+[functions.request-account-deletion]
+verify_jwt = true
