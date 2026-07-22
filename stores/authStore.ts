@@ -44,6 +44,19 @@ function deriveState(session: Session | null, profile: Profile | null) {
   };
 }
 
+/**
+ * Supabase refuse la connexion tant que l'email n'est pas confirmé.
+ * Sans ce test, l'app affichait « email ou mot de passe incorrect », ce qui
+ * envoyait l'utilisateur vérifier des identifiants pourtant corrects.
+ */
+export const EMAIL_NOT_CONFIRMED = 'EMAIL_NOT_CONFIRMED';
+
+function isEmailNotConfirmedError(error: any): boolean {
+  const code = String(error?.code ?? '').toLowerCase();
+  const message = String(error?.message ?? '').toLowerCase();
+  return code === 'email_not_confirmed' || message.includes('email not confirmed');
+}
+
 function isInvalidRefreshTokenError(error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
   return message.toLowerCase().includes('refresh token');
@@ -240,7 +253,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        if (isEmailNotConfirmedError(error)) {
+          const notConfirmed = new Error(EMAIL_NOT_CONFIRMED);
+          (notConfirmed as any).code = EMAIL_NOT_CONFIRMED;
+          throw notConfirmed;
+        }
+        throw error;
+      }
 
       if (data.user) {
         const { data: profile, error: profileError } = await supabase

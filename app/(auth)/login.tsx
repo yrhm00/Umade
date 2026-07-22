@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/Input';
 import { Colors } from '@/constants/Colors';
 import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { Layout } from '@/constants/Layout';
-import { useAuthStore } from '@/stores/authStore';
+import { EMAIL_NOT_CONFIRMED, useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Lock, Mail } from 'lucide-react-native';
 import { useState } from 'react';
@@ -60,7 +60,15 @@ export default function LoginScreen() {
     try {
       await signIn(email, password);
       // La redirection est gérée par AuthGuard
-    } catch (err) {
+    } catch (err: any) {
+      // Identifiants corrects mais email non confirmé : on renvoie vers
+      // l'écran de vérification (avec renvoi possible) plutôt que d'accuser
+      // à tort le mot de passe.
+      if (err?.code === EMAIL_NOT_CONFIRMED || err?.message === EMAIL_NOT_CONFIRMED) {
+        toast.info("Votre email n'a pas encore été confirmé.");
+        router.replace({ pathname: '/(auth)/verify-email', params: { email } } as any);
+        return;
+      }
       toast.error('Email ou mot de passe incorrect. Veuillez réessayer.');
     }
   };
