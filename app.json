@@ -26,7 +26,15 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.yrhm.umade"
+      "bundleIdentifier": "com.yrhm.umade",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "Umade utilise l'appareil photo pour vous permettre d'ajouter des photos à vos inspirations, à votre portfolio prestataire et à votre photo de profil.",
+        "NSFaceIDUsageDescription": "Umade utilise Face ID pour sécuriser l'accès à votre compte sans avoir à ressaisir votre mot de passe.",
+        "NSMicrophoneUsageDescription": "Umade peut utiliser votre micro lorsque vous enregistrez une vidéo pour votre portfolio prestataire.",
+        "NSPhotoLibraryUsageDescription": "Umade accède à votre bibliothèque photo pour vous permettre de partager des inspirations, illustrer votre portfolio et choisir une photo de profil.",
+        "NSPhotoLibraryAddUsageDescription": "Umade enregistre des images dans votre bibliothèque photo (par exemple, sauvegarde d'une inspiration ou export d'un contrat)."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -48,7 +56,8 @@
       "@react-native-community/datetimepicker",
       "expo-video",
       "expo-web-browser",
-      "@sentry/react-native"
+      "@sentry/react-native",
+      "./plugins/withoutPushEntitlement"
     ],
     "experiments": {
       "typedRoutes": true
