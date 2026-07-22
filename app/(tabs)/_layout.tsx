@@ -18,12 +18,15 @@ export default function TabLayout() {
     return <Redirect href="/(auth)/welcome" />;
   }
 
-  if (!isOnboarded) {
-    return <Redirect href={'/onboarding/event-type' as any} />;
-  }
-
+  // Les prestataires ont leur propre espace ET leur propre onboarding :
+  // ce test doit passer AVANT celui de isOnboarded, sinon ils tombent dans
+  // le tunnel client ("quel type d'événement prépares-tu ?").
   if (isProvider) {
     return <Redirect href="/(provider)/dashboard" />;
+  }
+
+  if (!isOnboarded) {
+    return <Redirect href={'/onboarding/event-type' as any} />;
   }
 
   const badgeText =
