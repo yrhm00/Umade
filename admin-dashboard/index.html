@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Umade — Console Ops</title>
+<style>
+  :root {
+    --bg: #0b0a10;
+    --bg-soft: #131119;
+    --card: #17151f;
+    --card-hover: #1e1b29;
+    --border: #272233;
+    --border-soft: #201c2b;
+    --text: #ece9f3;
+    --text-dim: #9a92ad;
+    --text-faint: #635b74;
+    --accent: #8f77b8;
+    --accent-bright: #a78bd4;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-font-smoothing: antialiased; }
+  body {
+    background: radial-gradient(1200px 600px at 80% -10%, #1a1524 0%, var(--bg) 55%) fixed;
+    color: var(--text);
+    font-family: var(--sans);
+    line-height: 1.5;
+    min-height: 100vh;
+    padding: 32px 20px 80px;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+
+  /* Header */
+  header { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }
+  .logo {
+    width: 46px; height: 46px; border-radius: 13px; flex-shrink: 0;
+    background: linear-gradient(145deg, #7b5fb0, #5f4a8b);
+    display: grid; place-items: center;
+    font-weight: 800; font-size: 24px; color: #fff;
+    box-shadow: 0 8px 24px rgba(95,74,139,0.4);
+  }
+  h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.4px; }
+  .sub { color: var(--text-dim); font-size: 13.5px; margin-top: 1px; }
+  .status-pill {
+    margin-left: auto; display: inline-flex; align-items: center; gap: 7px;
+    font-size: 12px; color: var(--text-dim); font-family: var(--mono);
+    background: var(--bg-soft); border: 1px solid var(--border-soft);
+    padding: 7px 12px; border-radius: 999px;
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: #3ecf8e; box-shadow: 0 0 8px #3ecf8e; }
+
+  /* Identifiers strip */
+  .ids {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
+    gap: 10px; margin: 26px 0 34px;
+  }
+  .id-chip {
+    background: var(--bg-soft); border: 1px solid var(--border-soft);
+    border-radius: 12px; padding: 12px 14px; cursor: pointer;
+    transition: border-color .15s, background .15s; position: relative;
+  }
+  .id-chip:hover { border-color: var(--border); background: var(--card); }
+  .id-chip .k { font-size: 10.5px; text-transform: uppercase; letter-spacing: .8px; color: var(--text-faint); font-weight: 600; }
+  .id-chip .v { font-family: var(--mono); font-size: 12.5px; color: var(--text); margin-top: 4px; word-break: break-all; }
+  .id-chip .copied {
+    position: absolute; top: 10px; right: 12px; font-size: 10px; color: var(--accent-bright);
+    opacity: 0; transition: opacity .2s; font-family: var(--mono);
+  }
+  .id-chip.show .copied { opacity: 1; }
+
+  /* Sections */
+  .section { margin-bottom: 30px; }
+  .section-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 13px; }
+  .section-head h2 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.1px; color: var(--text-dim); }
+  .section-head .rule { flex: 1; height: 1px; background: var(--border-soft); }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: 12px; }
+  a.card {
+    display: block; text-decoration: none; color: inherit;
+    background: var(--card); border: 1px solid var(--border-soft);
+    border-radius: 14px; padding: 16px; position: relative;
+    transition: transform .14s ease, border-color .14s, background .14s;
+  }
+  a.card:hover { transform: translateY(-2px); border-color: var(--border); background: var(--card-hover); }
+  a.card::after {
+    content: "↗"; position: absolute; top: 14px; right: 15px;
+    color: var(--text-faint); font-size: 14px; transition: color .14s, transform .14s;
+  }
+  a.card:hover::after { color: var(--accent-bright); transform: translate(1px,-1px); }
+  .card .ico { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; font-size: 17px; margin-bottom: 11px; }
+  .card .t { font-size: 14.5px; font-weight: 600; letter-spacing: -0.2px; }
+  .card .d { font-size: 12px; color: var(--text-dim); margin-top: 3px; }
+
+  /* accent tints per category */
+  .t-sentry  .ico { background: rgba(226,80,80,.14);  color: #f0736f; }
+  .t-db      .ico { background: rgba(62,207,142,.13); color: #3ecf8e; }
+  .t-deploy  .ico { background: rgba(255,255,255,.09); color: #f4f4f6; }
+  .t-expo    .ico { background: rgba(120,140,255,.14); color: #9aa8ff; }
+  .t-pay     .ico { background: rgba(120,110,240,.16); color: #a99bff; }
+  .t-apple   .ico { background: rgba(255,255,255,.09); color: #f4f4f6; }
+  .t-code    .ico { background: rgba(160,120,200,.15); color: var(--accent-bright); }
+  .t-mail    .ico { background: rgba(255,190,90,.14);  color: #ffc061; }
+  .t-dns     .ico { background: rgba(90,190,255,.13);  color: #6cc4ff; }
+
+  /* Commands */
+  .cmds { display: grid; gap: 10px; }
+  .cmd {
+    background: var(--bg-soft); border: 1px solid var(--border-soft);
+    border-radius: 12px; padding: 13px 15px; display: flex; align-items: center; gap: 14px;
+  }
+  .cmd .label { font-size: 12.5px; color: var(--text-dim); min-width: 148px; }
+  .cmd code {
+    font-family: var(--mono); font-size: 12.5px; color: #d6cdea;
+    background: #100e17; border: 1px solid var(--border-soft);
+    padding: 7px 11px; border-radius: 8px; flex: 1; overflow-x: auto; white-space: nowrap;
+  }
+  .cmd .copy {
+    cursor: pointer; color: var(--text-faint); font-size: 11px; font-family: var(--mono);
+    border: 1px solid var(--border-soft); background: none; padding: 6px 9px; border-radius: 7px;
+    transition: color .15s, border-color .15s; flex-shrink: 0;
+  }
+  .cmd .copy:hover { color: var(--accent-bright); border-color: var(--border); }
+
+  footer { margin-top: 44px; text-align: center; color: var(--text-faint); font-size: 11.5px; font-family: var(--mono); }
+
+  @media (max-width: 560px) {
+    .cmd { flex-direction: column; align-items: stretch; gap: 8px; }
+    .cmd .label { min-width: 0; }
+    .status-pill { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">U</div>
+    <div>
+      <h1>Umade — Console Ops</h1>
+      <div class="sub">Tableau de bord technique &middot; maintenance &amp; monitoring</div>
+    </div>
+    <span class="status-pill"><span class="dot"></span>com.yrhm.umade</span>
+  </header>
+
+  <!-- Copyable identifiers -->
+  <div class="ids">
+    <div class="id-chip" data-copy="otnujqfmdoohvgbeeqpm">
+      <div class="k">Supabase ref</div><div class="v">otnujqfmdoohvgbeeqpm</div><span class="copied">copié ✓</span>
+    </div>
+    <div class="id-chip" data-copy="1132b65b-3b07-4988-a65d-202a4195f732">
+      <div class="k">EAS project id</div><div class="v">1132b65b-3b07-4988-a65d-202a4195f732</div><span class="copied">copié ✓</span>
+    </div>
+    <div class="id-chip" data-copy="be.umade.app">
+      <div class="k">Bundle identifier (iOS)</div><div class="v">be.umade.app</div><span class="copied">copié ✓</span>
+    </div>
+    <div class="id-chip" data-copy="https://otnujqfmdoohvgbeeqpm.supabase.co">
+      <div class="k">URL Supabase</div><div class="v">otnujqfmdoohvgbeeqpm.supabase.co</div><span class="copied">copié ✓</span>
+    </div>
+    <div class="id-chip" data-copy="noreply@umade.be">
+      <div class="k">Expéditeur email</div><div class="v">noreply@umade.be</div><span class="copied">copié ✓</span>
+    </div>
+    <div class="id-chip" data-copy="com.yrhm.umade">
+      <div class="k">Package Android</div><div class="v">com.yrhm.umade</div><span class="copied">copié ✓</span>
+    </div>
+  </div>
+
+  <!-- Monitoring -->
+  <div class="section">
+    <div class="section-head"><h2>Monitoring &amp; erreurs</h2><span class="rule"></span></div>
+    <div class="grid">
+      <a class="card t-sentry" href="https://umade-sh.sentry.io/issues/" target="_blank" rel="noopener">
+        <div class="ico">◎</div><div class="t">Sentry — Issues</div><div class="d">Crashs &amp; erreurs en production</div>
+      </a>
+      <a class="card t-sentry" href="https://umade-sh.sentry.io/insights/" target="_blank" rel="noopener">
+        <div class="ico">∿</div><div class="t">Sentry — Performance</div><div class="d">Traces &amp; temps de réponse</div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Emails -->
+  <div class="section">
+    <div class="section-head"><h2>Emails</h2><span class="rule"></span></div>
+    <div class="grid">
+      <a class="card t-mail" href="https://resend.com/emails" target="_blank" rel="noopener">
+        <div class="ico">✉</div><div class="t">Resend — Logs</div><div class="d">Chaque email envoyé et son statut</div>
+      </a>
+      <a class="card t-mail" href="https://resend.com/domains" target="_blank" rel="noopener">
+        <div class="ico">◈</div><div class="t">Resend — Domaines</div><div class="d">Vérification DNS d'umade.be</div>
+      </a>
+      <a class="card t-mail" href="https://resend.com/api-keys" target="_blank" rel="noopener">
+        <div class="ico">⚿</div><div class="t">Resend — Clés API</div><div class="d">Clé utilisée par les Edge Functions</div>
+      </a>
+      <a class="card t-mail" href="https://supabase.com/dashboard/project/otnujqfmdoohvgbeeqpm/auth/templates" target="_blank" rel="noopener">
+        <div class="ico">✎</div><div class="t">Templates d'emails</div><div class="d">Inscription, mot de passe, changement</div>
+      </a>
+      <a class="card t-mail" href="https://supabase.com/dashboard/project/otnujqfmdoohvgbeeqpm/settings/auth" target="_blank" rel="noopener">
+        <div class="ico">⚙</div><div class="t">SMTP &amp; Auth</div><div class="d">Confirm email, SMTP, redirect URLs</div>
+      </a>
+    </div>
+  </div>
+
+  <!-- DNS -->
+  <div class="section">
+    <div class="section-head"><h2>Domaine &amp; DNS</h2><span class="rule"></span></div>
+    <div class="grid">
+      <a class="card t-dns" href="https://hpanel.hostinger.com/" target="_blank" rel="noopener">
+        <div class="ico">⌗</div><div class="t">Hostinger — DNS</div><div class="d">SPF, DKIM, DMARC, MX d'umade.be</div>
+      </a>
+      <a class="card t-dns" href="https://mxtoolbox.com/SuperTool.aspx?action=spf%3aumade.be" target="_blank" rel="noopener">
+        <div class="ico">✓</div><div class="t">Vérifier SPF</div><div class="d">Contrôle externe de l'enregistrement</div>
+      </a>
+      <a class="card t-dns" href="https://mxtoolbox.com/SuperTool.aspx?action=dmarc%3aumade.be" target="_blank" rel="noopener">
+        <div class="ico">⛨</div><div class="t">Vérifier DMARC</div><div class="d">Politique et rapports</div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Supabase -->
+  <div class="section">
+    <div class="section-head"><h2>Base de données &amp; backend</h2><span class="rule"></span></div>
+    <div class="grid">
+      <a class="card t-db" href="https://supabase.com/dashboard/project/otnujqfmdoohvgbeeqpm" target="_blank" rel="noopener">
+        <div class="ico">⌂</div><div class="t">Supabase Dashboard</div><div class="d">Vue d'ensemble du projet</div>
+      </a>
+      <a class="card t-db" href="https://supabase.com/dashboard/project/otnujqfmdoohvgbeeqpm/editor" target="_blank" rel="noopener">
+        <div class="ico">▦</div><div class="t">Table Editor</div><div class="d">Données des 52+ tables</div>
+      </a>
+      <a class="card t-db" href="https://supabase.com/dashboard/project/otnujqfmdoohvgbeeqpm/sql/new" target="_blank" rel="noopener">
+        <div class="ico">›_</div><div class="t">SQL Editor</div><div class="d">Requêtes &amp; migrations manuelles</div>
+      </a>
+      <a class="card t-db" href="https://supabase.com/dashboard/project/otnujqfmdoohvgbeeqpm/auth/users" target="_blank" rel="noopener">
+        <div class="ico">⚇</div><div class="t">Auth — Utilisateurs</div><div class="d">Comptes &amp; sessions</div>
+      </a>
+      <a class="card t-db" href="https://supabase.com/dashboard/project/otnujqfmdoohvgbeeqpm/storage/buckets" target="_blank" rel="noopener">
+        <div class="ico">⛃</div><div class="t">Storage</div><div class="d">Avatars, portfolios, inspirations</div>
+      </a>
+      <a class="card t-db" href="https://supabase.com/dashboard/project/otnujqfmdoohvgbeeqpm/logs/explorer" target="_blank" rel="noopener">
+        <div class="ico">☰</div><div class="t">Logs Explorer</div><div class="d">API, Postgres, Auth, Realtime</div>
+      </a>
+      <a class="card t-db" href="https://supabase.com/dashboard/project/otnujqfmdoohvgbeeqpm/database/functions" target="_blank" rel="noopener">
+        <div class="ico">ƒ</div><div class="t">RPC &amp; Functions</div><div class="d">13+ fonctions Postgres</div>
+      </a>
+      <a class="card t-db" href="https://supabase.com/dashboard/project/otnujqfmdoohvgbeeqpm/functions" target="_blank" rel="noopener">
+        <div class="ico">λ</div><div class="t">Edge Functions</div><div class="d">Paiements, payouts, suppression de compte</div>
+      </a>
+      <a class="card t-db" href="https://supabase.com/dashboard/project/otnujqfmdoohvgbeeqpm/settings/functions" target="_blank" rel="noopener">
+        <div class="ico">🔑</div><div class="t">Secrets des fonctions</div><div class="d">RESEND_API_KEY, clés Stripe</div>
+      </a>
+      <a class="card t-db" href="https://supabase.com/dashboard/project/otnujqfmdoohvgbeeqpm/settings/api" target="_blank" rel="noopener">
+        <div class="ico">⚙</div><div class="t">API &amp; clés</div><div class="d">URL, anon key, service role</div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Deploy -->
+  <div class="section">
+    <div class="section-head"><h2>Déploiement &amp; builds</h2><span class="rule"></span></div>
+    <div class="grid">
+      <a class="card t-deploy" href="https://vercel.com/dashboard" target="_blank" rel="noopener">
+        <div class="ico">▲</div><div class="t">Vercel — Dashboard</div><div class="d">Tous les déploiements web</div>
+      </a>
+      <a class="card t-deploy" href="https://marketing-site-yrhm00s-projects.vercel.app" target="_blank" rel="noopener">
+        <div class="ico">◉</div><div class="t">Site public (live)</div><div class="d">La vitrine Umade en production</div>
+      </a>
+      <a class="card t-expo" href="https://expo.dev/accounts/umade/projects/umade" target="_blank" rel="noopener">
+        <div class="ico">◈</div><div class="t">Expo — Projet</div><div class="d">Vue d'ensemble EAS</div>
+      </a>
+      <a class="card t-expo" href="https://expo.dev/accounts/umade/projects/umade/builds" target="_blank" rel="noopener">
+        <div class="ico">⚒</div><div class="t">EAS Builds</div><div class="d">Historique des builds iOS/Android</div>
+      </a>
+      <a class="card t-expo" href="https://expo.dev/accounts/umade/projects/umade/updates" target="_blank" rel="noopener">
+        <div class="ico">⇅</div><div class="t">EAS Updates (OTA)</div><div class="d">Mises à jour JS sans rebuild</div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Payments -->
+  <div class="section">
+    <div class="section-head"><h2>Paiements</h2><span class="rule"></span></div>
+    <div class="grid">
+      <a class="card t-pay" href="https://dashboard.stripe.com/" target="_blank" rel="noopener">
+        <div class="ico">$</div><div class="t">Stripe Dashboard</div><div class="d">Paiements, Connect, payouts</div>
+      </a>
+      <a class="card t-pay" href="https://dashboard.stripe.com/test/payments" target="_blank" rel="noopener">
+        <div class="ico">⌾</div><div class="t">Stripe — Mode test</div><div class="d">Transactions de test</div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Apple -->
+  <div class="section">
+    <div class="section-head"><h2>Apple</h2><span class="rule"></span></div>
+    <div class="grid">
+      <a class="card t-apple" href="https://appstoreconnect.apple.com/" target="_blank" rel="noopener">
+        <div class="ico"></div><div class="t">App Store Connect</div><div class="d">TestFlight, soumission, fiche</div>
+      </a>
+      <a class="card t-apple" href="https://developer.apple.com/account" target="_blank" rel="noopener">
+        <div class="ico">⚿</div><div class="t">Apple Developer</div><div class="d">Certificats, profils, identifiants</div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Code -->
+  <div class="section">
+    <div class="section-head"><h2>Code source</h2><span class="rule"></span></div>
+    <div class="grid">
+      <a class="card t-code" href="https://github.com/yrhm00/Umade" target="_blank" rel="noopener">
+        <div class="ico">⑂</div><div class="t">GitHub — Repo</div><div class="d">yrhm00/Umade</div>
+      </a>
+      <a class="card t-code" href="https://github.com/yrhm00/Umade/commits/main" target="_blank" rel="noopener">
+        <div class="ico">◷</div><div class="t">Commits (main)</div><div class="d">Historique des changements</div>
+      </a>
+      <a class="card t-code" href="https://github.com/yrhm00/Umade/pulls" target="_blank" rel="noopener">
+        <div class="ico">⇄</div><div class="t">Pull Requests</div><div class="d">Revues en cours</div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Commands -->
+  <div class="section">
+    <div class="section-head"><h2>Commandes fréquentes</h2><span class="rule"></span></div>
+    <div class="cmds">
+      <div class="cmd">
+        <span class="label">Déployer un fix JS (OTA)</span>
+        <code>npx eas-cli update --channel production --message "fix"</code>
+        <button class="copy">copier</button>
+      </div>
+      <div class="cmd">
+        <span class="label">Rebuild natif sur iPhone</span>
+        <code>npm run ios</code>
+        <button class="copy">copier</button>
+      </div>
+      <div class="cmd">
+        <span class="label">Vérifier les réglages iOS</span>
+        <code>npm run check-ios</code>
+        <button class="copy">copier</button>
+      </div>
+      <div class="cmd">
+        <span class="label">Déployer une Edge Function</span>
+        <code>npx supabase functions deploy &lt;nom&gt;</code>
+        <button class="copy">copier</button>
+      </div>
+      <div class="cmd">
+        <span class="label">Définir un secret de fonction</span>
+        <code>npx supabase secrets set CLE=valeur</code>
+        <button class="copy">copier</button>
+      </div>
+      <div class="cmd">
+        <span class="label">Pousser sur main</span>
+        <code>git add -p &amp;&amp; git commit &amp;&amp; git push origin main</code>
+        <button class="copy">copier</button>
+      </div>
+      <div class="cmd">
+        <span class="label">Régénérer le natif iOS</span>
+        <code>npx expo prebuild -p ios</code>
+        <button class="copy">copier</button>
+      </div>
+      <div class="cmd">
+        <span class="label">Voir les devices connectés</span>
+        <code>xcrun devicectl list devices</code>
+        <button class="copy">copier</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>Console interne Umade &middot; accès réservé IT</footer>
+</div>
+
+<script>
+  // Copy identifier chips
+  document.querySelectorAll('.id-chip').forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      navigator.clipboard.writeText(chip.dataset.copy).then(function () {
+        chip.classList.add('show');
+        setTimeout(function () { chip.classList.remove('show'); }, 1400);
+      });
+    });
+  });
+  // Copy command buttons
+  document.querySelectorAll('.cmd').forEach(function (row) {
+    var btn = row.querySelector('.copy');
+    var code = row.querySelector('code');
+    btn.addEventListener('click', function () {
+      navigator.clipboard.writeText(code.textContent.trim()).then(function () {
+        var old = btn.textContent; btn.textContent = 'copié ✓';
+        setTimeout(function () { btn.textContent = old; }, 1400);
+      });
+    });
+  });
+</script>
+</body>
+</html>
