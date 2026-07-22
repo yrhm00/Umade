@@ -71,6 +71,24 @@
   }
   .id-chip.show .copied { opacity: 1; }
 
+  /* Stats métier */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(168px, 1fr)); gap: 12px; }
+  .stat {
+    background: var(--card); border: 1px solid var(--border-soft);
+    border-radius: 14px; padding: 16px 18px;
+  }
+  .stat .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .8px; color: var(--text-faint); font-weight: 600; }
+  .stat .val { font-size: 27px; font-weight: 700; margin-top: 6px; letter-spacing: -0.5px; }
+  .stat .sub { font-size: 12px; color: var(--text-dim); margin-top: 3px; }
+  .stat.warn .val { color: #f0a45c; }
+  .stat.good .val { color: #3ecf8e; }
+  .stats-msg { color: var(--text-dim); font-size: 13px; padding: 4px 2px; }
+  .stats-msg button {
+    background: var(--accent); color: #fff; border: none; cursor: pointer;
+    font-size: 12.5px; font-weight: 600; padding: 8px 14px; border-radius: 8px; margin-left: 8px;
+  }
+  .stats-msg button.ghost { background: none; color: var(--text-faint); border: 1px solid var(--border-soft); }
+
   /* Sections */
   .section { margin-bottom: 30px; }
   .section-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 13px; }
@@ -177,6 +195,16 @@
       <a class="card t-sentry" href="https://umade-sh.sentry.io/insights/" target="_blank" rel="noopener">
         <div class="ico">∿</div><div class="t">Sentry — Performance</div><div class="d">Traces &amp; temps de réponse</div>
       </a>
+    </div>
+  </div>
+
+  <!-- Activité -->
+  <div class="section">
+    <div class="section-head"><h2>Activité</h2><span class="rule"></span></div>
+    <div id="statsHost">
+      <div class="stats-msg">
+        Chargement…
+      </div>
     </div>
   </div>
 
@@ -386,6 +414,84 @@
 </div>
 
 <script>
+  // ── Chiffres d'activité ───────────────────────────────────────────
+  // Le jeton n'est PAS écrit dans cette page : il est demandé une fois puis
+  // conservé dans le localStorage du navigateur. Le fichier déployé ne
+  // contient donc aucun secret.
+  var STATS_URL = 'https://otnujqfmdoohvgbeeqpm.supabase.co/functions/v1/admin-stats';
+  var TOKEN_KEY = 'umade_admin_stats_token';
+  var host = document.getElementById('statsHost');
+
+  function money(n) {
+    return new Intl.NumberFormat('fr-BE', {
+      style: 'currency', currency: 'EUR', maximumFractionDigits: 0,
+    }).format(n || 0);
+  }
+
+  function msg(html) { host.innerHTML = '<div class="stats-msg">' + html + '</div>'; }
+
+  function askToken() {
+    msg('Chiffres protégés. <button id="statsAuth">Saisir le jeton</button>');
+    document.getElementById('statsAuth').addEventListener('click', function () {
+      var t = window.prompt('Jeton ADMIN_STATS_TOKEN :');
+      if (t) { localStorage.setItem(TOKEN_KEY, t.trim()); load(); }
+    });
+  }
+
+  function render(d) {
+    var cards = [
+      { lbl: 'Utilisateurs', val: d.users.total, sub: '+' + d.users.newThisWeek + ' cette semaine' },
+      { lbl: 'Prestataires', val: d.providers.total,
+        sub: d.providers.unverified + ' à vérifier',
+        cls: d.providers.unverified > 0 ? 'warn' : '' },
+      { lbl: 'Réservations (mois)', val: d.bookings.thisMonth,
+        sub: d.bookings.pending + ' en attente',
+        cls: d.bookings.pending > 0 ? 'warn' : '' },
+      { lbl: 'Volume (mois)', val: money(d.revenue.volumeThisMonth), sub: 'encaissé' },
+      { lbl: 'Commission (mois)', val: money(d.revenue.commissionThisMonth),
+        sub: 'revenu Umade', cls: 'good' },
+      { lbl: 'Emails non confirmés', val: d.users.unconfirmed,
+        sub: d.users.unconfirmed > 0 ? 'vérifier la délivrabilité' : 'tout est confirmé',
+        cls: d.users.unconfirmed > 0 ? 'warn' : '' },
+    ];
+
+    host.innerHTML =
+      '<div class="stats">' +
+      cards.map(function (c) {
+        return '<div class="stat ' + (c.cls || '') + '">' +
+          '<div class="lbl">' + c.lbl + '</div>' +
+          '<div class="val">' + c.val + '</div>' +
+          '<div class="sub">' + c.sub + '</div></div>';
+      }).join('') +
+      '</div><div class="stats-msg" style="margin-top:10px">Mis à jour à ' +
+      new Date(d.generatedAt).toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' }) +
+      ' <button class="ghost" id="statsReset">Changer de jeton</button></div>';
+
+    document.getElementById('statsReset').addEventListener('click', function () {
+      localStorage.removeItem(TOKEN_KEY); askToken();
+    });
+  }
+
+  function load() {
+    var token = localStorage.getItem(TOKEN_KEY);
+    if (!token) return askToken();
+
+    msg('Chargement des chiffres…');
+    fetch(STATS_URL, { headers: { Authorization: 'Bearer ' + token } })
+      .then(function (r) {
+        if (r.status === 401) { localStorage.removeItem(TOKEN_KEY); throw new Error('Jeton refusé'); }
+        if (!r.ok) throw new Error('Erreur ' + r.status);
+        return r.json();
+      })
+      .then(render)
+      .catch(function (e) {
+        msg(e.message + ' <button id="statsAuth">Réessayer</button>');
+        document.getElementById('statsAuth').addEventListener('click', askToken);
+      });
+  }
+
+  load();
+
   // Copy identifier chips
   document.querySelectorAll('.id-chip').forEach(function (chip) {
     chip.addEventListener('click', function () {
