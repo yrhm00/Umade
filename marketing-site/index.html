@@ -3,541 +3,401 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Umade — Le bon prestataire pour chaque événement</title>
+<title>Umade — Le répertoire des prestataires de vos événements</title>
 <meta name="description" content="Umade réunit les meilleurs prestataires événementiels de Belgique. Comparez, échangez et réservez pour vos mariages, anniversaires, baptêmes et soirées." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
 <style>
-  :root {
-    --cream: #f7f5f1;
-    --white: #ffffff;
-    --ink: #101010;
-    --ink-2: #1b1b1b;
-    --grey: #6f6b64;
-    --grey-light: #a9a49b;
-    --amber: #a88a2c;
-    --olive: #b7b03f;
-    --line: rgba(16,16,16,0.08);
-    --display: "Instrument Sans", -apple-system, sans-serif;
-    --body: "Inter", -apple-system, sans-serif;
+  :root{
+    --paper:#f6f1e9;
+    --paper-2:#efe8dc;
+    --ink:#191219;
+    --ink-soft:#4a4048;
+    --muted:#8a8078;
+    --line:rgba(25,18,25,0.14);
+    --line-soft:rgba(25,18,25,0.08);
+    --violet:#5f4a8b;
+    --violet-2:#8f77b8;
+    --amber:#c8791f;
+    --serif:"Fraunces", Georgia, serif;
+    --sans:"Inter", -apple-system, sans-serif;
+    --mono:"Space Mono", ui-monospace, monospace;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
-  body { font-family: var(--body); background: var(--cream); color: var(--ink); overflow-x: hidden; }
-  a { color: inherit; text-decoration: none; }
-  img { display: block; }
-  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 46px; }
-  h1,h2,h3 { font-family: var(--display); font-weight: 500; letter-spacing: -0.025em; line-height: 1.06; }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);overflow-x:hidden;}
+  a{color:inherit;text-decoration:none;}
+  .wrap{max-width:1240px;margin:0 auto;padding:0 40px;}
+  ::selection{background:var(--violet);color:#fff;}
 
-  /* ============ reveals ============ */
-  .rv { opacity: 0; transform: translateY(26px); transition: opacity .7s cubic-bezier(.2,.6,.2,1), transform .7s cubic-bezier(.2,.6,.2,1); }
-  .rv.in { opacity: 1; transform: none; }
-  .rv-d1 { transition-delay: .08s; } .rv-d2 { transition-delay: .16s; } .rv-d3 { transition-delay: .24s; }
+  /* labels */
+  .lab{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
+  .num{font-family:var(--mono);font-size:12px;color:var(--violet);font-weight:700;}
 
-  /* ============ buttons ============ */
-  .btn { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14.5px; padding: 13px 22px; border-radius: 999px; cursor: pointer; border: none; transition: transform .18s ease, background .18s, color .18s; white-space: nowrap; font-family: var(--body); }
-  .btn .ar { transition: transform .18s ease; }
-  .btn:hover .ar { transform: translateX(3px); }
-  .btn-white { background: #fff; color: var(--ink); }
-  .btn-white:hover { transform: scale(1.03); }
-  .btn-dark { background: rgba(20,20,20,0.55); color: #fff; backdrop-filter: blur(6px); }
-  .btn-dark:hover { background: rgba(20,20,20,0.75); }
-  .btn-black { background: var(--ink); color: #fff; }
-  .btn-black:hover { background: #000; transform: scale(1.02); }
+  /* reveal */
+  .rv{opacity:0;transform:translateY(22px);transition:opacity .8s cubic-bezier(.2,.7,.2,1),transform .8s cubic-bezier(.2,.7,.2,1);}
+  .rv.in{opacity:1;transform:none;}
+  .d1{transition-delay:.07s}.d2{transition-delay:.14s}.d3{transition-delay:.21s}
 
-  .eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--amber); margin-bottom: 20px; }
+  /* buttons */
+  .btn{display:inline-flex;align-items:center;gap:10px;font-family:var(--sans);font-weight:600;font-size:15px;padding:15px 26px;border-radius:2px;cursor:pointer;border:1px solid var(--ink);transition:transform .16s,background .16s,color .16s;}
+  .btn .arw{transition:transform .16s}
+  .btn:hover .arw{transform:translateX(4px)}
+  .btn-solid{background:var(--ink);color:var(--paper);}
+  .btn-solid:hover{background:var(--violet);border-color:var(--violet);}
+  .btn-ghost{background:transparent;color:var(--ink);}
+  .btn-ghost:hover{background:var(--ink);color:var(--paper);}
 
-  /* ============ nav ============ */
-  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; transition: background .3s ease, box-shadow .3s ease; }
-  .nav-in { display: flex; align-items: center; height: 68px; }
-  .brand { font-family: var(--display); font-weight: 600; font-size: 19px; letter-spacing: -0.01em; color: #fff; transition: color .3s; }
-  .brand span { font-size: 11px; vertical-align: super; opacity: .7; }
-  .nav-links { margin-left: auto; display: flex; gap: 30px; }
-  .nav-links a { font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.85); transition: color .2s; }
-  .nav-links a:hover { color: #fff; }
-  nav.solid { background: var(--cream); box-shadow: 0 1px 0 var(--line); }
-  nav.solid .brand { color: var(--ink); }
-  nav.solid .nav-links a { color: var(--grey); }
-  nav.solid .nav-links a:hover { color: var(--ink); }
+  /* nav */
+  nav{position:sticky;top:0;z-index:60;background:var(--paper);border-bottom:1px solid var(--line);}
+  .nav-in{display:flex;align-items:center;height:70px;gap:28px;}
+  .brand{font-family:var(--serif);font-weight:600;font-size:23px;letter-spacing:-.01em;}
+  .brand sup{font-family:var(--mono);font-size:10px;vertical-align:super;color:var(--violet);}
+  .nav-links{display:flex;gap:26px;margin-left:auto;}
+  .nav-links a{font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);transition:color .15s;}
+  .nav-links a:hover{color:var(--violet);}
+  .nav-cta{font-size:13px;padding:10px 18px;}
 
-  /* ============ hero ============ */
-  .hero { position: relative; min-height: 104vh; display: flex; align-items: flex-end; }
-  .hero-bg { position: absolute; inset: 0; overflow: hidden; }
-  .hero-bg img { width: 100%; height: 100%; object-fit: cover; }
-  .hero-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.18) 45%, rgba(0,0,0,0.62) 100%); }
-  .hero-in { position: relative; z-index: 2; width: 100%; padding-bottom: 84px; }
-  .hero h1 { font-size: clamp(42px, 5.6vw, 74px); color: rgba(255,255,255,0.92); max-width: 830px; }
-  .hero h1 em { font-style: normal; color: rgba(255,255,255,0.55); }
-  .hero .lede { color: rgba(255,255,255,0.82); font-size: 16.5px; line-height: 1.55; max-width: 470px; margin: 22px 0 30px; }
-  .hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; }
+  /* hero */
+  .hero{padding:74px 0 40px;border-bottom:1px solid var(--line);position:relative;}
+  .hero-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:38px;flex-wrap:wrap;gap:12px;}
+  .hero h1{font-family:var(--serif);font-weight:300;font-size:clamp(48px,8.6vw,124px);line-height:.96;letter-spacing:-.025em;}
+  .hero h1 .it{font-style:italic;font-weight:400;}
+  .rotator{color:var(--violet);display:inline-block;font-style:italic;font-weight:500;min-width:6ch;}
+  .hero-foot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:44px;gap:30px;flex-wrap:wrap;}
+  .hero-foot p{max-width:430px;font-size:17px;line-height:1.55;color:var(--ink-soft);}
+  .hero-cta{display:flex;gap:12px;flex-wrap:wrap;}
 
-  /* ============ trusted (pinned zoom-out) ============ */
-  .trusted { height: 180vh; position: relative; text-align: center; }
-  .trusted-sticky { position: sticky; top: 0; height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-  .trusted-inner { will-change: transform, opacity; }
-  .chips { display: flex; gap: 10px; justify-content: center; margin-bottom: 30px; flex-wrap: wrap; }
-  .chip { font-size: 12.5px; font-weight: 600; color: var(--amber); background: #fff; border: 1px solid var(--line); padding: 7px 14px; border-radius: 999px; }
-  .trusted h2 { font-size: clamp(30px, 3.8vw, 46px); }
-  .trusted h2 .dim { color: var(--grey-light); display: block; }
-  .cats-row { display: flex; gap: 38px; justify-content: center; margin-top: 44px; flex-wrap: wrap; }
-  .cats-row span { font-family: var(--display); font-weight: 600; font-size: 16.5px; color: var(--grey-light); display: inline-flex; align-items: center; gap: 9px; }
+  /* marquee */
+  .marquee{border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden;background:var(--ink);color:var(--paper);}
+  .marquee-track{display:flex;gap:0;white-space:nowrap;animation:slide 34s linear infinite;}
+  .marquee-track span{font-family:var(--serif);font-size:26px;font-style:italic;padding:16px 30px;display:inline-flex;align-items:center;gap:30px;}
+  .marquee-track span::after{content:"✦";font-style:normal;font-size:13px;color:var(--violet-2);}
+  @keyframes slide{to{transform:translateX(-50%)}}
 
-  /* ============ founder ============ */
-  .founder { padding: 20px 0 120px; }
-  .founder-card { position: relative; max-width: 620px; margin-left: auto; border-radius: 16px; overflow: hidden; }
-  .founder-card > img { width: 100%; height: 460px; object-fit: cover; }
-  .quote-box { position: absolute; left: 22px; right: 22px; bottom: 22px; background: #fff; border-radius: 12px; padding: 24px 26px; }
-  .quote-box p { font-size: 15px; line-height: 1.55; color: var(--ink-2); }
-  .quote-meta { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; gap: 12px; }
-  .quote-meta .who { font-size: 13.5px; }
-  .quote-meta .who b { font-weight: 600; }
-  .quote-meta .who span { color: var(--grey-light); }
-  .handle { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; border: 1px solid var(--line); border-radius: 999px; padding: 7px 13px; transition: background .18s; }
-  .handle:hover { background: var(--cream); }
+  /* section frame */
+  section{padding:96px 0;border-bottom:1px solid var(--line);}
+  .sec-head{display:flex;gap:20px;align-items:baseline;margin-bottom:14px;}
+  .sec-title{font-family:var(--serif);font-weight:400;font-size:clamp(30px,4.6vw,54px);line-height:1.02;letter-spacing:-.02em;max-width:720px;}
+  .sec-lead{font-size:17px;color:var(--ink-soft);max-width:520px;margin-top:18px;line-height:1.55;}
 
-  /* ============ services ============ */
-  .services { position: relative; padding: 120px 0 110px; color: #fff; }
-  .services-bg { position: absolute; inset: 0; overflow: hidden; }
-  .services-bg img { width: 100%; height: 100%; object-fit: cover; }
-  .services-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0.25) 40%, rgba(0,0,0,0.45)); }
-  .services .wrap { position: relative; z-index: 2; }
-  .services .eyebrow { color: var(--olive); }
-  .services h2 { font-size: clamp(30px, 3.8vw, 46px); color: #fff; max-width: 640px; margin-bottom: 64px; }
-  .svc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-  .svc { position: relative; height: 300px; border-radius: 12px; background: rgba(16,16,16,0.72); backdrop-filter: blur(10px); padding: 20px; display: flex; flex-direction: column; justify-content: flex-end; transition: background .28s ease, color .28s ease, transform .28s ease; cursor: pointer; color: #fff; }
-  .svc .ar { position: absolute; top: 18px; right: 18px; font-size: 18px; opacity: .9; transition: transform .28s; }
-  .svc .nm { font-family: var(--display); font-weight: 500; font-size: 16.5px; }
-  .svc .ds { font-size: 13px; color: currentColor; opacity: 0; max-height: 0; overflow: hidden; transition: opacity .28s, max-height .28s; line-height: 1.5; }
-  .svc:hover { background: rgba(250,248,244,0.94); color: var(--ink); transform: translateY(-4px); }
-  .svc:hover .ar { transform: translate(3px,-3px); }
-  .svc:hover .ds { opacity: .75; max-height: 80px; margin-top: 6px; }
+  /* stats */
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:20px;border:1px solid var(--line);}
+  .stat{padding:34px 30px;border-right:1px solid var(--line);}
+  .stat:last-child{border-right:none;}
+  .stat .v{font-family:var(--serif);font-size:clamp(40px,6vw,68px);font-weight:400;line-height:1;letter-spacing:-.02em;}
+  .stat .k{font-family:var(--mono);font-size:12px;text-transform:uppercase;color:var(--muted);margin-top:12px;letter-spacing:.04em;}
 
-  /* ============ who ============ */
-  .who { padding: 120px 0 0; }
-  .who h2 { font-size: clamp(30px, 3.8vw, 46px); max-width: 760px; }
-  .strip-wrap { margin-top: 60px; overflow-x: auto; scrollbar-width: none; cursor: grab; }
-  .strip-wrap::-webkit-scrollbar { display: none; }
-  .strip { display: flex; }
-  .cell { position: relative; flex: 0 0 340px; height: 480px; overflow: hidden; }
-  .cell img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
-  .cell:hover img { transform: scale(1.045); }
-  .cell::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 55%, rgba(0,0,0,0.55)); }
-  .cell .lb { position: absolute; left: 18px; bottom: 16px; z-index: 2; color: #fff; font-size: 14.5px; font-weight: 500; }
+  /* directory */
+  .dir{margin-top:46px;border-top:1px solid var(--line);}
+  .dir-row{display:grid;grid-template-columns:64px 1fr auto;align-items:center;gap:24px;padding:22px 8px;border-bottom:1px solid var(--line);cursor:default;transition:background .22s,padding .22s,color .22s;position:relative;}
+  .dir-row:hover{background:var(--ink);color:var(--paper);padding-left:24px;}
+  .dir-row:hover .dir-idx{color:var(--violet-2);}
+  .dir-row:hover .dir-desc{color:rgba(246,241,233,.7);}
+  .dir-idx{font-family:var(--mono);font-size:13px;color:var(--muted);}
+  .dir-name{font-family:var(--serif);font-size:clamp(24px,3.4vw,38px);font-weight:400;letter-spacing:-.01em;}
+  .dir-desc{font-size:14.5px;color:var(--muted);text-align:right;max-width:320px;transition:color .22s;}
+  .dir-row .arw{position:absolute;right:8px;opacity:0;transition:opacity .22s,transform .22s;font-size:20px;}
+  .dir-row:hover .arw{opacity:1;transform:translateX(4px);}
+  .dir-row:hover .dir-desc{display:none;}
 
-  /* ============ projects ============ */
-  .projects { background: #0d0d0d; color: #fff; padding: 130px 0; }
-  .projects .eyebrow { color: var(--olive); text-align: center; }
-  .projects h2 { font-size: clamp(30px, 3.8vw, 46px); color: #fff; text-align: center; max-width: 700px; margin: 0 auto 80px; }
-  .proj { margin-bottom: 90px; }
-  .proj.right { display: flex; justify-content: flex-end; }
-  .proj-inner { width: 72%; }
-  .proj-inner.small { width: 54%; }
-  .proj-img { border-radius: 6px; overflow: hidden; }
-  .proj-img img { width: 100%; height: auto; aspect-ratio: 16/10; object-fit: cover; transition: transform .6s ease; }
-  .proj-inner:hover .proj-img img { transform: scale(1.03); }
-  .proj-cap { display: flex; justify-content: space-between; margin-top: 16px; font-size: 14.5px; }
-  .proj-cap .cat { color: rgba(255,255,255,0.45); }
-  .all-link { display: inline-flex; align-items: center; gap: 8px; font-size: 14.5px; font-weight: 500; border-bottom: 1px solid rgba(255,255,255,0.4); padding-bottom: 3px; transition: gap .18s; }
-  .all-link:hover { gap: 13px; }
+  /* events / tickets */
+  .tickets{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:48px;}
+  .ticket{border:1px solid var(--line);background:var(--paper-2);padding:0;position:relative;overflow:hidden;transition:transform .18s,background .18s;}
+  .ticket:hover{transform:translateY(-5px);background:#fff;}
+  .ticket .stub{padding:18px 20px;border-bottom:1px dashed var(--line);display:flex;justify-content:space-between;align-items:center;}
+  .ticket .stub .no{font-family:var(--mono);font-size:12px;color:var(--violet);}
+  .ticket .stub .ic{font-size:20px;}
+  .ticket .body{padding:22px 20px 26px;}
+  .ticket h3{font-family:var(--serif);font-weight:400;font-size:26px;letter-spacing:-.01em;margin-bottom:8px;}
+  .ticket p{font-size:13.5px;color:var(--ink-soft);line-height:1.5;}
+  .ticket::before,.ticket::after{content:"";position:absolute;width:16px;height:16px;background:var(--paper);border-radius:50%;left:50%;transform:translateX(-50%);}
+  .ticket::before{top:56px;box-shadow:none;}
 
-  /* ============ testimonials ============ */
-  .testi { padding: 130px 0 60px; }
-  .testi h2 { font-size: clamp(30px, 3.8vw, 46px); max-width: 700px; margin-bottom: 70px; }
-  .t-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-  .t-card { position: relative; background: #fff; border-radius: 12px; padding: 34px 22px 20px; display: flex; flex-direction: column; }
-  .t-chip { position: absolute; top: -13px; left: 50%; transform: translateX(-50%); background: #fff; border: 1px solid var(--line); font-size: 11.5px; font-weight: 600; padding: 5px 12px; border-radius: 999px; white-space: nowrap; }
-  .t-card .qm { font-family: var(--display); font-size: 26px; color: var(--grey-light); line-height: 1; margin-bottom: 10px; }
-  .t-card p { font-size: 13.5px; line-height: 1.55; color: var(--ink-2); flex: 1; }
-  .t-foot { display: flex; align-items: center; gap: 9px; margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--line); }
-  .t-foot .av { width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(145deg, #8f77b8, #5f4a8b); color: #fff; font-size: 11px; font-weight: 700; display: grid; place-items: center; }
-  .t-foot .nm { font-size: 12.5px; font-weight: 500; }
+  /* steps */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:48px;border-top:1px solid var(--line);}
+  .step{padding:36px 30px 30px;border-right:1px solid var(--line);}
+  .step:last-child{border-right:none;}
+  .step .sn{font-family:var(--mono);font-size:13px;color:var(--violet);font-weight:700;}
+  .step h3{font-family:var(--serif);font-weight:400;font-size:30px;margin:20px 0 12px;letter-spacing:-.01em;}
+  .step p{font-size:15px;color:var(--ink-soft);line-height:1.55;}
 
-  /* ============ pricing ============ */
-  .pricing { padding: 110px 0; }
-  .pricing h2 { font-size: clamp(30px, 3.8vw, 46px); max-width: 640px; margin-bottom: 70px; }
-  .p-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-  .p-card { background: #fff; border-radius: 12px; padding: 26px 22px; display: flex; flex-direction: column; }
-  .p-card .pl { font-size: 13px; font-weight: 600; color: var(--grey); }
-  .p-card .pr { font-family: var(--display); font-size: 42px; font-weight: 500; letter-spacing: -0.03em; margin: 12px 0 4px; }
-  .p-card .pr small { font-size: 15px; color: var(--grey-light); font-family: var(--body); letter-spacing: 0; }
-  .p-card .btn { justify-content: center; width: 100%; margin: 18px 0 22px; }
-  .p-feats { display: flex; flex-direction: column; gap: 11px; }
-  .p-feats div { display: flex; gap: 9px; font-size: 13px; color: var(--ink-2); line-height: 1.45; }
-  .p-feats .ck { flex-shrink: 0; width: 17px; height: 17px; border: 1px solid var(--line); border-radius: 50%; display: grid; place-items: center; font-size: 9px; color: var(--amber); margin-top: 1px; }
+  /* pricing table */
+  .price-table{margin-top:46px;border:1px solid var(--line);}
+  .price-row{display:grid;grid-template-columns:1.4fr .8fr 2fr auto;align-items:center;gap:24px;padding:26px 30px;border-bottom:1px solid var(--line);transition:background .16s;}
+  .price-row:last-child{border-bottom:none;}
+  .price-row:hover{background:var(--paper-2);}
+  .price-plan{font-family:var(--serif);font-size:24px;font-weight:400;}
+  .price-plan small{display:block;font-family:var(--mono);font-size:11px;text-transform:uppercase;color:var(--muted);margin-top:5px;letter-spacing:.04em;}
+  .price-amt{font-family:var(--serif);font-size:34px;font-weight:400;letter-spacing:-.02em;white-space:nowrap;}
+  .price-amt span{font-family:var(--mono);font-size:12px;color:var(--muted);}
+  .price-feat{font-size:14px;color:var(--ink-soft);line-height:1.5;}
+  .price-row .btn{white-space:nowrap;padding:12px 20px;font-size:14px;}
 
-  /* ============ faq ============ */
-  .faq { padding: 90px 0 130px; }
-  .faq-in { display: grid; grid-template-columns: 1fr 1.15fr; gap: 60px; align-items: start; }
-  .faq h2 { font-size: clamp(30px, 3.8vw, 46px); }
-  .acc { display: flex; flex-direction: column; gap: 10px; }
-  .acc-item { background: #fff; border-radius: 12px; overflow: hidden; }
-  .acc-q { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 22px; background: none; border: none; cursor: pointer; font-family: var(--body); font-size: 14.5px; font-weight: 500; color: var(--ink); text-align: left; }
-  .acc-q .ic { font-size: 18px; color: var(--grey); transition: transform .25s; flex-shrink: 0; }
-  .acc-a { max-height: 0; overflow: hidden; transition: max-height .32s ease; }
-  .acc-a p { padding: 0 22px 18px; font-size: 13.5px; line-height: 1.6; color: var(--grey); }
-  .acc-item.open .ic { transform: rotate(45deg); }
+  /* testimonials */
+  .quotes{columns:2;column-gap:18px;margin-top:46px;}
+  .quote{break-inside:avoid;border:1px solid var(--line);background:var(--paper-2);padding:26px 24px;margin-bottom:18px;}
+  .quote .qm{font-family:var(--serif);font-size:44px;line-height:.5;color:var(--violet-2);}
+  .quote p{font-family:var(--serif);font-size:19px;font-weight:400;line-height:1.4;margin:16px 0 20px;letter-spacing:-.01em;}
+  .quote .who{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:14px;}
+  .quote .who .nm{font-weight:600;font-size:13.5px;}
+  .quote .who .tg{font-family:var(--mono);font-size:11px;text-transform:uppercase;color:var(--violet);}
 
-  /* ============ final cta + footer ============ */
-  .final { position: relative; padding: 140px 0 46px; color: #fff; }
-  .final-bg { position: absolute; inset: 0; overflow: hidden; }
-  .final-bg img { width: 100%; height: 100%; object-fit: cover; }
-  .final-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.3), rgba(0,0,0,0.55)); }
-  .final .wrap { position: relative; z-index: 2; }
-  .final h2 { font-size: clamp(36px, 4.6vw, 58px); color: #fff; max-width: 560px; }
-  .final-ctas { display: flex; gap: 12px; margin: 30px 0 120px; flex-wrap: wrap; }
-  .foot-card { background: rgba(12,12,12,0.55); backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 38px 40px; display: flex; justify-content: space-between; gap: 40px; flex-wrap: wrap; }
-  .foot-brand .brand { color: #fff; font-size: 20px; }
-  .foot-brand p { color: rgba(255,255,255,0.55); font-size: 13.5px; margin-top: 8px; max-width: 260px; }
-  .foot-cols { display: flex; gap: 60px; flex-wrap: wrap; }
-  .foot-col h4 { font-size: 12.5px; font-weight: 600; color: rgba(255,255,255,0.45); margin-bottom: 14px; }
-  .foot-col a { display: block; font-size: 13.5px; color: rgba(255,255,255,0.85); margin-bottom: 10px; transition: color .15s; }
-  .foot-col a:hover { color: #fff; }
-  .foot-legal { position: relative; z-index: 2; text-align: center; color: rgba(255,255,255,0.4); font-size: 12px; margin-top: 22px; }
+  /* closer */
+  .closer{padding:120px 0;text-align:center;border-bottom:1px solid var(--line);}
+  .closer h2{font-family:var(--serif);font-weight:300;font-size:clamp(40px,8vw,104px);line-height:.98;letter-spacing:-.025em;}
+  .closer h2 .it{font-style:italic;font-weight:400;color:var(--violet);}
+  .closer .cta{display:flex;gap:12px;justify-content:center;margin-top:38px;flex-wrap:wrap;}
 
-  /* ============ responsive ============ */
-  @media (max-width: 1000px) {
-    .svc-grid, .t-grid, .p-grid { grid-template-columns: repeat(2, 1fr); }
-    .t-grid { row-gap: 28px; }
-    .faq-in { grid-template-columns: 1fr; }
-    .proj-inner, .proj-inner.small { width: 100%; }
+  /* footer */
+  footer{padding:64px 0 40px;}
+  .foot-top{display:flex;justify-content:space-between;gap:40px;flex-wrap:wrap;}
+  .foot-brand{max-width:300px;}
+  .foot-brand .brand{font-size:26px;}
+  .foot-brand p{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:12px;line-height:1.7;}
+  .foot-cols{display:flex;gap:60px;flex-wrap:wrap;}
+  .foot-col h4{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:16px;}
+  .foot-col a{display:block;font-size:14.5px;margin-bottom:11px;color:var(--ink-soft);transition:color .15s;}
+  .foot-col a:hover{color:var(--violet);}
+  .foot-bottom{display:flex;justify-content:space-between;margin-top:56px;padding-top:22px;border-top:1px solid var(--line);font-family:var(--mono);font-size:11px;color:var(--muted);flex-wrap:wrap;gap:10px;}
+
+  @media(max-width:980px){
+    .tickets{grid-template-columns:repeat(2,1fr);}
+    .steps{grid-template-columns:1fr;}
+    .step{border-right:none;border-bottom:1px solid var(--line);}
+    .quotes{columns:1;}
+    .price-row{grid-template-columns:1fr auto;grid-row-gap:8px;}
+    .price-feat{grid-column:1 / -1;}
   }
-  @media (max-width: 620px) {
-    .wrap { padding: 0 22px; }
-    .nav-links { display: none; }
-    .svc-grid, .t-grid, .p-grid { grid-template-columns: 1fr; }
-    .cell { flex-basis: 260px; height: 380px; }
-    .founder-card > img { height: 380px; }
-    .foot-card { padding: 28px 24px; }
+  @media(max-width:640px){
+    .wrap{padding:0 22px;}
+    .nav-links{display:none;}
+    .stats{grid-template-columns:1fr;}
+    .stat{border-right:none;border-bottom:1px solid var(--line);}
+    .tickets{grid-template-columns:1fr;}
+    .dir-row{grid-template-columns:40px 1fr;}
+    .dir-desc,.dir-row .arw{display:none;}
+    .hero-foot{flex-direction:column;align-items:flex-start;}
   }
 </style>
 </head>
 <body>
 
 <!-- NAV -->
-<nav id="nav">
+<nav>
   <div class="wrap nav-in">
-    <a class="brand" href="#top">Umade <span>®</span></a>
+    <a class="brand" href="#top">Umade<sup>®</sup></a>
     <div class="nav-links">
-      <a href="#services">Événements</a>
-      <a href="#inspirations">Inspirations</a>
+      <a href="#repertoire">Répertoire</a>
+      <a href="#occasions">Occasions</a>
       <a href="#tarifs">Tarifs</a>
-      <a href="#contact">Contact</a>
+      <a href="#avis">Avis</a>
     </div>
+    <a class="btn btn-solid nav-cta" href="#telecharger">Télécharger</a>
   </div>
 </nav>
 
 <!-- HERO -->
 <header class="hero" id="top">
-  <div class="hero-bg">
-    <img src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=2400&auto=format&fit=crop" alt="Fête avec confettis" />
-  </div>
-  <div class="wrap hero-in">
-    <h1 class="rv">Le bon prestataire pour <em>chaque événement inoubliable</em></h1>
-    <p class="lede rv rv-d1">Umade réunit les meilleurs prestataires événementiels de Belgique. Comparez, échangez et réservez — le tout depuis une seule application.</p>
-    <div class="hero-ctas rv rv-d2">
-      <a class="btn btn-white" href="#tarifs">Télécharger l'app <span class="ar">→</span></a>
-      <a class="btn btn-dark" href="#services">Découvrir Umade</a>
+  <div class="wrap">
+    <div class="hero-top">
+      <span class="lab">Le répertoire des événements — Belgique</span>
+      <span class="lab">Est. 2026</span>
+    </div>
+    <h1>Le bon prestataire<br>pour chaque <span class="rotator" id="rot">mariage</span><br><span class="it">inoubliable.</span></h1>
+    <div class="hero-foot">
+      <p>Umade réunit les meilleurs prestataires événementiels de Belgique. Comparez, échangez et réservez — tout depuis une seule application.</p>
+      <div class="hero-cta">
+        <a class="btn btn-solid" href="#telecharger">Trouver un prestataire <span class="arw">→</span></a>
+        <a class="btn btn-ghost" href="#repertoire">Voir le répertoire</a>
+      </div>
     </div>
   </div>
 </header>
 
-<!-- TRUSTED (pinned zoom-out) -->
-<section class="trusted" id="trusted">
-  <div class="trusted-sticky">
-    <div class="trusted-inner wrap" id="trustedInner">
-      <div class="chips">
-        <span class="chip">127+ prestataires vérifiés</span>
-        <span class="chip">+500 événements organisés</span>
-      </div>
-      <h2><span class="dim">Des événements bien préparés,</span> approuvés par nos utilisateurs</h2>
-      <div class="cats-row">
-        <span>📸 Photographes</span>
-        <span>🍽️ Traiteurs</span>
-        <span>🎵 DJs</span>
-        <span>💐 Fleuristes</span>
-        <span>🏰 Lieux</span>
-        <span>💍 Planners</span>
-      </div>
+<!-- MARQUEE -->
+<div class="marquee">
+  <div class="marquee-track">
+    <span>Photographes</span><span>Traiteurs</span><span>DJ &amp; Musique</span><span>Fleuristes</span><span>Lieux de réception</span><span>Wedding planners</span><span>Pâtissiers</span><span>Décorateurs</span>
+    <span>Photographes</span><span>Traiteurs</span><span>DJ &amp; Musique</span><span>Fleuristes</span><span>Lieux de réception</span><span>Wedding planners</span><span>Pâtissiers</span><span>Décorateurs</span>
+  </div>
+</div>
+
+<!-- STATS -->
+<section>
+  <div class="wrap">
+    <div class="sec-head"><span class="num">01</span><span class="lab">En bref</span></div>
+    <h2 class="sec-title rv">Une communauté de prestataires vérifiés, approuvés par ceux qui les ont fait travailler.</h2>
+    <div class="stats rv d1">
+      <div class="stat"><div class="v">127<span style="font-family:var(--sans);font-size:30px;color:var(--violet)">+</span></div><div class="k">Prestataires vérifiés</div></div>
+      <div class="stat"><div class="v">12</div><div class="k">Catégories de services</div></div>
+      <div class="stat"><div class="v">500<span style="font-family:var(--sans);font-size:30px;color:var(--violet)">+</span></div><div class="k">Événements organisés</div></div>
     </div>
   </div>
 </section>
 
-<!-- FOUNDER -->
-<section class="founder">
+<!-- DIRECTORY -->
+<section id="repertoire">
   <div class="wrap">
-    <div class="founder-card rv">
-      <img src="https://images.unsplash.com/photo-1511578314322-379afb476865?q=80&w=1600&auto=format&fit=crop" alt="Réception élégante" />
-      <div class="quote-box">
-        <p>« Chaque événement raconte une histoire. Notre mission, c'est de vous connecter aux artisans qui la rendront inoubliable — sans stress, sans détour. »</p>
-        <div class="quote-meta">
-          <div class="who"><b>Yassin R.,</b> <span>fondateur d'Umade</span></div>
-          <a class="handle" href="#contact">@umade <span>→</span></a>
-        </div>
-      </div>
+    <div class="sec-head"><span class="num">02</span><span class="lab">Le répertoire</span></div>
+    <h2 class="sec-title rv">Chaque métier de l'événementiel, réuni.</h2>
+    <p class="sec-lead rv d1">Du photographe au traiteur, comparez les profils, les avis et les tarifs en quelques secondes.</p>
+    <div class="dir rv d2">
+      <div class="dir-row"><span class="dir-idx">01</span><span class="dir-name">Photographie</span><span class="dir-desc">Immortalisez le jour J</span><span class="arw">→</span></div>
+      <div class="dir-row"><span class="dir-idx">02</span><span class="dir-name">Traiteur</span><span class="dir-desc">Cuisine &amp; buffets sur mesure</span><span class="arw">→</span></div>
+      <div class="dir-row"><span class="dir-idx">03</span><span class="dir-name">DJ &amp; Musique</span><span class="dir-desc">L'ambiance de la soirée</span><span class="arw">→</span></div>
+      <div class="dir-row"><span class="dir-idx">04</span><span class="dir-name">Fleuriste</span><span class="dir-desc">Compositions &amp; décors floraux</span><span class="arw">→</span></div>
+      <div class="dir-row"><span class="dir-idx">05</span><span class="dir-name">Lieu de réception</span><span class="dir-desc">Salles, domaines &amp; châteaux</span><span class="arw">→</span></div>
+      <div class="dir-row"><span class="dir-idx">06</span><span class="dir-name">Vidéographie</span><span class="dir-desc">Le film de votre événement</span><span class="arw">→</span></div>
+      <div class="dir-row"><span class="dir-idx">07</span><span class="dir-name">Maquillage &amp; Coiffure</span><span class="dir-desc">Mise en beauté</span><span class="arw">→</span></div>
+      <div class="dir-row"><span class="dir-idx">08</span><span class="dir-name">Pâtisserie</span><span class="dir-desc">Pièces montées &amp; wedding cakes</span><span class="arw">→</span></div>
+      <div class="dir-row"><span class="dir-idx">09</span><span class="dir-name">Animation</span><span class="dir-desc">Spectacles &amp; divertissement</span><span class="arw">→</span></div>
+      <div class="dir-row"><span class="dir-idx">10</span><span class="dir-name">Décoration</span><span class="dir-desc">Scénographie &amp; ambiance</span><span class="arw">→</span></div>
+      <div class="dir-row"><span class="dir-idx">11</span><span class="dir-name">Wedding Planner</span><span class="dir-desc">Organisation clé en main</span><span class="arw">→</span></div>
+      <div class="dir-row"><span class="dir-idx">12</span><span class="dir-name">Location de matériel</span><span class="dir-desc">Mobilier &amp; équipement</span><span class="arw">→</span></div>
     </div>
   </div>
 </section>
 
-<!-- SERVICES -->
-<section class="services" id="services">
-  <div class="services-bg">
-    <img src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=2400&auto=format&fit=crop" alt="Amis célébrant ensemble" />
-  </div>
+<!-- OCCASIONS / TICKETS -->
+<section id="occasions">
   <div class="wrap">
-    <div class="eyebrow rv">Événements</div>
-    <h2 class="rv rv-d1">Des moments de joie pour chaque occasion qui compte</h2>
-    <div class="svc-grid">
-      <div class="svc rv"><span class="ar">↗</span><div class="nm">Mariages</div><div class="ds">Lieu, photographe, traiteur, fleurs — tous les artisans du plus beau jour.</div></div>
-      <div class="svc rv rv-d1"><span class="ar">↗</span><div class="nm">Anniversaires</div><div class="ds">Des fêtes mémorables, de 1 à 100 ans, clé en main.</div></div>
-      <div class="svc rv rv-d2"><span class="ar">↗</span><div class="nm">Baptêmes</div><div class="ds">Un moment doux et soigné, entouré de vos proches.</div></div>
-      <div class="svc rv rv-d3"><span class="ar">↗</span><div class="nm">Soirées &amp; Pro</div><div class="ds">Événements privés ou d'entreprise, l'ambiance sur mesure.</div></div>
+    <div class="sec-head"><span class="num">03</span><span class="lab">Pour chaque occasion</span></div>
+    <h2 class="sec-title rv">Pas seulement les mariages.</h2>
+    <div class="tickets">
+      <div class="ticket rv"><div class="stub"><span class="no">N°01</span><span class="ic">◆</span></div><div class="body"><h3>Mariages</h3><p>Du lieu au photographe, tous les artisans du plus beau jour.</p></div></div>
+      <div class="ticket rv d1"><div class="stub"><span class="no">N°02</span><span class="ic">✷</span></div><div class="body"><h3>Anniversaires</h3><p>Une fête mémorable, quel que soit l'âge à célébrer.</p></div></div>
+      <div class="ticket rv d2"><div class="stub"><span class="no">N°03</span><span class="ic">❋</span></div><div class="body"><h3>Baptêmes</h3><p>Un moment doux et soigné, entouré de vos proches.</p></div></div>
+      <div class="ticket rv d3"><div class="stub"><span class="no">N°04</span><span class="ic">✦</span></div><div class="body"><h3>Soirées &amp; Pro</h3><p>Événements privés ou d'entreprise, sur mesure.</p></div></div>
     </div>
   </div>
 </section>
 
-<!-- WHO -->
-<section class="who">
+<!-- STEPS -->
+<section>
   <div class="wrap">
-    <div class="eyebrow rv">Pour qui</div>
-    <h2 class="rv rv-d1">Nos utilisateurs sont aussi variés que les événements qu'ils organisent, chacun accompagné avec soin</h2>
-  </div>
-  <div class="strip-wrap rv rv-d2" id="strip">
-    <div class="strip">
-      <div class="cell"><img src="https://images.unsplash.com/photo-1522673607200-164d1b6ce486?q=80&w=1200&auto=format&fit=crop" alt="" /><span class="lb">Couples &amp; futurs mariés</span></div>
-      <div class="cell"><img src="https://images.unsplash.com/photo-1511895426328-dc8714191300?q=80&w=1200&auto=format&fit=crop" alt="" /><span class="lb">Familles &amp; amis</span></div>
-      <div class="cell"><img src="https://images.unsplash.com/photo-1515187029135-18ee286d815b?q=80&w=1200&auto=format&fit=crop" alt="" /><span class="lb">Entreprises &amp; équipes</span></div>
-      <div class="cell"><img src="https://images.unsplash.com/photo-1496843916299-590492c751f4?q=80&w=1200&auto=format&fit=crop" alt="" /><span class="lb">Amateurs de fêtes</span></div>
-      <div class="cell"><img src="https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?q=80&w=1200&auto=format&fit=crop" alt="" /><span class="lb">Artistes &amp; animateurs</span></div>
-      <div class="cell"><img src="https://images.unsplash.com/photo-1556761175-b413da4baf72?q=80&w=1200&auto=format&fit=crop" alt="" /><span class="lb">Prestataires pro</span></div>
-    </div>
-  </div>
-</section>
-
-<!-- PROJECTS -->
-<section class="projects" id="inspirations">
-  <div class="wrap">
-    <div class="eyebrow rv">Inspirations</div>
-    <h2 class="rv rv-d1">Un aperçu des événements créés avec nos prestataires</h2>
-    <div class="proj rv">
-      <div class="proj-inner">
-        <div class="proj-img"><img src="https://images.unsplash.com/photo-1519225421980-715cb0215aed?q=80&w=2000&auto=format&fit=crop" alt="Mariage en plein air" /></div>
-        <div class="proj-cap"><span>Mariage élégant au bord de la Meuse</span><span class="cat">Mariage</span></div>
-      </div>
-    </div>
-    <div class="proj right rv">
-      <div class="proj-inner small">
-        <div class="proj-img"><img src="https://images.unsplash.com/photo-1530103862676-de8c9debad1d?q=80&w=1600&auto=format&fit=crop" alt="Fête d'anniversaire" /></div>
-        <div class="proj-cap"><span>30 ans vintage à Bruxelles</span><span class="cat">Soirée privée</span></div>
-      </div>
-    </div>
-    <a class="all-link rv" href="#tarifs">Toutes les inspirations <span>→</span></a>
-  </div>
-</section>
-
-<!-- TESTIMONIALS -->
-<section class="testi">
-  <div class="wrap">
-    <div class="eyebrow rv">Témoignages</div>
-    <h2 class="rv rv-d1">Ils ont organisé leur événement avec Umade</h2>
-    <div class="t-grid">
-      <div class="t-card rv"><span class="t-chip">Mariage</span><div class="qm">❝</div><p>Nous avons trouvé notre photographe et notre traiteur en une soirée. Tout était géré depuis l'app, jusqu'au jour J.</p><div class="t-foot"><span class="av">SL</span><span class="nm">Sophie &amp; Lucas</span></div></div>
-      <div class="t-card rv rv-d1"><span class="t-chip">Anniversaire</span><div class="qm">❝</div><p>Le DJ réservé via Umade a mis le feu à la soirée. La réservation instantanée, c'est un vrai game changer.</p><div class="t-foot"><span class="av">IM</span><span class="nm">Iman</span></div></div>
-      <div class="t-card rv rv-d2"><span class="t-chip">Baptême</span><div class="qm">❝</div><p>Fleuriste adorable, salle parfaite, zéro stress. La checklist intégrée m'a sauvé la vie.</p><div class="t-foot"><span class="av">MD</span><span class="nm">Marie D.</span></div></div>
-      <div class="t-card rv rv-d3"><span class="t-chip">Entreprise</span><div class="qm">❝</div><p>Nous organisons nos événements d'équipe via Umade. Comparer les devis n'a jamais été aussi simple.</p><div class="t-foot"><span class="av">TB</span><span class="nm">Thomas B.</span></div></div>
-      <div class="t-card rv"><span class="t-chip">Mariage</span><div class="qm">❝</div><p>Les avis vérifiés nous ont mis en confiance. Notre wedding planner était exactement comme décrite.</p><div class="t-foot"><span class="av">GD</span><span class="nm">Grace &amp; Daniel</span></div></div>
-      <div class="t-card rv rv-d1"><span class="t-chip">Soirée</span><div class="qm">❝</div><p>Un lieu trouvé en 10 minutes pour 80 personnes, un vendredi. Je ne cherche plus ailleurs.</p><div class="t-foot"><span class="av">KA</span><span class="nm">Karim A.</span></div></div>
-      <div class="t-card rv rv-d2"><span class="t-chip">Prestataire</span><div class="qm">❝</div><p>Côté pro : des demandes qualifiées chaque semaine et un calendrier qui se remplit tout seul.</p><div class="t-foot"><span class="av">LL</span><span class="nm">Lens &amp; Light</span></div></div>
-      <div class="t-card rv rv-d3"><span class="t-chip">Anniversaire</span><div class="qm">❝</div><p>La messagerie intégrée évite les allers-retours par mail. Tout est au même endroit, enfin.</p><div class="t-foot"><span class="av">NV</span><span class="nm">Nadia V.</span></div></div>
+    <div class="sec-head"><span class="num">04</span><span class="lab">En trois temps</span></div>
+    <h2 class="sec-title rv">Simple, du premier clic au jour J.</h2>
+    <div class="steps rv d1">
+      <div class="step"><div class="sn">→ 01</div><h3>Découvrez</h3><p>Parcourez les prestataires par catégorie, ville et budget. Filtrez par note, disponibilité et réservation instantanée.</p></div>
+      <div class="step"><div class="sn">→ 02</div><h3>Échangez</h3><p>Contactez les prestataires par messagerie, comparez vos favoris et demandez vos devis, sans quitter l'app.</p></div>
+      <div class="step"><div class="sn">→ 03</div><h3>Réservez</h3><p>Confirmez, puis gérez budget, checklist et invités au même endroit — jusqu'au jour J.</p></div>
     </div>
   </div>
 </section>
 
 <!-- PRICING -->
-<section class="pricing" id="tarifs">
+<section id="tarifs">
   <div class="wrap">
-    <div class="eyebrow rv">Tarifs</div>
-    <h2 class="rv rv-d1">Des formules flexibles, pensées pour chaque besoin</h2>
-    <div class="p-grid">
-      <div class="p-card rv">
-        <div class="pl">Clients</div>
-        <div class="pr">0€ <small>pour toujours</small></div>
-        <a class="btn btn-black" href="#contact">Télécharger l'app</a>
-        <div class="p-feats">
-          <div><span class="ck">✓</span>Recherche &amp; comparaison illimitées</div>
-          <div><span class="ck">✓</span>Messagerie avec les prestataires</div>
-          <div><span class="ck">✓</span>Checklist, budget &amp; invités</div>
-          <div><span class="ck">✓</span>Avis vérifiés</div>
-        </div>
+    <div class="sec-head"><span class="num">05</span><span class="lab">Tarifs</span></div>
+    <h2 class="sec-title rv">Gratuit pour les clients. Flexible pour les pros.</h2>
+    <div class="price-table rv d1">
+      <div class="price-row">
+        <div class="price-plan">Clients <small>Pour toujours</small></div>
+        <div class="price-amt">0€</div>
+        <div class="price-feat">Recherche &amp; comparaison illimitées · messagerie · checklist, budget &amp; invités · avis vérifiés.</div>
+        <a class="btn btn-solid" href="#telecharger">Télécharger l'app</a>
       </div>
-      <div class="p-card rv rv-d1">
-        <div class="pl">Prestataire — Découverte</div>
-        <div class="pr">0€ <small>/mois</small></div>
-        <a class="btn btn-black" href="#contact">Créer mon profil</a>
-        <div class="p-feats">
-          <div><span class="ck">✓</span>Profil &amp; portfolio</div>
-          <div><span class="ck">✓</span>Réception de demandes</div>
-          <div><span class="ck">✓</span>Messagerie clients</div>
-          <div><span class="ck">✓</span>Gestion des disponibilités</div>
-        </div>
+      <div class="price-row">
+        <div class="price-plan">Découverte <small>Prestataire</small></div>
+        <div class="price-amt">0€ <span>/mois</span></div>
+        <div class="price-feat">Profil &amp; portfolio · réception de demandes · messagerie clients · gestion des disponibilités.</div>
+        <a class="btn btn-ghost" href="#telecharger">Créer mon profil</a>
       </div>
-      <div class="p-card rv rv-d2">
-        <div class="pl">Prestataire — Pro</div>
-        <div class="pr">29€ <small>/mois</small></div>
-        <a class="btn btn-black" href="#contact">Passer Pro</a>
-        <div class="p-feats">
-          <div><span class="ck">✓</span>Badge vérifié prioritaire</div>
-          <div><span class="ck">✓</span>Réservation instantanée</div>
-          <div><span class="ck">✓</span>Statistiques avancées</div>
-          <div><span class="ck">✓</span>Mise en avant dans la recherche</div>
-        </div>
+      <div class="price-row">
+        <div class="price-plan">Pro <small>Prestataire</small></div>
+        <div class="price-amt">29€ <span>/mois</span></div>
+        <div class="price-feat">Badge vérifié prioritaire · réservation instantanée · statistiques avancées · mise en avant.</div>
+        <a class="btn btn-ghost" href="#telecharger">Passer Pro</a>
       </div>
-      <div class="p-card rv rv-d3">
-        <div class="pl">Prestataire — Premium</div>
-        <div class="pr">59€ <small>/mois</small></div>
-        <a class="btn btn-black" href="#contact">Nous contacter</a>
-        <div class="p-feats">
-          <div><span class="ck">✓</span>Tout le plan Pro</div>
-          <div><span class="ck">✓</span>Placement en tête de catégorie</div>
-          <div><span class="ck">✓</span>Accompagnement dédié</div>
-          <div><span class="ck">✓</span>Accès anticipé aux nouveautés</div>
-        </div>
+      <div class="price-row">
+        <div class="price-plan">Premium <small>Prestataire</small></div>
+        <div class="price-amt">59€ <span>/mois</span></div>
+        <div class="price-feat">Tout le plan Pro · tête de catégorie · accompagnement dédié · accès anticipé aux nouveautés.</div>
+        <a class="btn btn-ghost" href="#telecharger">Nous contacter</a>
       </div>
     </div>
   </div>
 </section>
 
-<!-- FAQ -->
-<section class="faq">
-  <div class="wrap faq-in">
-    <div>
-      <div class="eyebrow rv">Questions fréquentes</div>
-      <h2 class="rv rv-d1">Les questions les plus courantes sur Umade</h2>
-    </div>
-    <div class="acc rv rv-d2">
-      <div class="acc-item open">
-        <button class="acc-q">Comment réserver un prestataire ?<span class="ic">+</span></button>
-        <div class="acc-a"><p>Recherchez par catégorie, ville ou budget, comparez les profils et envoyez votre demande directement depuis l'app. Le prestataire confirme — ou instantanément s'il a activé la réservation instantanée.</p></div>
-      </div>
-      <div class="acc-item">
-        <button class="acc-q">Les prestataires sont-ils vérifiés ?<span class="ic">+</span></button>
-        <div class="acc-a"><p>Les profils portant le badge ✓ ont été vérifiés par notre équipe. Les avis, eux, ne peuvent être laissés que par des clients ayant réellement réservé.</p></div>
-      </div>
-      <div class="acc-item">
-        <button class="acc-q">Qu'est-ce que la réservation instantanée ?<span class="ic">+</span></button>
-        <div class="acc-a"><p>Chez les prestataires ⚡, votre date est confirmée automatiquement si le créneau est libre — sans attendre de validation manuelle.</p></div>
-      </div>
-      <div class="acc-item">
-        <button class="acc-q">Combien coûte Umade pour les clients ?<span class="ic">+</span></button>
-        <div class="acc-a"><p>Rien. La recherche, la messagerie, la checklist et le suivi de budget sont gratuits, sans limite.</p></div>
-      </div>
-      <div class="acc-item">
-        <button class="acc-q">Comment devenir prestataire sur Umade ?<span class="ic">+</span></button>
-        <div class="acc-a"><p>Téléchargez l'app, créez un compte prestataire, complétez votre profil et votre portfolio. Vous recevez des demandes dès la mise en ligne.</p></div>
-      </div>
-      <div class="acc-item">
-        <button class="acc-q">Puis-je annuler une réservation ?<span class="ic">+</span></button>
-        <div class="acc-a"><p>Oui, chaque prestataire affiche ses conditions d'annulation sur son profil. La messagerie intégrée facilite les arrangements directs.</p></div>
-      </div>
+<!-- TESTIMONIALS -->
+<section id="avis">
+  <div class="wrap">
+    <div class="sec-head"><span class="num">06</span><span class="lab">Ils l'ont fait</span></div>
+    <h2 class="sec-title rv">Des événements réussis, racontés par ceux qui les ont vécus.</h2>
+    <div class="quotes rv d1">
+      <div class="quote"><div class="qm">“</div><p>Photographe et traiteur trouvés en une soirée. Tout géré depuis l'app, jusqu'au jour J.</p><div class="who"><span class="nm">Sophie &amp; Lucas</span><span class="tg">Mariage</span></div></div>
+      <div class="quote"><div class="qm">“</div><p>Le DJ réservé via Umade a mis le feu. La réservation instantanée, c'est un vrai game changer.</p><div class="who"><span class="nm">Iman</span><span class="tg">Anniversaire</span></div></div>
+      <div class="quote"><div class="qm">“</div><p>Fleuriste adorable, salle parfaite, zéro stress. La checklist intégrée m'a sauvé la vie.</p><div class="who"><span class="nm">Marie D.</span><span class="tg">Baptême</span></div></div>
+      <div class="quote"><div class="qm">“</div><p>Nous organisons nos événements d'équipe via Umade. Comparer les devis n'a jamais été aussi simple.</p><div class="who"><span class="nm">Thomas B.</span><span class="tg">Entreprise</span></div></div>
+      <div class="quote"><div class="qm">“</div><p>Les avis vérifiés nous ont mis en confiance. Notre wedding planner était exactement comme décrite.</p><div class="who"><span class="nm">Grace &amp; Daniel</span><span class="tg">Mariage</span></div></div>
+      <div class="quote"><div class="qm">“</div><p>Côté pro : des demandes qualifiées chaque semaine et un calendrier qui se remplit tout seul.</p><div class="who"><span class="nm">Lens &amp; Light</span><span class="tg">Prestataire</span></div></div>
     </div>
   </div>
 </section>
 
-<!-- FINAL CTA + FOOTER -->
-<section class="final" id="contact">
-  <div class="final-bg">
-    <img src="https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?q=80&w=2400&auto=format&fit=crop" alt="Couple heureux en fête" />
-  </div>
+<!-- CLOSER -->
+<section class="closer" id="telecharger">
   <div class="wrap">
-    <h2 class="rv">Votre événement de rêve est à portée de main</h2>
-    <div class="final-ctas rv rv-d1">
-      <a class="btn btn-white" href="#top">Télécharger l'app <span class="ar">→</span></a>
-      <a class="btn btn-dark" href="mailto:hello@umade.be">Nous écrire</a>
+    <h2>Votre événement<br><span class="it">commence ici.</span></h2>
+    <div class="cta">
+      <a class="btn btn-solid" href="#"> App Store <span class="arw">→</span></a>
+      <a class="btn btn-ghost" href="#">▶ Google Play</a>
     </div>
-    <div class="foot-card rv rv-d2">
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap">
+    <div class="foot-top">
       <div class="foot-brand">
-        <div class="brand">Umade <span>®</span></div>
-        <p>Votre partenaire de confiance pour des événements extraordinaires, partout en Belgique.</p>
+        <div class="brand">Umade<sup>®</sup></div>
+        <p>Le répertoire des prestataires<br>de vos événements.<br>Partout en Belgique.</p>
       </div>
       <div class="foot-cols">
         <div class="foot-col">
-          <h4>Événements</h4>
-          <a href="#services">Mariages</a>
-          <a href="#services">Anniversaires</a>
-          <a href="#services">Baptêmes</a>
-          <a href="#services">Soirées &amp; Pro</a>
+          <h4>Découvrir</h4>
+          <a href="#repertoire">Répertoire</a>
+          <a href="#occasions">Occasions</a>
+          <a href="#tarifs">Tarifs</a>
+        </div>
+        <div class="foot-col">
+          <h4>Prestataires</h4>
+          <a href="#telecharger">Devenir prestataire</a>
+          <a href="#tarifs">Nos forfaits</a>
+          <a href="#telecharger">Télécharger</a>
         </div>
         <div class="foot-col">
           <h4>Umade</h4>
-          <a href="#inspirations">Inspirations</a>
-          <a href="#tarifs">Tarifs</a>
-          <a href="#contact">Contact</a>
-        </div>
-        <div class="foot-col">
-          <h4>Suivez-nous</h4>
-          <a href="#" rel="noopener">Instagram</a>
-          <a href="#" rel="noopener">TikTok</a>
-          <a href="mailto:hello@umade.be">Email</a>
+          <a href="#">À propos</a>
+          <a href="mailto:hello@umade.be">Contact</a>
+          <a href="#">Confidentialité</a>
         </div>
       </div>
     </div>
+    <div class="foot-bottom">
+      <span>© 2026 Umade — Tous droits réservés</span>
+      <span>Fait avec ♥ en Belgique</span>
+    </div>
   </div>
-  <div class="foot-legal">© 2026 Umade — Tous droits réservés</div>
-</section>
+</footer>
 
 <script>
-  // Sticky nav: transparent over hero, solid after
-  var nav = document.getElementById('nav');
-  var hero = document.querySelector('.hero');
+  // scroll reveals
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.12});
+  document.querySelectorAll('.rv').forEach(function(el){io.observe(el);});
 
-  // Pinned zoom-out: the "trusted" block scales down + fades as you scroll
-  // through its extra height, then the next section rises from below.
-  var trusted = document.getElementById('trusted');
-  var trustedInner = document.getElementById('trustedInner');
-
-  var onScroll = function () {
-    nav.classList.toggle('solid', window.scrollY > hero.offsetHeight - 90);
-
-    if (trusted && trustedInner) {
-      var rect = trusted.getBoundingClientRect();
-      var travel = trusted.offsetHeight - window.innerHeight; // scrollable distance while pinned
-      // progress 0 (section top hits viewport top) → 1 (section bottom reaches viewport bottom)
-      var p = Math.min(1, Math.max(0, -rect.top / travel));
-      var scale = 1 - p * 0.42;          // 1 → 0.58, le texte "s'éloigne"
-      var opacity = 1 - Math.pow(p, 1.4); // fond plus longtemps visible, disparaît vers la fin
-      trustedInner.style.transform = 'scale(' + scale + ')';
-      trustedInner.style.opacity = opacity.toFixed(3);
-    }
-  };
-  window.addEventListener('scroll', onScroll, { passive: true }); onScroll();
-
-  // Scroll reveals
-  var io = new IntersectionObserver(function (entries) {
-    entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
-  }, { threshold: 0.14 });
-  document.querySelectorAll('.rv').forEach(function (el) { io.observe(el); });
-
-  // FAQ accordion
-  document.querySelectorAll('.acc-item').forEach(function (item) {
-    var q = item.querySelector('.acc-q');
-    var a = item.querySelector('.acc-a');
-    var sync = function () { a.style.maxHeight = item.classList.contains('open') ? a.scrollHeight + 'px' : '0'; };
-    q.addEventListener('click', function () {
-      document.querySelectorAll('.acc-item.open').forEach(function (o) {
-        if (o !== item) { o.classList.remove('open'); o.querySelector('.acc-a').style.maxHeight = '0'; }
-      });
-      item.classList.toggle('open');
-      sync();
-    });
-    sync();
-  });
-
-  // Drag-to-scroll strip
-  var strip = document.getElementById('strip');
-  var isDown = false, startX = 0, scrollLeft = 0;
-  strip.addEventListener('mousedown', function (e) { isDown = true; startX = e.pageX; scrollLeft = strip.scrollLeft; strip.style.cursor = 'grabbing'; });
-  window.addEventListener('mouseup', function () { isDown = false; strip.style.cursor = 'grab'; });
-  window.addEventListener('mousemove', function (e) { if (!isDown) return; strip.scrollLeft = scrollLeft - (e.pageX - startX); });
+  // hero rotating word
+  var words=['mariage','anniversaire','baptême','soirée'];
+  var i=0,rot=document.getElementById('rot');
+  setInterval(function(){
+    i=(i+1)%words.length;
+    rot.style.opacity=0;
+    setTimeout(function(){rot.textContent=words[i];rot.style.opacity=1;},220);
+  },2100);
+  rot.style.transition='opacity .22s';
 </script>
 </body>
 </html>
