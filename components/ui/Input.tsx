@@ -170,8 +170,12 @@ const styles = StyleSheet.create({
   },
   iconLeft: {
     paddingLeft: Layout.spacing.md,
+    // L'input passe à paddingLeft: 0 quand une icône est présente ; sans cet
+    // espace à droite de l'icône, le texte vient la toucher.
+    paddingRight: Layout.spacing.sm,
   },
   iconRight: {
+    paddingLeft: Layout.spacing.sm,
     paddingRight: Layout.spacing.md,
   },
   error: {

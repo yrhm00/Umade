@@ -20,7 +20,7 @@ import Animated, {
     withSequence,
     withTiming,
 } from 'react-native-reanimated';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width, height } = Dimensions.get('window');
 
@@ -85,6 +85,7 @@ export default function WelcomeScreen() {
   const router = useRouter();
   const colors = useColors();
   const isDark = useIsDarkTheme();
+  const insets = useSafeAreaInsets();
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -94,8 +95,10 @@ export default function WelcomeScreen() {
         style={styles.gradient}
       />
 
-      {/* Logo et illustration */}
-      <View style={styles.header}>
+      {/* Logo et illustration.
+          paddingTop dépend des insets : un padding fixe passait sous la
+          Dynamic Island, qui réserve ~59pt en haut. */}
+      <View style={[styles.header, { paddingTop: insets.top + Layout.spacing.lg }]}>
         <View style={styles.logoContainer}>
           <Text style={[styles.logoText, { color: colors.primary }]}>Umade</Text>
           <Text style={[styles.tagline, { color: colors.primaryLight }]}>L'événementiel simplifié</Text>
@@ -160,9 +163,9 @@ const styles = StyleSheet.create({
     height: height * 0.6,
   },
   header: {
+    // paddingTop est fourni en ligne à partir des insets réels.
     flex: 1,
     alignItems: 'center',
-    paddingTop: Layout.spacing.xxl,
   },
   logoContainer: {
     alignItems: 'center',
