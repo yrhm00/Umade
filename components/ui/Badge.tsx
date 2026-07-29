@@ -84,6 +84,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: Layout.radius.full,
+    // Un badge se dimensionne sur son contenu. Sans ceci, il hérite du
+    // `alignItems: stretch` d'un parent en colonne et s'étire sur toute la
+    // largeur (badge « Client » du profil). Surchargeable via la prop style.
+    alignSelf: 'flex-start',
   },
 
   // Sizes

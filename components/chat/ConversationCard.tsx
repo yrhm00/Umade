@@ -6,15 +6,19 @@ import { formatRelativeTime } from '@/lib/utils';
 import { useAuthStore } from '@/stores/authStore';
 import { ConversationWithDetails } from '@/types';
 import { useRouter } from 'expo-router';
+import { Pin } from 'lucide-react-native';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface ConversationCardProps {
   conversation: ConversationWithDetails;
+  /** Affiche une épingle dans l'en-tête, à gauche de la date. */
+  isPinned?: boolean;
 }
 
 export const ConversationCard = React.memo(function ConversationCard({
   conversation,
+  isPinned = false,
 }: ConversationCardProps) {
   const router = useRouter();
   const userId = useAuthStore((state) => state.user?.id);
@@ -61,6 +65,9 @@ export const ConversationCard = React.memo(function ConversationCard({
           >
             {displayName}
           </Text>
+          {isPinned && (
+            <Pin size={12} color={colors.primary} fill={colors.primary} />
+          )}
           {lastMessage?.created_at && (
             <Text style={[styles.time, { color: colors.textTertiary }]}>
               {formatRelativeTime(lastMessage.created_at)}
@@ -124,6 +131,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 4,
     marginBottom: Layout.spacing.xs,
   },
   name: {

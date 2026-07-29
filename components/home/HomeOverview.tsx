@@ -125,21 +125,28 @@ export function HomeOverview({
               {counter.eyebrow}
             </Text>
             <View style={styles.heroCounterRow}>
-              <Text
-                style={[
-                  styles.heroCounter,
-                  counter.isPlaceholder && styles.heroCounterPlaceholder,
-                  { color: colors.text },
-                ]}
-                numberOfLines={1}
-              >
-                {counter.value}
-              </Text>
-              {counter.unit ? (
-                <Text style={[styles.heroCounterUnit, { color: mutedText }]}>
+              {counter.isPlaceholder ? (
+                // Pas de date : on affiche un libellé, pas un compteur. Le
+                // tiret cadratin utilisé auparavant se rendait comme une
+                // barre noire épaisse en gras 32px.
+                <Text style={[styles.heroCounterPlaceholder, { color: mutedText }]}>
                   {counter.unit}
                 </Text>
-              ) : null}
+              ) : (
+                <>
+                  <Text
+                    style={[styles.heroCounter, { color: colors.text }]}
+                    numberOfLines={1}
+                  >
+                    {counter.value}
+                  </Text>
+                  {counter.unit ? (
+                    <Text style={[styles.heroCounterUnit, { color: mutedText }]}>
+                      {counter.unit}
+                    </Text>
+                  ) : null}
+                </>
+              )}
             </View>
           </View>
         </View>
@@ -307,8 +314,10 @@ const styles = StyleSheet.create({
     letterSpacing: -2,
   },
   heroCounterPlaceholder: {
-    fontSize: 32,
-    fontStyle: 'italic',
+    // Texte autonome (plus une valeur de compteur) : taille lisible, pas de gras.
+    fontFamily: fontFamily.medium,
+    fontSize: 20,
+    lineHeight: 26,
   },
   heroCounterUnit: {
     fontFamily: fontFamily.medium,
@@ -373,11 +382,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 14,
     paddingHorizontal: 10,
-    paddingVertical: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
+    paddingVertical: 10,
+    // Disposition verticale : en ligne, l'icône laissait ~66pt au texte alors
+    // que « Événements » en réclame ~70 — le libellé était tronqué.
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
     gap: 6,
-    minHeight: 48,
+    minHeight: 64,
   },
   quickIconWrap: {
     width: 26,

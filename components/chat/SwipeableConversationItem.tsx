@@ -93,12 +93,9 @@ export const SwipeableConversationItem = ({
             overshootLeft={false}
         >
             <View style={[styles.cardContainer, { backgroundColor: colors.card }]}>
-                <ConversationCard conversation={conversation} />
-                {isPinned && (
-                    <View style={styles.pinnedMarker}>
-                        <Pin size={12} color="#FFFFFF" fill="#FFFFFF" />
-                    </View>
-                )}
+                {/* L'épingle est rendue dans l'en-tête de la carte : en
+                    superposition absolue, elle recouvrait la date. */}
+                <ConversationCard conversation={conversation} isPinned={!!isPinned} />
             </View>
         </Swipeable>
     );
@@ -123,14 +120,5 @@ const styles = StyleSheet.create({
         marginTop: 4,
     },
     cardContainer: {
-    },
-    pinnedMarker: {
-        position: 'absolute',
-        top: 0,
-        right: 0,
-        backgroundColor: '#3B82F6',
-        borderBottomLeftRadius: 8,
-        padding: 4,
-        zIndex: 10,
     },
 });

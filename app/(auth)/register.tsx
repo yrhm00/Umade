@@ -265,9 +265,12 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: Layout.spacing.lg,
+    // Marge de fin : sans elle, le dernier élément se retrouve collé au bord
+    // dès que le clavier ouvert force le défilement.
+    paddingBottom: Layout.spacing.md,
   },
   header: {
-    paddingVertical: Layout.spacing.md,
+    paddingVertical: Layout.spacing.sm,
   },
   backButton: {
     width: 40,
@@ -277,7 +280,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   titleContainer: {
-    marginBottom: Layout.spacing.lg,
+    marginBottom: Layout.spacing.md,
   },
   title: {
     fontSize: Layout.fontSize['3xl'],
@@ -288,7 +291,7 @@ const styles = StyleSheet.create({
     fontSize: Layout.fontSize.md,
   },
   roleContainer: {
-    marginBottom: Layout.spacing.lg,
+    marginBottom: Layout.spacing.md,
   },
   roleLabel: {
     fontSize: Layout.fontSize.sm,
@@ -339,7 +342,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: Layout.spacing.lg,
+    paddingVertical: Layout.spacing.md,
     gap: Layout.spacing.xs,
   },
   footerText: {
