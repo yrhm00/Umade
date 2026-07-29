@@ -146,7 +146,7 @@ export default function ChecklistScreen() {
 
   const handleApplyTemplate = useCallback(() => {
     Alert.alert(
-      'Appliquer un template',
+      'Appliquer un modèle',
       'Veux-tu ajouter une checklist pré-remplie pour ton type d\'événement ?',
       [
         { text: 'Annuler', style: 'cancel' },
@@ -264,7 +264,7 @@ export default function ChecklistScreen() {
               style={[styles.actionButton, { backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1 }]}
             >
               <Sparkles size={18} color={colors.primary} />
-              <Text style={[styles.actionButtonText, { color: colors.text }]}>Template</Text>
+              <Text style={[styles.actionButtonText, { color: colors.text }]}>Modèle</Text>
             </PressableScale>
           )}
         </View>

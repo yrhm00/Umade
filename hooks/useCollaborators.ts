@@ -10,6 +10,7 @@ import {
   CreateCollaboratorInput,
 } from '@/types/eventFeatures';
 import { useAuth } from './useAuth';
+import { useEventDetail } from './useEvents';
 
 const QUERY_KEY = 'collaborators';
 
@@ -53,15 +54,23 @@ export function useCollaborators(eventId: string | undefined) {
 export function useIsCollaborator(eventId: string | undefined) {
   const { userId } = useAuth();
   const { data: collaborators = [] } = useCollaborators(eventId);
+  const { data: event } = useEventDetail(eventId);
 
   const collaborator = collaborators.find((c) => c.user_id === userId);
 
+  // Le créateur de l'événement n'a pas de ligne dans `event_collaborators` :
+  // sans ce cas, il perdait tout droit sur son propre événement et l'écran
+  // Partage ne lui montrait aucun bouton « Inviter ».
+  const isEventCreator = !!userId && !!event && event.client_id === userId;
+  const role: CollaboratorRole | undefined =
+    collaborator?.role ?? (isEventCreator ? 'owner' : undefined);
+
   return {
-    isCollaborator: !!collaborator,
-    role: collaborator?.role,
-    canEdit: collaborator?.role === 'owner' || collaborator?.role === 'editor',
-    canView: !!collaborator,
-    isOwner: collaborator?.role === 'owner',
+    isCollaborator: !!collaborator || isEventCreator,
+    role,
+    canEdit: role === 'owner' || role === 'editor',
+    canView: !!collaborator || isEventCreator,
+    isOwner: role === 'owner',
   };
 }
 
@@ -281,8 +290,11 @@ export function useGenerateShareLink() {
 
       if (error) throw error;
 
-      // Construire le lien
-      const shareLink = `umade://event/join/${token}`;
+      // Lien web, comme pour les invitations RSVP : un schéma `umade://` ne
+      // s'ouvre que si l'app est déjà installée, ce qui exclut précisément le
+      // destinataire qu'on cherche à inviter.
+      const webBase = (process.env.EXPO_PUBLIC_WEB_URL || 'https://umade.app').replace(/\/$/, '');
+      const shareLink = `${webBase}/event/join/${token}`;
 
       return { ...data, shareLink };
     },

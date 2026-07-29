@@ -185,6 +185,10 @@ export default function CollaboratorsScreen() {
   }
 
   const owners = collaborators.filter((c) => c.role === 'owner');
+  // Le créateur n'a pas de ligne dans `event_collaborators` : sans lui, un
+  // événement fraîchement créé annonçait « 0 propriétaire ».
+  const ownerCount = owners.length > 0 ? owners.length : isOwner ? 1 : 0;
+  const collaboratorCount = collaborators.length + (owners.length === 0 && isOwner ? 1 : 0);
   const editors = collaborators.filter((c) => c.role === 'editor');
   const viewers = collaborators.filter((c) => c.role === 'viewer');
 
@@ -222,10 +226,10 @@ export default function CollaboratorsScreen() {
           <Users size={24} color={colors.primary} />
           <View style={styles.statsContent}>
             <Text style={[styles.statsValue, { color: colors.text }]}>
-              {collaborators.length} collaborateur{collaborators.length > 1 ? 's' : ''}
+              {collaboratorCount} collaborateur{collaboratorCount > 1 ? 's' : ''}
             </Text>
             <Text style={[styles.statsSubtitle, { color: colors.textSecondary }]}>
-              {owners.length} propriétaire • {editors.length} éditeur{editors.length > 1 ? 's' : ''} • {viewers.length} spectateur{viewers.length > 1 ? 's' : ''}
+              {ownerCount} propriétaire{ownerCount > 1 ? 's' : ''} • {editors.length} éditeur{editors.length > 1 ? 's' : ''} • {viewers.length} spectateur{viewers.length > 1 ? 's' : ''}
             </Text>
           </View>
         </Animated.View>
@@ -263,7 +267,7 @@ export default function CollaboratorsScreen() {
               <Mail size={20} color={colors.textTertiary} />
               <TextInput
                 style={[styles.input, { color: colors.text }]}
-                placeholder="Email du collaborateur"
+                placeholder="Email du collaborateur *"
                 placeholderTextColor={colors.textTertiary}
                 value={inviteEmail}
                 onChangeText={setInviteEmail}
@@ -293,7 +297,11 @@ export default function CollaboratorsScreen() {
                       <Text
                         style={[
                           styles.roleLabel,
-                          { color: inviteRole === role ? ROLE_COLORS[role] : colors.text },
+                          // Toujours `colors.text` : le gris du rôle « Spectateur »
+                          // rendait l'option sélectionnée plus pâle que l'option
+                          // inactive, donc lue comme désactivée. L'icône, la
+                          // bordure et la coche portent déjà la couleur du rôle.
+                          { color: colors.text },
                         ]}
                       >
                         {roleInfo.label}
@@ -312,6 +320,9 @@ export default function CollaboratorsScreen() {
               title="Envoyer l'invitation"
               onPress={handleInvite}
               loading={isInviting}
+              // L'email est requis : sans `disabled`, le bouton paraissait
+              // actif et rien ne se passait au tap.
+              disabled={!inviteEmail.trim()}
               fullWidth
             />
           </Animated.View>
@@ -445,9 +456,13 @@ export default function CollaboratorsScreen() {
         {collaborators.length === 0 && (
           <View style={styles.emptyState}>
             <Text style={{ fontSize: 48 }}>👥</Text>
-            <Text style={[styles.emptyTitle, { color: colors.text }]}>Aucun collaborateur</Text>
+            {/* « Aucun collaborateur » contredisait la carte du dessus, qui
+                compte déjà le propriétaire implicite. */}
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>
+              {isOwner ? "Personne d'autre pour l'instant" : 'Aucun collaborateur'}
+            </Text>
             <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
-              Invitez des personnes pour organiser ensemble
+              Invite des personnes pour organiser ensemble
             </Text>
           </View>
         )}
