@@ -121,6 +121,8 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingLeft: Layout.spacing.md,
+    // Symétrique : la dernière carte touchait le bord droit en fin de défilement.
+    paddingRight: Layout.spacing.md,
     gap: Layout.spacing.sm,
   },
 });

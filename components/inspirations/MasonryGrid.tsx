@@ -214,7 +214,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    paddingHorizontal: Layout.spacing.md,
+    // Pas de `paddingHorizontal` ici : `ListHeaderComponent` est rendu dans ce
+    // conteneur, si bien que les carrousels horizontaux de l'accueil étaient
+    // larges de « écran - 32pt » et se faisaient rogner avant le bord de
+    // l'écran. La marge appartient à la grille, pas au conteneur.
     paddingTop: Layout.spacing.xs,
   },
   emptyContainer: {
@@ -224,6 +227,7 @@ const styles = StyleSheet.create({
   columnsContainer: {
     flexDirection: 'row',
     gap: CARD_GAP,
+    paddingHorizontal: Layout.spacing.md,
   },
   column: {
     flex: 1,
