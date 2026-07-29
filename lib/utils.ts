@@ -1,3 +1,15 @@
+/**
+ * Majuscule sur la première lettre uniquement.
+ *
+ * `textTransform: 'capitalize'` capitalise chaque mot, ce qui produit
+ * « Vendredi 27 Février » — incorrect en français, où jours et mois
+ * restent en minuscules.
+ */
+export function capitalizeFirst(value: string): string {
+  if (!value) return value;
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
 // Formatage de date
 export function formatDate(date: string | Date): string {
   const d = new Date(date);

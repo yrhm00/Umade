@@ -2,7 +2,7 @@ import { PressableScale } from '@/components/ui/PressableScale';
 import { Layout } from '@/constants/Layout';
 import { useColors } from '@/hooks/useColors';
 import { BookingStatus } from '@/lib/supabase';
-import { formatPrice } from '@/lib/utils';
+import { capitalizeFirst, formatPrice } from '@/lib/utils';
 import { useRouter } from 'expo-router';
 import { AlertCircle, Calendar, Check, CheckCircle2, Clock, X, XCircle } from 'lucide-react-native';
 import React from 'react';
@@ -104,11 +104,13 @@ export const BookingActionCard = ({
   const tone = toneStyles[copy.tone];
 
   const date = new Date(booking.booking_date);
-  const dateStr = date.toLocaleDateString('fr-FR', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  });
+  const dateStr = capitalizeFirst(
+    date.toLocaleDateString('fr-FR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    })
+  );
 
   const serviceName = booking.services?.name || 'Prestation';
   const displayedPrice =
@@ -308,7 +310,6 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: Layout.fontSize.sm,
-    textTransform: 'capitalize',
   },
   clientLine: {
     fontSize: Layout.fontSize.sm,

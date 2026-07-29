@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Layout } from '@/constants/Layout';
 import { useColors } from '@/hooks/useColors';
+import { capitalizeFirst } from '@/lib/utils';
 
 interface DateSeparatorProps {
   date: string;
@@ -24,11 +25,13 @@ function formatDateLabel(dateString: string): string {
   if (messageDay.getTime() === yesterday.getTime()) {
     return 'Hier';
   }
-  return date.toLocaleDateString('fr-BE', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  });
+  return capitalizeFirst(
+    date.toLocaleDateString('fr-BE', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    })
+  );
 }
 
 export const DateSeparator = React.memo(function DateSeparator({
@@ -59,6 +62,5 @@ const styles = StyleSheet.create({
   text: {
     fontSize: Layout.fontSize.xs,
     paddingHorizontal: Layout.spacing.md,
-    textTransform: 'capitalize',
   },
 });

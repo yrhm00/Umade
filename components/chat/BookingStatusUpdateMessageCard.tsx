@@ -2,7 +2,7 @@ import { PressableScale } from '@/components/ui/PressableScale';
 import { Layout } from '@/constants/Layout';
 import { useColors } from '@/hooks/useColors';
 import { BookingStatus } from '@/lib/supabase';
-import { formatPrice } from '@/lib/utils';
+import { capitalizeFirst, formatPrice } from '@/lib/utils';
 import { router } from 'expo-router';
 import { Calendar, CheckCircle2, Clock3, Info, XCircle } from 'lucide-react-native';
 import React from 'react';
@@ -83,11 +83,13 @@ export function BookingStatusUpdateMessageCard({
   };
 
   const dateLabel = data.booking_date
-    ? new Date(data.booking_date).toLocaleDateString('fr-FR', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-      })
+    ? capitalizeFirst(
+        new Date(data.booking_date).toLocaleDateString('fr-FR', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+        })
+      )
     : null;
 
   const timeLabel = data.start_time?.slice(0, 5) || null;
@@ -207,7 +209,6 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 11,
-    textTransform: 'capitalize',
   },
   infoRow: {
     flexDirection: 'row',
