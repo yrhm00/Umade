@@ -71,10 +71,21 @@ export const PaymentSummarySheet = forwardRef<BottomSheetModal, PaymentSummarySh
 
     const quoteAmount = finance.quote_amount || 0;
     const depositAmount = finance.deposit_amount || 0;
-    const depositPaid = finance.deposit_paid_amount || 0;
     const balanceAmount = Math.max(quoteAmount - depositAmount, 0);
-    const balancePaid = finance.balance_paid_amount || 0;
-    const totalPaid = depositPaid + balancePaid;
+
+    // Voir PaymentTracker : `payment_status` fait foi. Une réservation réglée
+    // sans ventilation acompte/solde affichait le badge « Payé » au-dessus de
+    // « Total payé 0,00 € » et « Restant à payer 1500,00 € » en rouge.
+    const isSettled = finance.payment_status === 'paid';
+    const depositPaid = isSettled
+      ? Math.max(finance.deposit_paid_amount || 0, depositAmount)
+      : finance.deposit_paid_amount || 0;
+    const balancePaid = isSettled
+      ? Math.max(finance.balance_paid_amount || 0, balanceAmount)
+      : finance.balance_paid_amount || 0;
+    const totalPaid = isSettled
+      ? Math.max(depositPaid + balancePaid, quoteAmount)
+      : depositPaid + balancePaid;
     const remaining = Math.max(quoteAmount - totalPaid, 0);
 
     const renderBackdrop = useCallback(

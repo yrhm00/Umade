@@ -71,6 +71,26 @@ export function WizardEventForm({ onSubmit, isLoading }: WizardEventFormProps) {
 
     const [error, setError] = useState<string | null>(null);
 
+    // L'erreur de validation restait affichée après correction du champ :
+    // on l'efface dès que l'utilisateur touche à l'un des champs contrôlés.
+    const clearError = () => setError((current) => (current === null ? current : null));
+    const handleTitleChange = (value: string) => {
+        clearError();
+        setTitle(value);
+    };
+    const handleEventTypeChange = (value: string) => {
+        clearError();
+        setEventType(value);
+    };
+    const handleDateChange = (value: string) => {
+        clearError();
+        setSelectedDate(value);
+    };
+    const handleLocationChange = (value: string) => {
+        clearError();
+        setLocation(value);
+    };
+
     const handleNext = () => {
         setError(null);
 
@@ -161,7 +181,7 @@ export function WizardEventForm({ onSubmit, isLoading }: WizardEventFormProps) {
                     label="Titre de l'événement"
                     placeholder="Ex: 30 ans de Sarah"
                     value={title}
-                    onChangeText={setTitle}
+                    onChangeText={handleTitleChange}
                     autoFocus
                 />
             </View>
@@ -180,7 +200,7 @@ export function WizardEventForm({ onSubmit, isLoading }: WizardEventFormProps) {
                                     { backgroundColor: colors.card, shadowColor: isDark ? '#000' : '#000' },
                                     isSelected && { borderColor: colors.primary, backgroundColor: isDark ? colors.backgroundTertiary : Colors.primary['50'] }
                                 ]}
-                                onPress={() => setEventType(type.value)}
+                                onPress={() => handleEventTypeChange(type.value)}
                             >
                                 <View style={[
                                     styles.iconCircle,
@@ -210,7 +230,7 @@ export function WizardEventForm({ onSubmit, isLoading }: WizardEventFormProps) {
             <View style={styles.calendarContainer}>
                 <CustomCalendar
                     selectedDate={selectedDate}
-                    onSelectDate={setSelectedDate}
+                    onSelectDate={handleDateChange}
                     // Un événement ne peut pas être planifié dans le passé.
                     minDate={todayISO()}
                 />
@@ -248,11 +268,11 @@ export function WizardEventForm({ onSubmit, isLoading }: WizardEventFormProps) {
                     <PlaceAutocomplete
                         label="Lieu"
                         value={location}
-                        onChangeText={setLocation}
+                        onChangeText={handleLocationChange}
                         onSelectPlace={(place) => {
                             // On enregistre « Nom, Ville » : plus parlant qu'un
                             // nom seul quand plusieurs lieux se ressemblent.
-                            setLocation(
+                            handleLocationChange(
                                 place.address ? `${place.name}, ${place.address}` : place.name
                             );
                         }}
@@ -263,6 +283,7 @@ export function WizardEventForm({ onSubmit, isLoading }: WizardEventFormProps) {
             <TouchableOpacity
                 style={styles.checkboxRow}
                 onPress={() => {
+                    clearError();
                     const newValue = !isLocationTBD;
                     setIsLocationTBD(newValue);
                     if (newValue) setLocation('');
@@ -492,6 +513,9 @@ const styles = StyleSheet.create({
     budgetSep: {
         marginHorizontal: 10,
         fontSize: 20,
+        // Même marge basse que `Input` : sans elle, le centrage de la ligne
+        // tenait compte des 16pt sous les champs et posait le tiret trop bas.
+        marginBottom: 16,
     },
     footer: {
         padding: 20,

@@ -342,11 +342,15 @@ function RoomPlanOverlay({
   canvasHeight,
   roomShape,
   colors,
+  showWatermark = true,
 }: {
   canvasWidth: number;
   canvasHeight: number;
   roomShape: SeatingRoomShape;
   colors: any;
+  /** Masqué quand le plan est vide : le filigrane tombait pile derrière
+   *  l'emoji et le texte « Aucune table créée ». */
+  showWatermark?: boolean;
 }) {
   const baseFill = `${colors.primary}10`;
   const baseBorder = `${colors.primary}55`;
@@ -402,19 +406,21 @@ function RoomPlanOverlay({
 
     return (
       <View pointerEvents="none" style={styles.roomOverlay}>
-        <View
-          style={[
-            styles.roomWatermark,
-            {
-              left: watermarkLeft,
-              top: watermarkTop,
-              width: watermarkSize,
-              height: watermarkSize,
-            },
-          ]}
-        >
-          <BrandLogoMark size={watermarkSize} subtle />
-        </View>
+        {showWatermark && (
+          <View
+            style={[
+              styles.roomWatermark,
+              {
+                left: watermarkLeft,
+                top: watermarkTop,
+                width: watermarkSize,
+                height: watermarkSize,
+              },
+            ]}
+          >
+            <BrandLogoMark size={watermarkSize} subtle />
+          </View>
+        )}
 
         <View
           style={[
@@ -451,19 +457,21 @@ function RoomPlanOverlay({
 
   return (
     <View pointerEvents="none" style={styles.roomOverlay}>
-      <View
-        style={[
-          styles.roomWatermark,
-          {
-            left: watermarkLeft,
-            top: watermarkTop,
-            width: watermarkSize,
-            height: watermarkSize,
-          },
-        ]}
-      >
-        <BrandLogoMark size={watermarkSize} subtle />
-      </View>
+      {showWatermark && (
+        <View
+          style={[
+            styles.roomWatermark,
+            {
+              left: watermarkLeft,
+              top: watermarkTop,
+              width: watermarkSize,
+              height: watermarkSize,
+            },
+          ]}
+        >
+          <BrandLogoMark size={watermarkSize} subtle />
+        </View>
+      )}
 
       <View
         style={[
@@ -534,7 +542,7 @@ export default function SeatingScreen() {
   const canvasHeight = clampValue(canvasWidth / roomRatio, MIN_CANVAS_HEIGHT, MAX_CANVAS_HEIGHT);
   const roomShapeLabel =
     activeRoomLayout.room_shape === 'square'
-      ? 'Carre'
+      ? 'Carré'
       : activeRoomLayout.room_shape === 'l_shape'
         ? 'En L'
         : 'Rectangle';
@@ -693,7 +701,7 @@ export default function SeatingScreen() {
       });
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-      toast.success(`Plan de salle mis a jour — ${Math.round(savedLayout.width_m * savedLayout.height_m)} m2 · ${autoLayoutResult.moved}/${autoLayoutResult.total} table(s) repositionnee(s).`);
+      toast.success(`Plan de salle mis à jour — ${Math.round(savedLayout.width_m * savedLayout.height_m)} m² · ${autoLayoutResult.moved}/${autoLayoutResult.total} table(s) repositionnée(s).`);
       setShowLayoutEditor(false);
     } catch (error) {
       const message =
@@ -880,7 +888,12 @@ export default function SeatingScreen() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
+      {/* Pas d'`edges: top` : l'en-tête natif (`headerShown`) gère déjà l'encoche.
+          En le cumulant, on ajoutait ~59pt de vide sous le titre. */}
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: colors.backgroundSecondary }]}
+        edges={['bottom']}
+      >
         <Stack.Screen
           options={{
             headerShown: true,
@@ -954,7 +967,7 @@ export default function SeatingScreen() {
                     Plan de salle {roomShapeLabel.toLowerCase()}
                   </Text>
                   <Text style={[styles.layoutSummaryText, { color: colors.textSecondary }]}>
-                    {activeRoomLayout.width_m}m x {activeRoomLayout.height_m}m · {roomSurface} m2
+                    {activeRoomLayout.width_m}m x {activeRoomLayout.height_m}m · {roomSurface} m²
                   </Text>
                 </View>
               </View>
@@ -1044,7 +1057,7 @@ export default function SeatingScreen() {
               Glissez les tables pour les positionner
             </Text>
             <Text style={[styles.canvasScale, { color: colors.textTertiary }]}>
-              Echelle: {activeRoomLayout.width_m}m x {activeRoomLayout.height_m}m
+              Échelle : {activeRoomLayout.width_m}m x {activeRoomLayout.height_m}m
             </Text>
             <View style={[styles.canvasArea, { width: canvasWidth, height: canvasHeight }]}>
               <RoomPlanOverlay
@@ -1052,6 +1065,7 @@ export default function SeatingScreen() {
                 canvasHeight={canvasHeight}
                 roomShape={activeRoomLayout.room_shape}
                 colors={colors}
+                showWatermark={tables.length > 0}
               />
 
               {positionedTables.map((table) => (
@@ -1227,7 +1241,7 @@ export default function SeatingScreen() {
             <Pressable style={styles.editorOverlay} onPress={() => setShowLayoutEditor(false)} />
             <View style={[styles.editorSheet, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border }]}>
               <View style={styles.editorHeader}>
-                <Text style={[styles.editorTitle, { color: colors.text }]}>Edition du plan</Text>
+                <Text style={[styles.editorTitle, { color: colors.text }]}>Édition du plan</Text>
                 <Pressable onPress={() => setShowLayoutEditor(false)} style={styles.editorCloseBtn}>
                   <Text style={[styles.editorCloseText, { color: colors.textSecondary }]}>Fermer</Text>
                 </Pressable>
@@ -1242,7 +1256,7 @@ export default function SeatingScreen() {
                 style={[styles.classicResetBtn, { borderColor: colors.primary, backgroundColor: `${colors.primary}14` }]}
               >
                 <Text style={[styles.classicResetText, { color: colors.primary }]}>
-                  Revenir au classique carre (12m x 12m)
+                  Revenir au classique carré (12m x 12m)
                 </Text>
               </Pressable>
 
@@ -1272,7 +1286,7 @@ export default function SeatingScreen() {
                   />
                 </View>
                 <View style={styles.layoutInputCol}>
-                  <Text style={[styles.layoutInputLabel, { color: colors.textSecondary }]}>Allee (m)</Text>
+                  <Text style={[styles.layoutInputLabel, { color: colors.textSecondary }]}>Allée (m)</Text>
                   <TextInput
                     value={layoutDraft.aisle_m}
                     onChangeText={(text) => setLayoutDraft((prev) => ({ ...prev, aisle_m: text }))}
@@ -1288,7 +1302,7 @@ export default function SeatingScreen() {
               <View style={styles.roomShapeRow}>
                 {([
                   { id: 'rectangle', label: 'Rectangle' },
-                  { id: 'square', label: 'Carre' },
+                  { id: 'square', label: 'Carré' },
                   { id: 'l_shape', label: 'En L' },
                 ] as { id: SeatingRoomShape; label: string }[]).map((shapeOption) => {
                   const selected = layoutDraft.room_shape === shapeOption.id;
@@ -1374,11 +1388,11 @@ export default function SeatingScreen() {
               </View>
 
               <Text style={[styles.editorPreviewText, { color: colors.textSecondary }]}>
-                Dessin: {Math.round(draftPreview.renderedWidth * 10) / 10}m x {Math.round(draftPreview.renderedHeight * 10) / 10}m
+                Dessin : {Math.round(draftPreview.renderedWidth * 10) / 10}m x {Math.round(draftPreview.renderedHeight * 10) / 10}m
               </Text>
 
               <AnimatedButton
-                title="Appliquer et reorganiser"
+                title="Appliquer et réorganiser"
                 onPress={handleApplyRoomLayout}
                 loading={isSavingRoomLayout || isAutoLayouting}
                 fullWidth

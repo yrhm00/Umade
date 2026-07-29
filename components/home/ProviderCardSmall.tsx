@@ -9,7 +9,7 @@ import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { ProviderListItem } from '@/types';
 import { useRouter } from 'expo-router';
 import { BadgeCheck, User } from 'lucide-react-native';
-import React from 'react';
+import React, { useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
 interface ProviderCardSmallProps {
@@ -20,6 +20,10 @@ export function ProviderCardSmall({ provider }: ProviderCardSmallProps) {
   const router = useRouter();
   const colors = useColors();
   const isDark = useIsDarkTheme();
+  // Une URL de portfolio cassée laissait un vide blanc à la place de l'avatar :
+  // `Image` ne rend rien du tout en cas d'échec. On repasse sur le placeholder.
+  const [imageFailed, setImageFailed] = useState(false);
+  const portfolioImage = imageFailed ? null : provider.portfolio_image;
 
   return (
     <PressableScale
@@ -36,11 +40,12 @@ export function ProviderCardSmall({ provider }: ProviderCardSmallProps) {
       ]}
     >
       {/* Avatar */}
-      {provider.portfolio_image ? (
+      {portfolioImage ? (
         <Image
-          source={{ uri: provider.portfolio_image }}
+          source={{ uri: portfolioImage }}
           style={styles.avatar}
           resizeMode="cover"
+          onError={() => setImageFailed(true)}
         />
       ) : (
         <View style={[styles.avatar, styles.avatarPlaceholder, { backgroundColor: colors.backgroundTertiary }]}>

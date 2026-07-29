@@ -231,6 +231,23 @@ export default function BookingDetailsScreen() {
     return booking?.total_price || 0;
   }, [finance, booking?.total_price]);
 
+  // Une réservation réglée hors plateforme n'a pas toujours de ventilation
+  // acompte/solde enregistrée. Sans cet alignement sur `payment_status`, la
+  // carte annonçait « Réglé » juste au-dessus de deux montants payés à 0 €.
+  const isPaymentSettled = finance?.payment_status === 'paid';
+  const displayedDepositPaid = useMemo(() => {
+    if (!finance) return 0;
+    const paid = finance.deposit_paid_amount || 0;
+    return isPaymentSettled ? Math.max(paid, finance.deposit_amount || 0) : paid;
+  }, [finance, isPaymentSettled]);
+  const displayedBalancePaid = useMemo(() => {
+    if (!finance) return 0;
+    const paid = finance.balance_paid_amount || 0;
+    if (!isPaymentSettled) return paid;
+    const quote = finance.quote_amount || finance.total_price || 0;
+    return Math.max(paid, Math.max(quote - (finance.deposit_amount || 0), 0));
+  }, [finance, isPaymentSettled]);
+
   const completionRole = useMemo<'provider' | 'client' | null>(() => {
     if (!booking) return null;
     if (userId && booking.client_id === userId) return 'client';
@@ -842,6 +859,13 @@ export default function BookingDetailsScreen() {
   const canClientCancel = !isProvider && (isBookingPending || isBookingConfirmed);
   const requiresContractSignatures = finance?.contract_required !== false;
   const paymentUnlockedByContract = !requiresContractSignatures || contractStatus === 'signed';
+  // Rien à régler sur une réservation soldée, annulée ou remboursée : le bloc
+  // « Paiement en attente » s'affichait encore sur une prestation terminée.
+  const hasPaymentPending =
+    booking.status !== 'cancelled' &&
+    finance?.payment_status !== 'paid' &&
+    finance?.payment_status !== 'refunded' &&
+    finance?.payment_status !== 'cancelled';
   const canClientPayOnline =
     !isProvider &&
     booking.status !== 'cancelled' &&
@@ -1021,13 +1045,13 @@ export default function BookingDetailsScreen() {
             <View style={styles.financeRow}>
               <Text style={[styles.financeLabel, { color: colors.textSecondary }]}>Acompte payé</Text>
               <Text style={[styles.financeValue, { color: colors.text }]}>
-                {formatPrice(finance.deposit_paid_amount || 0)}
+                {formatPrice(displayedDepositPaid)}
               </Text>
             </View>
             <View style={styles.financeRow}>
               <Text style={[styles.financeLabel, { color: colors.textSecondary }]}>Solde payé</Text>
               <Text style={[styles.financeValue, { color: colors.text }]}>
-                {formatPrice(finance.balance_paid_amount || 0)}
+                {formatPrice(displayedBalancePaid)}
               </Text>
             </View>
             <View style={styles.financeRow}>
@@ -1048,7 +1072,7 @@ export default function BookingDetailsScreen() {
               size="sm"
             />
 
-            {!isProvider && !paymentUnlockedByContract && (
+            {!isProvider && !paymentUnlockedByContract && hasPaymentPending && (
               <>
                 <View style={styles.sectionDivider} />
                 <Text style={[styles.subSectionTitle, { color: colors.text }]}>Paiement en attente</Text>
@@ -1280,7 +1304,10 @@ export default function BookingDetailsScreen() {
 
           {contractStatus === 'none' && (
             <Text style={[styles.infoText, { color: colors.textSecondary }]}>
-              Le contrat sera généré après confirmation du devis par le prestataire.
+              {/* Le futur n'a plus de sens sur une réservation terminée ou annulée. */}
+              {booking.status === 'completed' || booking.status === 'cancelled'
+                ? "Aucun contrat n'a été généré pour cette réservation."
+                : 'Le contrat sera généré après confirmation du devis par le prestataire.'}
             </Text>
           )}
 

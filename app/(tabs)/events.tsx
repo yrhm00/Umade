@@ -99,8 +99,11 @@ export default function EventsScreen() {
   const softSurface = isDark ? colors.backgroundTertiary : '#F8F5F0';
   const tabInactiveBg = isDark ? colors.backgroundTertiary : 'transparent';
   const tabActiveBg = colors.primary;
-  const visibleEventsCount = filteredEvents.length;
-  const visibleBookingsCount = filteredBookings.length;
+  // Totaux, pas les compteurs filtrés : le bandeau est au-dessus des onglets,
+  // il résume le compte entier. Filtré, il annonçait « 0 événements » sur
+  // « À venir » alors que le compte en compte 9 dans « Passés ».
+  const totalEventsCount = events?.length ?? 0;
+  const totalBookingsCount = bookings?.length ?? 0;
 
   const scrollY = useSharedValue(0);
   const onScroll = useAnimatedScrollHandler((e) => {
@@ -157,20 +160,20 @@ export default function EventsScreen() {
       <Animated.View style={[styles.summaryWrapper, summaryWrapperStyle]}>
         <Animated.View style={[styles.summaryRowAbsolute, expandedStyle]} pointerEvents="none">
           <View style={[styles.summaryCard, { backgroundColor: surface, borderColor: colors.cardBorder }]}>
-            <Text style={[styles.summaryValue, { color: colors.text }]}>{visibleEventsCount}</Text>
+            <Text style={[styles.summaryValue, { color: colors.text }]}>{totalEventsCount}</Text>
             <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>événements</Text>
           </View>
           <View style={[styles.summaryCard, { backgroundColor: surface, borderColor: colors.cardBorder }]}>
-            <Text style={[styles.summaryValue, { color: colors.text }]}>{visibleBookingsCount}</Text>
+            <Text style={[styles.summaryValue, { color: colors.text }]}>{totalBookingsCount}</Text>
             <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>réservations</Text>
           </View>
         </Animated.View>
         <Animated.View style={[styles.summaryCompactAbsolute, collapsedStyle]} pointerEvents="none">
           <View style={[styles.summaryPill, { backgroundColor: surface, borderColor: colors.cardBorder }]}>
-            <Text style={[styles.summaryPillValue, { color: colors.text }]}>{visibleEventsCount}</Text>
+            <Text style={[styles.summaryPillValue, { color: colors.text }]}>{totalEventsCount}</Text>
             <Text style={[styles.summaryPillLabel, { color: colors.textSecondary }]}>événements</Text>
             <View style={[styles.summaryPillDivider, { backgroundColor: colors.cardBorder }]} />
-            <Text style={[styles.summaryPillValue, { color: colors.text }]}>{visibleBookingsCount}</Text>
+            <Text style={[styles.summaryPillValue, { color: colors.text }]}>{totalBookingsCount}</Text>
             <Text style={[styles.summaryPillLabel, { color: colors.textSecondary }]}>réservations</Text>
           </View>
         </Animated.View>

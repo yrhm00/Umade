@@ -36,16 +36,30 @@ export function PaymentTracker({ finance, payments }: PaymentTrackerProps) {
 
   const quoteAmount = finance.quote_amount || 0;
   const depositAmount = finance.deposit_amount || 0;
-  const depositPaid = finance.deposit_paid_amount || 0;
-  const balancePaid = finance.balance_paid_amount || 0;
   const balanceAmount = Math.max(quoteAmount - depositAmount, 0);
-  const totalPaid = depositPaid + balancePaid;
+
+  // `payment_status` fait foi : une réservation réglée peut ne pas avoir de
+  // ventilation acompte/solde (paiement hors plateforme, reprise de données).
+  // Sans cette bascule, la carte annonçait « Réglé » tout en affichant 0 %,
+  // un solde en retard et « 0,00 € reçus » sous une étape cochée.
+  const isSettled = finance.payment_status === 'paid';
+  const depositPaid = isSettled
+    ? Math.max(finance.deposit_paid_amount || 0, depositAmount)
+    : finance.deposit_paid_amount || 0;
+  const balancePaid = isSettled
+    ? Math.max(finance.balance_paid_amount || 0, balanceAmount)
+    : finance.balance_paid_amount || 0;
+  const totalPaid = isSettled
+    ? Math.max(depositPaid + balancePaid, quoteAmount)
+    : depositPaid + balancePaid;
   const progressPercent = quoteAmount > 0 ? Math.min((totalPaid / quoteAmount) * 100, 100) : 0;
 
   const depositDueDate = finance.deposit_due_date;
   const balanceDueDate = finance.balance_due_date;
-  const isDepositLate = depositDueDate && new Date(depositDueDate) < new Date() && depositPaid < depositAmount;
-  const isBalanceLate = balanceDueDate && new Date(balanceDueDate) < new Date() && balancePaid < balanceAmount;
+  const isDepositLate =
+    !isSettled && depositDueDate && new Date(depositDueDate) < new Date() && depositPaid < depositAmount;
+  const isBalanceLate =
+    !isSettled && balanceDueDate && new Date(balanceDueDate) < new Date() && balancePaid < balanceAmount;
 
   // Animated progress bar
   const progressWidth = useSharedValue(0);
@@ -62,7 +76,7 @@ export function PaymentTracker({ finance, payments }: PaymentTrackerProps) {
     const quoteAccepted = quoteAmount > 0;
     const depositDone = depositPaid >= depositAmount && depositAmount > 0;
     const balanceDone = balancePaid >= balanceAmount && balanceAmount > 0;
-    const fullyPaid = finance.payment_status === 'paid';
+    const fullyPaid = isSettled;
 
     return [
       {
@@ -118,7 +132,7 @@ export function PaymentTracker({ finance, payments }: PaymentTrackerProps) {
         icon: <Shield size={16} color={fullyPaid ? '#FFFFFF' : colors.textTertiary} />,
       },
     ];
-  }, [finance, quoteAmount, depositAmount, depositPaid, balancePaid, balanceAmount, totalPaid, depositDueDate, balanceDueDate, colors]);
+  }, [isSettled, quoteAmount, depositAmount, depositPaid, balancePaid, balanceAmount, totalPaid, depositDueDate, balanceDueDate, colors]);
 
   const getStepColor = (status: StepStatus) => {
     switch (status) {
