@@ -2,7 +2,7 @@
  * Écran Checklist Collaborative
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -69,6 +69,16 @@ export default function ChecklistScreen() {
   const { mutate: applyTemplate, isPending: isApplyingTemplate } = useApplyChecklistTemplate();
 
   const [showAddForm, setShowAddForm] = useState(false);
+  // Le formulaire s'ouvre sous le pli : son bouton de validation restait
+  // invisible tant que l'utilisateur ne devinait pas qu'il fallait défiler.
+  const scrollRef = useRef<ScrollView>(null);
+  const toggleAddForm = () => {
+    const opening = !showAddForm;
+    setShowAddForm(opening);
+    if (opening) {
+      requestAnimationFrame(() => scrollRef.current?.scrollToEnd({ animated: true }));
+    }
+  };
   const [expandedSections, setExpandedSections] = useState<ChecklistItemStatus[]>(['todo', 'in_progress']);
   const [newItem, setNewItem] = useState({
     title: '',
@@ -137,7 +147,7 @@ export default function ChecklistScreen() {
   const handleApplyTemplate = useCallback(() => {
     Alert.alert(
       'Appliquer un template',
-      'Voulez-vous ajouter une checklist pré-remplie pour votre type d\'événement ?',
+      'Veux-tu ajouter une checklist pré-remplie pour ton type d\'événement ?',
       [
         { text: 'Annuler', style: 'cancel' },
         { text: 'Mariage', onPress: () => applyTemplate({ eventId: eventId!, eventType: 'wedding' }) },
@@ -161,8 +171,14 @@ export default function ChecklistScreen() {
     return <LoadingSpinner fullScreen message="Chargement de la checklist..." />;
   }
 
+  // Pas d'`edges: top` : l'en-tête natif gère déjà l'encoche — cumulés, ils
+  // ajoutaient ~59pt de vide sous le titre. Fond aligné sur celui de l'en-tête
+  // pour éviter une couture de couleur.
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.backgroundSecondary }]}
+      edges={['bottom']}
+    >
       <Stack.Screen
         options={{
           headerShown: true,
@@ -174,6 +190,7 @@ export default function ChecklistScreen() {
       />
 
       <ScrollView
+        ref={scrollRef}
         style={styles.scrollView}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
@@ -232,7 +249,7 @@ export default function ChecklistScreen() {
         {/* Actions */}
         <View style={styles.actionsRow}>
           <PressableScale
-            onPress={() => setShowAddForm(!showAddForm)}
+            onPress={toggleAddForm}
             haptic="light"
             style={[styles.actionButton, { backgroundColor: colors.primary }]}
           >
@@ -260,7 +277,7 @@ export default function ChecklistScreen() {
           >
             <TextInput
               style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
-              placeholder="Titre de la tâche"
+              placeholder="Titre de la tâche *"
               placeholderTextColor={colors.textTertiary}
               value={newItem.title}
               onChangeText={(text) => setNewItem({ ...newItem, title: text })}
@@ -315,6 +332,9 @@ export default function ChecklistScreen() {
               title="Ajouter la tâche"
               onPress={handleAddItem}
               loading={isCreating}
+              // Le titre est requis : sans `disabled`, le bouton paraissait
+              // actif et rien ne se passait au tap.
+              disabled={!newItem.title.trim()}
               fullWidth
             />
           </Animated.View>
@@ -477,7 +497,7 @@ export default function ChecklistScreen() {
             <Text style={{ fontSize: 48 }}>✅</Text>
             <Text style={[styles.emptyTitle, { color: colors.text }]}>Aucune tâche</Text>
             <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
-              Créez votre checklist ou utilisez un template
+              Crée ta checklist ou pars d'un modèle
             </Text>
           </View>
         )}

@@ -821,7 +821,7 @@ export default function SeatingScreen() {
                 onSuccess: (result) => {
                   Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
                   if (result.reason === 'no_guests') {
-                    toast.warning("Ajoutez des invités ou confirmez des groupes pour lancer l'auto-assignation.");
+                    toast.warning("Ajoute des invités ou confirme des groupes pour lancer l'auto-assignation.");
                     return;
                   }
 
@@ -1225,7 +1225,7 @@ export default function SeatingScreen() {
                 </Text>
               </View>
               <Text style={[styles.unassignedHint, { color: colors.textSecondary }]}>
-                Sélectionnez une table pour y assigner des invités
+                Sélectionne une table pour y assigner des invités
               </Text>
             </Animated.View>
           )}

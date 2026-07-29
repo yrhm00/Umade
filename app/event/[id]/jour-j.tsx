@@ -253,7 +253,7 @@ export default function JourJScreen() {
           <EmptyState
             icon={<PartyPopper size={36} color={colors.primary} />}
             title="Aucun moment planifié"
-            description="Ajoutez des moments à votre timeline depuis l'onglet Planification."
+            description="Ajoute des moments à ta timeline depuis l'onglet Planification."
           />
         }
       />

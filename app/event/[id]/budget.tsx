@@ -2,7 +2,7 @@
  * Écran Budget Tracker
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -58,6 +58,16 @@ export default function BudgetScreen() {
   const customItems = items.filter((item) => item.source_type !== 'booking');
 
   const [showAddForm, setShowAddForm] = useState(false);
+  // Le formulaire s'ouvre sous le pli : son bouton de validation restait
+  // invisible tant que l'utilisateur ne devinait pas qu'il fallait défiler.
+  const scrollRef = useRef<ScrollView>(null);
+  const toggleAddForm = () => {
+    const opening = !showAddForm;
+    setShowAddForm(opening);
+    if (opening) {
+      requestAnimationFrame(() => scrollRef.current?.scrollToEnd({ animated: true }));
+    }
+  };
   const [newItem, setNewItem] = useState({
     name: '',
     category: 'other' as BudgetCategory,
@@ -175,7 +185,9 @@ export default function BudgetScreen() {
             <Text style={[styles.itemAmount, { color: colors.text }]}>
               {formatPrice(totalAmount)}
             </Text>
-            {(paidAmount > 0 || isBookingItem) && (
+            {/* Redondant avec le badge vert quand tout est réglé : la carte
+                répétait alors trois fois le même montant. */}
+            {(paidAmount > 0 || isBookingItem) && !(item.is_paid && remainingAmount === 0) && (
               <Text style={[styles.itemMetaAmount, { color: colors.textSecondary }]}>
                 Payé {formatPrice(paidAmount)}
                 {remainingAmount > 0 ? ` • Reste ${formatPrice(remainingAmount)}` : ''}
@@ -215,8 +227,14 @@ export default function BudgetScreen() {
     );
   };
 
+  // Pas d'`edges: top` : l'en-tête natif gère déjà l'encoche — cumulés, ils
+  // ajoutaient ~59pt de vide sous le titre. Fond aligné sur celui de l'en-tête
+  // pour éviter une couture de couleur.
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.backgroundSecondary }]}
+      edges={['bottom']}
+    >
       <Stack.Screen
         options={{
           headerShown: true,
@@ -228,6 +246,7 @@ export default function BudgetScreen() {
       />
 
       <ScrollView
+        ref={scrollRef}
         style={styles.scrollView}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
@@ -249,7 +268,12 @@ export default function BudgetScreen() {
               <Wallet size={20} color={colors.primary} />
             </View>
             <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Budget total</Text>
-            <Text style={[styles.summaryValue, { color: colors.text }]}>
+            <Text
+              style={[styles.summaryValue, { color: colors.text }]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.7}
+            >
               {formatPrice(summary.total_estimated)}
             </Text>
           </Animated.View>
@@ -262,7 +286,12 @@ export default function BudgetScreen() {
               <TrendingDown size={20} color="#10B981" />
             </View>
             <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Payé</Text>
-            <Text style={[styles.summaryValue, { color: '#10B981' }]}>
+            <Text
+              style={[styles.summaryValue, { color: '#10B981' }]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.7}
+            >
               {formatPrice(summary.total_paid)}
             </Text>
           </Animated.View>
@@ -275,7 +304,12 @@ export default function BudgetScreen() {
               <TrendingUp size={20} color="#F59E0B" />
             </View>
             <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Restant</Text>
-            <Text style={[styles.summaryValue, { color: '#F59E0B' }]}>
+            <Text
+              style={[styles.summaryValue, { color: '#F59E0B' }]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.7}
+            >
               {formatPrice(summary.total_remaining)}
             </Text>
           </Animated.View>
@@ -302,7 +336,7 @@ export default function BudgetScreen() {
 
         {/* Add Button */}
         <PressableScale
-          onPress={() => setShowAddForm(!showAddForm)}
+          onPress={toggleAddForm}
           haptic="light"
           style={[styles.addButton, { backgroundColor: colors.primary }]}
         >
@@ -326,7 +360,7 @@ export default function BudgetScreen() {
           >
             <TextInput
               style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
-              placeholder="Nom de la dépense"
+              placeholder="Nom de la dépense *"
               placeholderTextColor={colors.textTertiary}
               value={newItem.name}
               onChangeText={(text) => setNewItem({ ...newItem, name: text })}
@@ -334,7 +368,7 @@ export default function BudgetScreen() {
 
             <TextInput
               style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
-              placeholder="Montant estimé (€)"
+              placeholder="Montant estimé (€) *"
               placeholderTextColor={colors.textTertiary}
               value={newItem.estimated_amount}
               onChangeText={(text) => setNewItem({ ...newItem, estimated_amount: text })}
@@ -378,6 +412,9 @@ export default function BudgetScreen() {
               title="Ajouter"
               onPress={handleAddItem}
               loading={isCreating}
+              // Nom et montant sont requis : sans `disabled`, le bouton
+              // paraissait actif et rien ne se passait au tap.
+              disabled={!newItem.name.trim() || !newItem.estimated_amount.trim()}
               fullWidth
             />
           </Animated.View>
@@ -394,7 +431,10 @@ export default function BudgetScreen() {
 
           {customItems.length > 0 && (
             <View style={styles.group}>
-              <Text style={[styles.groupTitle, { color: colors.text }]}>Autres dépenses</Text>
+              {/* « Autres » n'a de sens qu'en présence du groupe précédent. */}
+              <Text style={[styles.groupTitle, { color: colors.text }]}>
+                {syncedItems.length > 0 ? 'Autres dépenses' : 'Dépenses'}
+              </Text>
               {customItems.map((item, index) => renderBudgetItem(item, syncedItems.length + index))}
             </View>
           )}
@@ -404,7 +444,7 @@ export default function BudgetScreen() {
               <Text style={{ fontSize: 48 }}>💰</Text>
               <Text style={[styles.emptyTitle, { color: colors.text }]}>Aucune dépense</Text>
               <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
-                Commencez à suivre votre budget
+                Commence à suivre ton budget
               </Text>
             </View>
           )}
@@ -427,7 +467,9 @@ const styles = StyleSheet.create({
   },
   iconCircle: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: Layout.spacing.xs },
   summaryLabel: { fontSize: Layout.fontSize.xs, marginBottom: 2 },
-  summaryValue: { fontSize: Layout.fontSize.md, fontWeight: '700' },
+  // Trois cartes côte à côte : un montant à quatre chiffres renvoyait le
+  // « € » seul à la ligne suivante.
+  summaryValue: { fontSize: Layout.fontSize.md, fontWeight: '700', textAlign: 'center' },
   progressContainer: { padding: Layout.spacing.lg, borderRadius: Layout.radius.lg, marginBottom: Layout.spacing.lg },
   progressHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: Layout.spacing.sm },
   progressLabel: { fontSize: Layout.fontSize.md, fontWeight: '600' },

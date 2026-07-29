@@ -222,7 +222,7 @@ export default function GuestsScreen() {
     const { deepLink, webLink } = getInviteLinks(token);
     try {
       await Share.share({
-        message: `Invitation RSVP pour ${groupName}\\nLien web: ${webLink}\\nLien app: ${deepLink}`,
+        message: `Invitation RSVP pour ${groupName}\nLien web : ${webLink}\nLien app : ${deepLink}`,
       });
     } catch (error) {
       console.error('Share invite error:', error);
@@ -240,7 +240,7 @@ export default function GuestsScreen() {
 
           Alert.alert(
             'Lien RSVP généré',
-            `${group.name}\\n${webLink}`,
+            `${group.name}\n${webLink}`,
             [
               { text: 'Fermer', style: 'cancel' },
               {
@@ -546,8 +546,14 @@ export default function GuestsScreen() {
     return <LoadingSpinner fullScreen message="Chargement des invités..." />;
   }
 
+  // Pas d'`edges: top` : l'en-tête natif gère déjà l'encoche — cumulés, ils
+  // ajoutaient ~59pt de vide sous le titre. Fond aligné sur celui de l'en-tête
+  // pour éviter une couture de couleur.
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.backgroundSecondary }]}
+      edges={['bottom']}
+    >
       <Stack.Screen
         options={{
           headerShown: true,
@@ -597,7 +603,14 @@ export default function GuestsScreen() {
       </View>
 
       {/* Status Filter */}
-      <View style={styles.filterRow}>
+      {/* Défilable : les quatre puces ne tenaient pas dans la largeur et
+          « Décliné » était rognée par le bord de l'écran. */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.filterScroll}
+        contentContainerStyle={styles.filterRow}
+      >
         {(['all', 'confirmed', 'pending', 'declined'] as const).map((status) => (
           <Pressable
             key={status}
@@ -618,7 +631,7 @@ export default function GuestsScreen() {
             </Text>
           </Pressable>
         ))}
-      </View>
+      </ScrollView>
 
       {/* Add Button */}
       <PressableScale
@@ -639,7 +652,7 @@ export default function GuestsScreen() {
           <ScrollView style={{ maxHeight: 400 }} showsVerticalScrollIndicator={false}>
             <TextInput
               style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
-              placeholder="Nom du groupe (ex: Famille Dupont)"
+              placeholder="Nom du groupe (ex: Famille Dupont) *"
               placeholderTextColor={colors.textTertiary}
               value={newGroup.name}
               onChangeText={(text) => setNewGroup({ ...newGroup, name: text })}
@@ -709,12 +722,12 @@ export default function GuestsScreen() {
               Noms des membres (optionnel)
             </Text>
             <Text style={[styles.fieldHint, { color: colors.textTertiary }]}>
-              Vous pouvez ajouter les noms maintenant ou plus tard
+              Tu peux ajouter les noms maintenant ou plus tard
             </Text>
 
             <TextInput
               style={[styles.input, styles.bulkInput, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
-              placeholder="Ajoutez plusieurs noms (ex: Alice, Bob, Clara)"
+              placeholder="Ajoute plusieurs noms (ex: Alice, Bob, Clara)"
               placeholderTextColor={colors.textTertiary}
               value={bulkMembersText}
               onChangeText={setBulkMembersText}
@@ -771,6 +784,9 @@ export default function GuestsScreen() {
               title="Créer le groupe"
               onPress={handleAddGroup}
               loading={isCreating}
+              // Le nom est requis : sans `disabled`, le bouton paraissait
+              // actif et rien ne se passait au tap.
+              disabled={!newGroup.name.trim()}
               fullWidth
               style={{ marginTop: Layout.spacing.md }}
             />
@@ -793,7 +809,7 @@ export default function GuestsScreen() {
             <Text style={{ fontSize: 48 }}>👨‍👩‍👧‍👦</Text>
             <Text style={[styles.emptyTitle, { color: colors.text }]}>Aucune famille</Text>
             <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
-              Ajoutez vos premières familles ou groupes d'invités
+              Ajoute tes premières familles ou groupes d'invités
             </Text>
           </View>
         }
@@ -879,8 +895,13 @@ const styles = StyleSheet.create({
     gap: Layout.spacing.sm,
   },
   searchText: { flex: 1, fontSize: Layout.fontSize.md },
+  // Un ScrollView n'a pas de hauteur intrinsèque : sans ces deux règles il
+  // s'étire sur la place restante, ou se fait écraser à zéro dès que le
+  // formulaire d'ajout occupe la colonne.
+  filterScroll: { flexGrow: 0, flexShrink: 0 },
   filterRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: Layout.spacing.lg,
     marginTop: Layout.spacing.md,
     gap: Layout.spacing.sm,

@@ -188,8 +188,14 @@ export default function CollaboratorsScreen() {
   const editors = collaborators.filter((c) => c.role === 'editor');
   const viewers = collaborators.filter((c) => c.role === 'viewer');
 
+  // Pas d'`edges: top` : l'en-tête natif gère déjà l'encoche — cumulés, ils
+  // ajoutaient ~59pt de vide sous le titre. Fond aligné sur celui de l'en-tête
+  // pour éviter une couture de couleur.
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.backgroundSecondary }]}
+      edges={['bottom']}
+    >
       <Stack.Screen
         options={{
           headerShown: true,

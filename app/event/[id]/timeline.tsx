@@ -2,7 +2,7 @@
  * Écran Timeline Jour J
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -56,6 +56,16 @@ export default function TimelineScreen() {
   const { mutate: deleteItem } = useDeleteTimelineItem();
 
   const [showAddForm, setShowAddForm] = useState(false);
+  // Le formulaire s'ouvre sous le pli : son bouton de validation restait
+  // invisible tant que l'utilisateur ne devinait pas qu'il fallait défiler.
+  const scrollRef = useRef<ScrollView>(null);
+  const toggleAddForm = () => {
+    const opening = !showAddForm;
+    setShowAddForm(opening);
+    if (opening) {
+      requestAnimationFrame(() => scrollRef.current?.scrollToEnd({ animated: true }));
+    }
+  };
   const [newItem, setNewItem] = useState({
     title: '',
     type: 'other' as TimelineItemType,
@@ -126,8 +136,14 @@ export default function TimelineScreen() {
 
   const completedCount = items.filter((i) => i.is_completed).length;
 
+  // Pas d'`edges: top` : l'en-tête natif gère déjà l'encoche — cumulés, ils
+  // ajoutaient ~59pt de vide sous le titre. Fond aligné sur celui de l'en-tête
+  // pour éviter une couture de couleur.
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.backgroundSecondary }]}
+      edges={['bottom']}
+    >
       <Stack.Screen
         options={{
           headerShown: true,
@@ -139,6 +155,7 @@ export default function TimelineScreen() {
       />
 
       <ScrollView
+        ref={scrollRef}
         style={styles.scrollView}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
@@ -154,9 +171,15 @@ export default function TimelineScreen() {
           >
             <Clock size={24} color={colors.primary} />
             <View>
-              <Text style={[styles.durationLabel, { color: colors.textSecondary }]}>Durée totale</Text>
+              <Text style={[styles.durationLabel, { color: colors.textSecondary }]}>
+                {duration.startTime === duration.endTime ? 'Début' : 'Durée totale'}
+              </Text>
               <Text style={[styles.durationValue, { color: colors.text }]}>
-                {duration.startTime} - {duration.endTime} ({duration.durationFormatted})
+                {/* Un seul moment sans heure de fin donnait la plage nulle
+                    « 18:30 - 18:30 (0h) » : on n'affiche alors que l'heure. */}
+                {duration.startTime === duration.endTime
+                  ? duration.startTime
+                  : `${duration.startTime} - ${duration.endTime} (${duration.durationFormatted})`}
               </Text>
             </View>
             <View style={styles.progressInfo}>
@@ -169,7 +192,7 @@ export default function TimelineScreen() {
 
         {/* Add Button */}
         <PressableScale
-          onPress={() => setShowAddForm(!showAddForm)}
+          onPress={toggleAddForm}
           haptic="light"
           style={[styles.addButton, { backgroundColor: colors.primary }]}
         >
@@ -185,7 +208,7 @@ export default function TimelineScreen() {
           >
             <TextInput
               style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
-              placeholder="Titre du moment"
+              placeholder="Titre du moment *"
               placeholderTextColor={colors.textTertiary}
               value={newItem.title}
               onChangeText={(text) => setNewItem({ ...newItem, title: text })}
@@ -194,7 +217,7 @@ export default function TimelineScreen() {
             <View style={styles.timeRow}>
               <TextInput
                 style={[styles.input, styles.timeInput, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
-                placeholder="Début (HH:MM)"
+                placeholder="Début (HH:MM) *"
                 placeholderTextColor={colors.textTertiary}
                 value={newItem.start_time}
                 onChangeText={(text) => setNewItem({ ...newItem, start_time: text })}
@@ -249,10 +272,13 @@ export default function TimelineScreen() {
               ))}
             </View>
 
+            {/* Titre et heure de début sont requis : sans `disabled`, le
+                bouton paraissait actif et le formulaire ne réagissait pas. */}
             <AnimatedButton
               title="Ajouter"
               onPress={handleAddItem}
               loading={isCreating}
+              disabled={!newItem.title.trim() || !newItem.start_time.trim()}
               fullWidth
             />
           </Animated.View>
@@ -369,7 +395,7 @@ export default function TimelineScreen() {
               <Text style={{ fontSize: 48 }}>⏰</Text>
               <Text style={[styles.emptyTitle, { color: colors.text }]}>Aucun moment planifié</Text>
               <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
-                Créez le planning de votre journée
+                Crée le planning de ta journée
               </Text>
             </View>
           )}
