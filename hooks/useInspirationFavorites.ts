@@ -263,6 +263,15 @@ export function useToggleInspirationFavorite() {
       queryClient.invalidateQueries({
         queryKey: [Config.cacheKeys.inspirations, 'favorites'],
       });
+      // `favorite_count` vit sur la ligne de l'inspiration : sans cette
+      // invalidation, l'ecran de detail gardait le compteur charge a
+      // l'ouverture et seul le coeur changeait de couleur. Cible sur un
+      // seul id, donc sans effet de reordonnancement sur le feed.
+      if (result?.inspirationId) {
+        queryClient.invalidateQueries({
+          queryKey: [Config.cacheKeys.inspirations, 'detail', result.inspirationId],
+        });
+      }
 
       // Gamification : vérifier le badge premier favori (seulement si ajouté)
       if (result?.action === 'added' && userId) {

@@ -120,8 +120,17 @@ export function useInspiration(inspirationId: string | undefined) {
     queryFn: async (): Promise<InspirationDetail | null> => {
       if (!inspirationId) return null;
 
-      // Incrementer le compteur de vues
-      supabase.rpc('increment_inspiration_views' as any, { insp_id: inspirationId });
+      // Incrementer le compteur de vues (fire-and-forget).
+      // Le `.then()` est indispensable : le builder supabase-js est paresseux
+      // et n'emet la requete HTTP qu'a la consommation. Sans lui, l'appel ne
+      // partait jamais et `view_count` restait bloque a 0.
+      supabase
+        .rpc('increment_inspiration_views' as any, { insp_id: inspirationId })
+        .then(({ error: viewError }: { error: { message: string } | null }) => {
+          if (viewError && __DEV__) {
+            console.warn('[inspirations] view_count:', viewError.message);
+          }
+        });
 
       const { data: inspiration, error } = await fromTable('inspirations')
         .select(`

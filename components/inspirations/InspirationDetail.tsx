@@ -274,12 +274,13 @@ export function InspirationDetail({
           <View style={styles.stat}>
             <Heart size={16} color={colors.textTertiary} />
             <Text style={[styles.statText, { color: colors.textTertiary }]}>
-              {inspiration.favorite_count} favoris
+              {/* 0 et 1 restent au singulier en francais. */}
+              {inspiration.favorite_count} favori{inspiration.favorite_count > 1 ? 's' : ''}
             </Text>
           </View>
           <View style={styles.stat}>
             <Text style={[styles.statText, { color: colors.textTertiary }]}>
-              {inspiration.view_count} vues
+              {inspiration.view_count} vue{inspiration.view_count > 1 ? 's' : ''}
             </Text>
           </View>
         </View>

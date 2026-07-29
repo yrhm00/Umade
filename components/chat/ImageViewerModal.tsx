@@ -13,7 +13,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface ImageViewerModalProps {
   visible: boolean;
@@ -35,6 +35,7 @@ export function ImageViewerModal({
   caption,
   onClose,
 }: ImageViewerModalProps) {
+  const insets = useSafeAreaInsets();
   const scale = useSharedValue(1);
   const baseScale = useSharedValue(1);
   const translateX = useSharedValue(0);
@@ -145,8 +146,17 @@ export function ImageViewerModal({
       onRequestClose={handleClose}
     >
       <View style={styles.overlay}>
-        <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-          <View style={styles.header}>
+        <View style={styles.safeArea}>
+          <View
+            style={[
+              styles.header,
+              // Marges appliquées à la main : un SafeAreaView placé dans un
+              // Modal est rendu hors du SafeAreaProvider et ne reçoit pas
+              // toujours les bons insets — la croix passait alors sous
+              // l'heure et la batterie.
+              { paddingTop: Math.max(insets.top, 12) + Layout.spacing.sm },
+            ]}
+          >
             <Pressable onPress={handleClose} style={styles.closeButton} hitSlop={12}>
               <X size={22} color="#FFFFFF" />
             </Pressable>
@@ -167,11 +177,16 @@ export function ImageViewerModal({
           </View>
 
           {!!caption && (
-            <View style={styles.captionContainer}>
+            <View
+              style={[
+                styles.captionContainer,
+                { paddingBottom: Math.max(insets.bottom, Layout.spacing.lg) },
+              ]}
+            >
               <Text style={styles.captionText}>{caption}</Text>
             </View>
           )}
-        </SafeAreaView>
+        </View>
       </View>
     </Modal>
   );
