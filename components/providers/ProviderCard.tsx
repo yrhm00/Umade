@@ -3,7 +3,7 @@
  * Supporte deux modes: grid (compact) et list (horizontal)
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -53,6 +53,11 @@ export function ProviderCard({
   const addToCompare = useCompareStore((state) => state.addToCompare);
   const removeFromCompare = useCompareStore((state) => state.removeFromCompare);
   const { warning, ToastComponent } = useToast();
+
+  // Une URL de portfolio cassée laissait un dégradé vide sans repère : on
+  // retombe sur le placeholder appareil-photo dès que le chargement échoue.
+  const [imageFailed, setImageFailed] = useState(false);
+  const portfolioImage = imageFailed ? null : provider.portfolio_image;
 
   const isFavorite = favoriteIds.includes(provider.id);
   const isCompared = compareIds.includes(provider.id);
@@ -129,13 +134,14 @@ export function ProviderCard({
         >
           {/* Image */}
           <View style={styles.listImageContainer}>
-            {provider.portfolio_image ? (
+            {portfolioImage ? (
               <Image
-                source={{ uri: provider.portfolio_image }}
+                source={{ uri: portfolioImage }}
                 style={styles.listImage}
                 contentFit="cover"
                 transition={300}
                 placeholder={{ blurhash: DEFAULT_BLURHASH }}
+                onError={() => setImageFailed(true)}
               />
             ) : (
               renderPlaceholder(styles.listImage)
@@ -262,13 +268,14 @@ export function ProviderCard({
       >
         {/* Image */}
         <View style={styles.gridImageContainer}>
-          {provider.portfolio_image ? (
+          {portfolioImage ? (
             <Image
-              source={{ uri: provider.portfolio_image }}
+              source={{ uri: portfolioImage }}
               style={styles.gridImage}
               contentFit="cover"
               transition={300}
               placeholder={{ blurhash: DEFAULT_BLURHASH }}
+              onError={() => setImageFailed(true)}
             />
           ) : (
             renderPlaceholder(styles.gridImage)

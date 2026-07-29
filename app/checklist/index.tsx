@@ -10,6 +10,8 @@ import {
   ScrollView,
   Pressable,
   TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, Stack } from 'expo-router';
@@ -24,6 +26,7 @@ import * as Haptics from 'expo-haptics';
 import {
   ArrowLeft,
   Check,
+  CheckSquare2,
   Clock,
   Plus,
   Trash2,
@@ -31,6 +34,7 @@ import {
 import { Layout } from '@/constants/Layout';
 import { useColors, useIsDarkTheme } from '@/hooks/useColors';
 import { ClientHeader } from '@/components/client/ClientHeader';
+import { EmptyState } from '@/components/common/EmptyState';
 import { PressableScale } from '@/components/ui/PressableScale';
 import { Button } from '@/components/ui/Button';
 import {
@@ -149,6 +153,18 @@ export default function ChecklistScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
+          {categories.length === 0 && (
+            // Sans cet état, une checklist vide n'affichait qu'une barre à 0 %
+            // au-dessus d'une page blanche, sans expliquer quoi faire.
+            <EmptyState
+              icon={<CheckSquare2 size={32} color={colors.primary} />}
+              title="Ta checklist est vide"
+              description="Ajoute les étapes de ton événement pour suivre ton avancement."
+              actionLabel="Ajouter une tâche"
+              onAction={() => setShowAddForm(true)}
+            />
+          )}
+
           {categories.map((category, catIndex) => (
             <Animated.View
               key={category.name}
@@ -218,40 +234,46 @@ export default function ChecklistScreen() {
               style={styles.addFormBackdrop}
               onPress={() => setShowAddForm(false)}
             />
-            <Animated.View
-              entering={FadeInDown.duration(260)}
-              style={[styles.addFormCard, { backgroundColor: colors.card }]}
+            {/* Le panneau est ancré en bas : sans ceci, le clavier recouvrait
+                les deux champs et les boutons. */}
+            <KeyboardAvoidingView
+              behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             >
-              <Text style={[styles.addFormTitle, { color: colors.text }]}>Ajouter un élément</Text>
-              <TextInput
-                style={[styles.addFormInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.text }]}
-                placeholder="Catégorie (ex: Lieu, Musique...)"
-                placeholderTextColor={colors.textTertiary}
-                value={newItemCategory}
-                onChangeText={setNewItemCategory}
-              />
-              <TextInput
-                style={[styles.addFormInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.text }]}
-                placeholder="Titre de l'élément"
-                placeholderTextColor={colors.textTertiary}
-                value={newItemTitle}
-                onChangeText={setNewItemTitle}
-              />
-              <View style={styles.addFormButtons}>
-                <Button
-                  title="Annuler"
-                  variant="outline"
-                  onPress={() => setShowAddForm(false)}
-                  style={{ flex: 1 }}
+              <Animated.View
+                entering={FadeInDown.duration(260)}
+                style={[styles.addFormCard, { backgroundColor: colors.card }]}
+              >
+                <Text style={[styles.addFormTitle, { color: colors.text }]}>Ajouter un élément</Text>
+                <TextInput
+                  style={[styles.addFormInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.text }]}
+                  placeholder="Catégorie (ex: Lieu, Musique...)"
+                  placeholderTextColor={colors.textTertiary}
+                  value={newItemCategory}
+                  onChangeText={setNewItemCategory}
                 />
-                <Button
-                  title="Ajouter"
-                  onPress={handleAddItem}
-                  disabled={!newItemTitle.trim() || !newItemCategory.trim()}
-                  style={{ flex: 1 }}
+                <TextInput
+                  style={[styles.addFormInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.text }]}
+                  placeholder="Titre de l'élément"
+                  placeholderTextColor={colors.textTertiary}
+                  value={newItemTitle}
+                  onChangeText={setNewItemTitle}
                 />
-              </View>
-            </Animated.View>
+                <View style={styles.addFormButtons}>
+                  <Button
+                    title="Annuler"
+                    variant="outline"
+                    onPress={() => setShowAddForm(false)}
+                    style={{ flex: 1 }}
+                  />
+                  <Button
+                    title="Ajouter"
+                    onPress={handleAddItem}
+                    disabled={!newItemTitle.trim() || !newItemCategory.trim()}
+                    style={{ flex: 1 }}
+                  />
+                </View>
+              </Animated.View>
+            </KeyboardAvoidingView>
           </View>
         )}
       </SafeAreaView>

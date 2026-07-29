@@ -342,19 +342,23 @@ const styles = StyleSheet.create({
   },
   heroMetaRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: 14,
   },
   heroMetaItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    maxWidth: '48%',
+    // Deux colonnes égales plutôt que `maxWidth: 48%` : cumulées, les deux
+    // largeurs max ne laissaient pas la place au gap et un lieu long venait
+    // se coller à l'icône suivante.
+    flex: 1,
+    minWidth: 0,
   },
   heroMetaText: {
     fontFamily: fontFamily.medium,
     fontSize: 13,
     letterSpacing: -0.1,
+    flexShrink: 1,
   },
 
   // CTA

@@ -242,7 +242,7 @@ export default function ProfileScreen() {
 
         {/* Menu Sections */}
         <Animated.View entering={FadeInDown.delay(200).duration(260)} style={styles.menuSection}>
-          <Text style={[styles.menuSectionTitle, { color: colors.textSecondary }]}>Mon compte</Text>
+          <Text style={[styles.menuSectionTitle, { color: colors.textSecondary }]}>MON COMPTE</Text>
           <Card variant="outlined" padding="none">
             <MenuItem
               icon={<User size={20} color={colors.primary} />}
@@ -288,7 +288,7 @@ export default function ProfileScreen() {
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(300).duration(260)} style={styles.menuSection}>
-          <Text style={[styles.menuSectionTitle, { color: colors.textSecondary }]}>Paramètres</Text>
+          <Text style={[styles.menuSectionTitle, { color: colors.textSecondary }]}>PARAMÈTRES</Text>
           <Card variant="outlined" padding="none">
             <MenuItem
               icon={<Bell size={20} color={colors.primary} />}
@@ -423,7 +423,8 @@ const styles = StyleSheet.create({
     fontSize: Layout.fontSize.sm,
     fontFamily: fontFamily.semiBold,
     marginBottom: Layout.spacing.sm,
-    textTransform: 'uppercase',
+    // Libellés déjà en capitales dans le JSX : `textTransform: uppercase`
+    // rendait « PARAMETRES », sans l'accent grave.
     letterSpacing: 0.5,
   },
   menuItem: {

@@ -17,9 +17,14 @@ import { FilterSheet, MasonryGrid } from '@/components/inspirations';
 import { StoriesStrip } from '@/components/stories';
 import { PressableScale } from '@/components/ui/PressableScale';
 import { VoiceSearchButton } from '@/components/ui/VoiceSearchButton';
+import {
+  getCreatedEventTypeEmoji,
+  getCreatedEventTypeLabel,
+} from '@/constants/EventTypes';
 import { Layout } from '@/constants/Layout';
 import { fontFamily } from '@/constants/Typography';
 import { useColors, useIsDarkTheme } from '@/hooks/useColors';
+import { useUserEvents } from '@/hooks/useEvents';
 import { useInspirationFeed } from '@/hooks/useInspirations';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { useAuthStore } from '@/stores/authStore';
@@ -71,6 +76,7 @@ export default function HomeScreen() {
   const isDark = useIsDarkTheme();
 
   const { data: preferences } = useUserPreferences();
+  const { data: userEvents } = useUserEvents();
   const profile = useAuthStore((s) => s.profile);
 
   const [filters, setFilters] = useState<InspirationFilters>({});
@@ -114,13 +120,34 @@ export default function HomeScreen() {
   );
 
   const firstName = profile?.full_name?.split(' ')[0] || 'toi';
-  const daysUntil = getDaysUntilEvent(preferences?.event_date || null);
-  const eventLabel = preferences?.event_type
-    ? getEventTypeLabel(preferences.event_type)
-    : 'Événement';
-  const eventEmoji = preferences?.event_type
-    ? getEventTypeEmoji(preferences.event_type)
-    : '✨';
+
+  // La carte héro décrivait uniquement les réponses d'onboarding
+  // (`user_preferences`) : elle annonçait « date à définir » et « Ton
+  // événement » alors que l'utilisateur venait de créer un événement daté.
+  // Le prochain événement réel prime, les préférences servent de repli.
+  const nextEvent = useMemo(() => {
+    if (!userEvents?.length) return null;
+    const today = new Date().toISOString().split('T')[0];
+    return (
+      userEvents
+        .filter((event) => event.event_date >= today)
+        .sort((a, b) => a.event_date.localeCompare(b.event_date))[0] ?? null
+    );
+  }, [userEvents]);
+
+  const daysUntil = getDaysUntilEvent(
+    nextEvent?.event_date || preferences?.event_date || null
+  );
+  const eventLabel = nextEvent?.event_type
+    ? getCreatedEventTypeLabel(nextEvent.event_type)
+    : preferences?.event_type
+      ? getEventTypeLabel(preferences.event_type)
+      : 'Événement';
+  const eventEmoji = nextEvent?.event_type
+    ? getCreatedEventTypeEmoji(nextEvent.event_type)
+    : preferences?.event_type
+      ? getEventTypeEmoji(preferences.event_type)
+      : '✨';
   const firstPreferredStyle = preferences?.preferred_styles?.[0];
   const preferredStyleLabel = firstPreferredStyle
     ? getStyleLabel(firstPreferredStyle)
@@ -265,12 +292,12 @@ export default function HomeScreen() {
               colors={colors}
               isDark={isDark}
               firstName={firstName}
-              eventName={preferences?.event_name}
+              eventName={nextEvent?.title ?? preferences?.event_name}
               eventLabel={eventLabel}
               eventEmoji={eventEmoji}
               daysUntil={daysUntil}
-              location={preferences?.location}
-              guestCount={preferences?.guest_count}
+              location={nextEvent?.location ?? preferences?.location}
+              guestCount={nextEvent?.guest_count ?? preferences?.guest_count}
               preferredStyle={preferredStyleLabel}
               onFindProviders={handleFindProvidersPress}
               onOpenEvents={handleEventsPress}
