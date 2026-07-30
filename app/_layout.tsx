@@ -223,7 +223,17 @@ function RootLayout() {
                       glissade laterale par-dessus casserait l'effet. */}
                   <Stack.Screen
                     name="inspiration/[id]"
-                    options={{ headerShown: false, animation: 'none' }}
+                    options={{
+                      headerShown: false,
+                      animation: 'none',
+                      // Ecran transparent, et surtout ecran precedent conserve :
+                      // par defaut la pile le detache, si bien qu'en tirant la
+                      // photo vers le bas on decouvrait un fond blanc au lieu de
+                      // l'accueil. Le fond opaque est fourni par l'ecran lui-meme,
+                      // qui l'efface pendant le geste.
+                      presentation: 'transparentModal',
+                      contentStyle: { backgroundColor: 'transparent' },
+                    }}
                   />
                 </Stack>
                 </ErrorBoundary>

@@ -199,9 +199,9 @@ export default function InspirationDetailScreen() {
     const dx = dragX.value;
     const dy = dragY.value;
     const dragDistance = Math.sqrt(dx * dx + dy * dy);
-    // Le fond disparait presque entierement : on doit voir le fil de la grille
-    // derriere la photo, comme si on la deplacait au-dessus de lui.
-    const dragFade = 1 - Math.min(dragDistance / (DISMISS_THRESHOLD * 1.6), 0.92);
+    // Le fond s'efface vite et presque totalement : des les premiers pixels de
+    // glissement, on doit retrouver l'accueil tel qu'on l'avait laisse.
+    const dragFade = 1 - Math.min(dragDistance / (DISMISS_THRESHOLD * 0.7), 0.96);
     return { opacity: progress.value * dragFade };
   });
 
