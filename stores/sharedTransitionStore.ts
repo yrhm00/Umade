@@ -17,8 +17,14 @@ export interface SharedTransitionOrigin {
   height: number;
   /** Rayon de depart, pour l'interpoler vers 0 en plein ecran. */
   borderRadius: number;
-  /** Visuel affiche pendant l'agrandissement : deja en cache cote carte. */
+  /** Miniature deja en cache cote carte : affichable des la premiere frame. */
   imageUrl: string | null;
+  /**
+   * Pleine resolution, posee par-dessus la miniature. Sans elle, le calque
+   * etirait une image en 400px de large sur toute la largeur de l'ecran, d'ou
+   * une photo floue pendant tout le trajet.
+   */
+  fullImageUrl: string | null;
   /** Ratio largeur/hauteur de la photo, pour viser la bonne hauteur finale. */
   aspectRatio: number | null;
   /** Horodatage du tap, pour ne pas rejouer une origine perimee. */

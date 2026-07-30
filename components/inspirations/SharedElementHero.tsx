@@ -107,7 +107,10 @@ export const SharedElementHero = React.forwardRef<
     );
 
     const scale = interpolate(t, [0, 1], [startScale, 1]) * dragScale;
-    const translateX = interpolate(t, [0, 1], [origin.x, 0]);
+    // Ancrage haut-gauche : sans compensation, le retrecissement du geste
+    // collerait le visuel au bord gauche au lieu de rester centre.
+    const dragCenterShift = ((1 - dragScale) * target.width) / 2;
+    const translateX = interpolate(t, [0, 1], [origin.x, 0]) + dragCenterShift;
     const translateY = interpolate(t, [0, 1], [origin.y, 0]) + drag;
 
     return {
@@ -135,15 +138,26 @@ export const SharedElementHero = React.forwardRef<
       ]}
       pointerEvents="none"
     >
+      {/* Miniature : deja en cache cote grille, donc presente des la premiere
+          frame. Elle assure la continuite mais serait floue etiree en plein
+          ecran, d'ou la pleine resolution posee par-dessus. */}
       {!!origin.imageUrl && (
         <Image
           source={{ uri: origin.imageUrl }}
           style={styles.image}
           contentFit="cover"
-          // Pas de fondu d'apparition : l'image vient du cache de la grille et
-          // doit etre a l'ecran des la premiere frame, sinon la continuite avec
-          // la carte est rompue par un flash.
           transition={0}
+          cachePolicy="memory-disk"
+        />
+      )}
+      {!!origin.fullImageUrl && origin.fullImageUrl !== origin.imageUrl && (
+        <Image
+          source={{ uri: origin.fullImageUrl }}
+          style={[styles.image, styles.imageOverlay]}
+          contentFit="cover"
+          // Court fondu : la releve de la miniature ne doit pas se voir comme
+          // un remplacement brutal.
+          transition={120}
           cachePolicy="memory-disk"
         />
       )}
@@ -167,5 +181,8 @@ const styles = StyleSheet.create({
   image: {
     width: '100%',
     height: '100%',
+  },
+  imageOverlay: {
+    ...StyleSheet.absoluteFillObject,
   },
 });

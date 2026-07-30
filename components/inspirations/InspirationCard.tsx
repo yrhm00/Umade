@@ -67,6 +67,7 @@ export const InspirationCard = memo(function InspirationCard({
 
     const node = cardRef.current;
     const uri = mainImage?.thumbnail_url || mainImage?.image_url || null;
+    const fullUri = mainImage?.image_url || mainImage?.thumbnail_url || null;
 
     if (!node || !onPress) {
       onPress?.();
@@ -74,6 +75,11 @@ export const InspirationCard = memo(function InspirationCard({
     }
 
     isNavigatingRef.current = true;
+    // Lance le telechargement de la pleine resolution des le tap, pour qu'elle
+    // recouvre la miniature au plus vite pendant l'agrandissement.
+    if (fullUri && fullUri !== uri) {
+      Image.prefetch(fullUri, { cachePolicy: 'memory-disk' });
+    }
     // Relache le verrou une fois l'ecran ouvert, pour que la carte reste
     // utilisable au retour dans la liste.
     setTimeout(() => {
@@ -89,6 +95,7 @@ export const InspirationCard = memo(function InspirationCard({
           height,
           borderRadius: Layout.radius.md,
           imageUrl: uri,
+          fullImageUrl: fullUri,
           aspectRatio,
           createdAt: Date.now(),
         });
