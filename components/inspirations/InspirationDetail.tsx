@@ -40,8 +40,9 @@ import { toast } from '@/lib/toast';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { goBackOrFallback } from '@/lib/navigation';
+import { getHeroHeight } from './heroLayout';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 interface InspirationDetailProps {
   inspiration: InspirationDetailType;
@@ -65,6 +66,17 @@ export function InspirationDetail({
   const { mutateAsync: findOrCreateConversation } = useFindOrCreateConversation();
 
   const images = inspiration.inspiration_images || [];
+
+  // Pinterest dimensionne le visuel sur le ratio naturel de la photo : une
+  // image portrait remplit presque l'ecran, une image carree ou paysage laisse
+  // voir le contenu en dessous. Une hauteur fixe donnait le meme cadrage a
+  // toutes les photos, en rognant les portraits et en etirant les paysages.
+  const heroHeight = React.useMemo(() => {
+    const cover = images[0];
+    return getHeroHeight(
+      cover?.width && cover?.height ? cover.width / cover.height : null
+    );
+  }, [images]);
 
   const onViewableItemsChanged = useCallback(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
@@ -165,7 +177,7 @@ export function InspirationDetail({
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Carousel d'images */}
-      <View style={styles.carouselContainer}>
+      <View style={[styles.carouselContainer, { height: heroHeight }]}>
         <FlatList
           ref={flatListRef}
           data={images}
@@ -333,7 +345,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   carouselContainer: {
-    height: SCREEN_HEIGHT * 0.5,
+    // Hauteur fournie a l'execution : elle depend du ratio de la photo.
     position: 'relative',
   },
   imageContainer: {

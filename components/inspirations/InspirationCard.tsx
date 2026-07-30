@@ -17,7 +17,8 @@ import {
 } from '@/types/inspiration';
 import { Image } from 'expo-image';
 import { Heart } from 'lucide-react-native';
-import React, { memo, useCallback } from 'react';
+import { useSharedTransitionStore } from '@/stores/sharedTransitionStore';
+import React, { memo, useCallback, useRef } from 'react';
 import { Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
@@ -37,6 +38,11 @@ export const InspirationCard = memo(function InspirationCard({
   style,
   index = 0,
 }: InspirationCardProps) {
+  const cardRef = useRef<View>(null);
+  // Deux appuis rapides declencheraient deux navigations empilees : la mesure
+  // est asynchrone, donc le second tap arrive avant le premier `push`.
+  const isNavigatingRef = useRef(false);
+  const beginTransition = useSharedTransitionStore((state) => state.begin);
   const { isFavorite, toggleFavorite, isLoading } = useInspirationFavoriteActions();
   const isInspFavorite = isFavorite(inspiration.id);
   const colors = useColors();
@@ -51,6 +57,45 @@ export const InspirationCard = memo(function InspirationCard({
   const imageHeight = CARD_WIDTH / aspectRatio;
   // Limiter la hauteur entre 120 et 280
   const clampedHeight = Math.max(120, Math.min(280, imageHeight));
+
+  // La position de la carte n'est connue qu'a l'instant du tap : on la mesure
+  // puis on laisse l'ecran de destination reprendre l'agrandissement depuis
+  // ces coordonnees. `measureInWindow` donne des coordonnees ecran, ce qu'il
+  // faut ici puisque la destination est un ecran plein.
+  const handlePress = useCallback(() => {
+    if (isNavigatingRef.current) return;
+
+    const node = cardRef.current;
+    const uri = mainImage?.thumbnail_url || mainImage?.image_url || null;
+
+    if (!node || !onPress) {
+      onPress?.();
+      return;
+    }
+
+    isNavigatingRef.current = true;
+    // Relache le verrou une fois l'ecran ouvert, pour que la carte reste
+    // utilisable au retour dans la liste.
+    setTimeout(() => {
+      isNavigatingRef.current = false;
+    }, 600);
+
+    node.measureInWindow((x, y, width, height) => {
+      if (width > 0 && height > 0) {
+        beginTransition(inspiration.id, {
+          x,
+          y,
+          width,
+          height,
+          borderRadius: Layout.radius.md,
+          imageUrl: uri,
+          aspectRatio,
+          createdAt: Date.now(),
+        });
+      }
+      onPress();
+    });
+  }, [aspectRatio, beginTransition, inspiration.id, mainImage, onPress]);
 
   const handleFavoritePress = useCallback(() => {
     if (!isLoading) {
@@ -72,11 +117,11 @@ export const InspirationCard = memo(function InspirationCard({
       entering={FadeInDown.delay(delay).duration(260)}
       style={[styles.container, { width: CARD_WIDTH }, style]}
     >
-      <View style={[styles.card, { backgroundColor: colors.card }]}>
+      <View ref={cardRef} style={[styles.card, { backgroundColor: colors.card }]}>
         {/* Image principale avec titre en overlay */}
         <View style={[styles.imageContainer, { height: clampedHeight }]}>
           {/* Gestures only on the content (avoid stealing taps from the favorite button) */}
-          <DoubleTapLike onDoubleTap={handleDoubleTap} onSingleTap={onPress}>
+          <DoubleTapLike onDoubleTap={handleDoubleTap} onSingleTap={handlePress}>
             <View style={{ width: CARD_WIDTH, height: clampedHeight }}>
               <Image
                 source={{ uri: mainImage?.thumbnail_url || mainImage?.image_url }}

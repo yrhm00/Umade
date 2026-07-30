@@ -218,6 +218,13 @@ function RootLayout() {
                   <Stack.Screen name="notifications/index" options={{ animation: 'slide_from_right' }} />
                   <Stack.Screen name="settings/notifications" />
                   <Stack.Screen name="settings/delete-account" />
+                  {/* Aucune animation de pile : la continuite est assuree par
+                      l'agrandissement de la carte (SharedElementHero). Une
+                      glissade laterale par-dessus casserait l'effet. */}
+                  <Stack.Screen
+                    name="inspiration/[id]"
+                    options={{ headerShown: false, animation: 'none' }}
+                  />
                 </Stack>
                 </ErrorBoundary>
                 <OfflineIndicator floating />
