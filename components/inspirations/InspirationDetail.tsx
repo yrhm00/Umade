@@ -42,6 +42,7 @@ import {
   type PanGesture,
 } from 'react-native-gesture-handler';
 import Animated, {
+  useAnimatedScrollHandler,
   FadeIn,
   FadeInUp,
   useAnimatedStyle,
@@ -71,34 +72,33 @@ function CarouselGestureWrapper({
 interface InspirationDetailProps {
   inspiration: InspirationDetailType;
   onClose?: () => void;
-  /**
-   * 0 = ouvert, 1 = glisse au maximum. Pendant le geste de fermeture, tout
-   * s'efface sauf la photo : seul le visuel doit accompagner le doigt.
-   */
-  dragProgress?: SharedValue<number>;
-  /**
-   * Geste « tirer vers le bas pour fermer ». Rattache a la zone de la photo, et
-   * non a l'ecran entier : englobant le contenu defilant, il perdait
-   * systematiquement l'arbitrage contre le ScrollView.
-   */
+  /** Geste « tirer vers le bas pour fermer », rattache a toute la page. */
   dismissGesture?: PanGesture;
+  /**
+   * Ref du ScrollView, pour que le geste de fermeture puisse cohabiter avec le
+   * defilement au lieu de l'emporter sur lui.
+   */
+  scrollRef?: React.Ref<Animated.ScrollView>;
+  /** Position de defilement : le geste ne part que si le contenu est en haut. */
+  contentScrollY?: SharedValue<number>;
 }
 
 export function InspirationDetail({
   inspiration,
   onClose,
-  dragProgress,
   dismissGesture,
+  scrollRef,
+  contentScrollY,
 }: InspirationDetailProps) {
   const colors = useColors();
   const isDark = useIsDarkTheme();
   const insets = useSafeAreaInsets();
 
-  // Pendant le glissement, il ne doit rester que la photo : les infos et les
-  // boutons s'effacent bien avant le seuil de fermeture.
-  const fadeOnDragStyle = useAnimatedStyle(() => ({
-    opacity: dragProgress ? Math.max(1 - dragProgress.value * 2.2, 0) : 1,
-  }));
+  // Remonte la position de defilement : le geste de fermeture ne doit partir que
+  // si le contenu est deja en haut, sinon lire les infos fermerait l'ecran.
+  const handleContentScroll = useAnimatedScrollHandler((event) => {
+    if (contentScrollY) contentScrollY.value = event.contentOffset.y;
+  });
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isContacting, setIsContacting] = useState(false);
   const { isFavorite, toggleFavorite, isLoading } = useInspirationFavoriteActions();
@@ -218,9 +218,9 @@ export function InspirationDetail({
   );
 
   return (
+    <CarouselGestureWrapper gesture={dismissGesture}>
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Carousel d'images */}
-      <CarouselGestureWrapper gesture={dismissGesture}>
       <View style={[styles.carouselContainer, { height: heroHeight }]}>
         <FlatList
           ref={flatListRef}
@@ -238,7 +238,7 @@ export function InspirationDetail({
         {/* Deux vues : Reanimated avertit qu'une animation `entering` et un
             style anime peuvent tous deux piloter `opacity` sur le meme noeud. */}
         <Animated.View
-          style={[styles.headerOverlay, fadeOnDragStyle]}
+          style={styles.headerOverlay}
           pointerEvents="box-none"
         >
         <Animated.View entering={FadeIn.delay(200)}>
@@ -271,7 +271,7 @@ export function InspirationDetail({
 
         {/* Pagination dots */}
         {images.length > 1 && (
-          <Animated.View style={[styles.pagination, fadeOnDragStyle]}>
+          <Animated.View style={styles.pagination}>
             {images.map((_, index) => (
               <View
                 key={index}
@@ -284,15 +284,16 @@ export function InspirationDetail({
           </Animated.View>
         )}
       </View>
-      </CarouselGestureWrapper>
 
       {/* Contenu */}
-      <Animated.View style={[styles.content, fadeOnDragStyle]}>
       <Animated.ScrollView
+        ref={scrollRef}
         entering={FadeInUp.delay(300).duration(260)}
         style={styles.content}
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
+        onScroll={handleContentScroll}
+        scrollEventThrottle={16}
       >
         {/* Badges */}
         <View style={styles.badges}>
@@ -386,8 +387,8 @@ export function InspirationDetail({
         {/* Bottom padding */}
         <View style={styles.bottomPadding} />
       </Animated.ScrollView>
-      </Animated.View>
     </View>
+    </CarouselGestureWrapper>
   );
 }
 

@@ -35,7 +35,8 @@ interface SharedElementHeroProps {
   targetRadius?: number;
   /** Progression 0 -> 1, partagee avec l'ecran pour synchroniser les fondus. */
   progress: SharedValue<number>;
-  /** Translation verticale du geste de fermeture. */
+  /** Translation du geste de fermeture : la photo suit le doigt librement. */
+  dragX?: SharedValue<number>;
   dragY?: SharedValue<number>;
   onExpanded: () => void;
 }
@@ -48,7 +49,7 @@ export const SharedElementHero = React.forwardRef<
   SharedElementHeroHandle,
   SharedElementHeroProps
 >(function SharedElementHero(
-  { origin, target, targetRadius = 0, progress, dragY, onExpanded },
+  { origin, target, targetRadius = 0, progress, dragX, dragY, onExpanded },
   ref
 ) {
   // Echelle uniforme calee sur la largeur : la hauteur suit, puisque la carte et
@@ -97,35 +98,45 @@ export const SharedElementHero = React.forwardRef<
 
   const animatedStyle = useAnimatedStyle(() => {
     const t = progress.value;
-    const drag = dragY?.value ?? 0;
+    const dx = dragX?.value ?? 0;
+    const dy = dragY?.value ?? 0;
+    // Distance parcourue, toutes directions confondues : le retrecissement doit
+    // suivre l'eloignement reel du doigt, pas seulement sa composante verticale.
+    const dragDistance = Math.min(Math.sqrt(dx * dx + dy * dy), 500);
 
-    // Pendant le geste de fermeture, le visuel suit le doigt et retrecit.
-    const dragScale = interpolate(
-      Math.min(Math.max(drag, 0), 400),
-      [0, 400],
-      [1, 0.82]
-    );
+    // Pendant le geste, la photo suit le doigt et retrecit.
+    const dragScale = interpolate(dragDistance, [0, 500], [1, 0.62]);
 
     const scale = interpolate(t, [0, 1], [startScale, 1]) * dragScale;
     // Ancrage haut-gauche : sans compensation, le retrecissement du geste
     // collerait le visuel au bord gauche au lieu de rester centre.
     const dragCenterShift = ((1 - dragScale) * target.width) / 2;
-    const translateX = interpolate(t, [0, 1], [origin.x, 0]) + dragCenterShift;
-    const translateY = interpolate(t, [0, 1], [origin.y, 0]) + drag;
+    const translateX = interpolate(t, [0, 1], [origin.x, 0]) + dragCenterShift + dx;
+    const translateY = interpolate(t, [0, 1], [origin.y, 0]) + dy;
+
+    // Rayon exprime dans l'espace non mis a l'echelle : divise par le scale, il
+    // reste visuellement constant. Pendant le geste, la photo reprend des coins
+    // arrondis sur ses quatre angles, comme la carte de la grille.
+    const openRadius = interpolate(
+      t,
+      [0, 1],
+      [origin.borderRadius / startScale, targetRadius]
+    );
+    const dragRadius = interpolate(dragDistance, [0, 220], [0, 26]) / scale;
 
     return {
       transform: [{ translateX }, { translateY }, { scale }],
-      // Rayon exprime dans l'espace non mis a l'echelle : divise par le scale,
-      // il reste visuellement constant pendant la montee.
-      borderRadius: interpolate(
-        t,
-        [0, 1],
-        [origin.borderRadius / startScale, targetRadius]
+      borderRadius: Math.max(openRadius, dragRadius),
+      // L'ombre porte la carte au depart, s'efface en plein ecran, et revient
+      // pendant le geste pour detacher la photo du fil derriere elle.
+      shadowOpacity: Math.max(
+        interpolate(t, [0, 1], [0.22, 0]),
+        interpolate(dragDistance, [0, 220], [0, 0.3])
       ),
-      // L'ombre porte la carte au depart puis s'efface : a plein ecran il n'y a
-      // plus de bord a detacher du fond.
-      shadowOpacity: interpolate(t, [0, 1], [0.22, 0]),
-      shadowRadius: interpolate(t, [0, 1], [16, 0]),
+      shadowRadius: Math.max(
+        interpolate(t, [0, 1], [16, 0]),
+        interpolate(dragDistance, [0, 220], [0, 22])
+      ),
     };
   });
 

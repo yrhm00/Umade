@@ -27,10 +27,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { Gesture } from 'react-native-gesture-handler';
 import Animated, {
-  interpolate,
   runOnJS,
   useAnimatedStyle,
-  useDerivedValue,
   useSharedValue,
   withSpring,
   withTiming,
@@ -59,7 +57,17 @@ export default function InspirationDetailScreen() {
   const heroRef = useRef<SharedElementHeroHandle>(null);
   // Progression partagee : 0 = carte, 1 = plein ecran.
   const progress = useSharedValue(hasHero ? 0 : 1);
+  const dragX = useSharedValue(0);
   const dragY = useSharedValue(0);
+  // Le calque hero doit rester monte pendant tout le geste : c'est lui, et non
+  // le contenu reel, qui suit le doigt. Transformer l'ecran entier laissait
+  // apparaitre le bloc d'infos et son fond sous la photo.
+  const [isDragging, setIsDragging] = useState(false);
+  // Le geste cohabite avec le defilement : il ne part que si le contenu est en
+  // haut, sinon lire les infos fermerait l'ecran.
+  const scrollRef = useRef<React.ComponentRef<typeof Animated.ScrollView>>(null);
+  const contentScrollY = useSharedValue(0);
+  const dragAllowed = useSharedValue(true);
   // Une seule fermeture a la fois : sans ce garde, un second geste ou un second
   // appui declencherait deux `goBack`. En SharedValue plutot qu'en ref, car une
   // ref mutee apres avoir ete capturee par un worklet est interdite.
@@ -80,6 +88,7 @@ export default function InspirationDetailScreen() {
   }, [clearTransition]);
 
   const finishClose = useCallback(() => {
+
     goBackOrFallback(router);
   }, []);
 
@@ -113,6 +122,7 @@ export default function InspirationDetailScreen() {
   // mutee apres capture fait planter le runtime Worklets. Le collapse est
   // declenche par l'effet ci-dessous.
   const handleDragRelease = useCallback(() => {
+
     setIsExpanding(true);
     setIsHandedOverToHero(true);
   }, []);
@@ -128,9 +138,10 @@ export default function InspirationDetailScreen() {
     }
     // Le decalage du doigt se resorbe pendant la descente, sinon le visuel
     // atterrirait a cote de la carte.
+    dragX.value = withTiming(0, { duration: 260 });
     dragY.value = withTiming(0, { duration: 260 });
     handle.collapse(finishClose);
-  }, [dragY, finishClose, isHandedOverToHero]);
+  }, [dragX, dragY, finishClose, isHandedOverToHero]);
 
   // Memoise : une nouvelle reference a chaque rendu relancerait l'animation.
   const heroTarget = useMemo(
@@ -143,56 +154,65 @@ export default function InspirationDetailScreen() {
   // laisse le defilement du contenu intact.
   const dismissGesture = Gesture.Pan()
     .enabled(hasHero)
-    .activeOffsetY(24)
-    .failOffsetY(-12)
+    // Ne se declenche que vers le bas, pour laisser le defilement du contenu
+    // intact. Passe ce seuil, la photo suit ensuite le doigt librement.
+    .activeOffsetY(18)
+    .failOffsetY(-14)
+    // Coexiste avec le defilement au lieu de l'emporter : sans cela, le geste
+    // devait etre rattache a la seule zone de la photo, trop petite sur une
+    // image paysage — d'ou un glissement qui ne prenait pas sur toutes les
+    // publications.
+    // Cast : la signature attend `RefObject<ComponentType | undefined>` la ou
+    // React fournit `| null`. La ref reste bien celle du ScrollView.
+    .simultaneousWithExternalGesture(
+      scrollRef as unknown as React.RefObject<React.ComponentType | undefined>
+    )
+    .onStart(() => {
+      dragAllowed.value = contentScrollY.value <= 2;
+      if (dragAllowed.value) runOnJS(setIsDragging)(true);
+    })
     .onUpdate((event) => {
-      dragY.value = Math.max(event.translationY, 0);
+      if (!dragAllowed.value) return;
+      // Les deux axes : la photo doit pouvoir etre promenee n'importe ou, pas
+      // seulement verticalement.
+      dragX.value = event.translationX;
+      dragY.value = event.translationY;
     })
     .onEnd((event) => {
+      if (!dragAllowed.value) return;
       if (event.translationY > DISMISS_THRESHOLD && !isClosing.value) {
         isClosing.value = true;
         // Au-dela du seuil : la photo rejoint son emplacement dans la grille.
         runOnJS(handleDragRelease)();
         return;
       }
-      // En dessous : retour a la position ouverte, avec un leger ressort pour
-      // que le relachement ne paraisse pas sec.
-      dragY.value = withSpring(0, { damping: 22, stiffness: 220 });
+      // En dessous : la photo revient se poser en plein ecran.
+      dragX.value = withSpring(0, { damping: 22, stiffness: 220 });
+      dragY.value = withSpring(0, { damping: 22, stiffness: 220 }, (done) => {
+        if (done) runOnJS(setIsDragging)(false);
+      });
     });
 
   // Le fond apparait avec l'agrandissement et s'estompe pendant le geste : sans
   // cela, l'ecran precedent resterait masque par un bloc opaque.
   const backdropStyle = useAnimatedStyle(() => {
-    const dragFade = 1 - Math.min(dragY.value / (DISMISS_THRESHOLD * 3), 0.55);
+    const dx = dragX.value;
+    const dy = dragY.value;
+    const dragDistance = Math.sqrt(dx * dx + dy * dy);
+    // Le fond disparait presque entierement : on doit voir le fil de la grille
+    // derriere la photo, comme si on la deplacait au-dessus de lui.
+    const dragFade = 1 - Math.min(dragDistance / (DISMISS_THRESHOLD * 1.6), 0.92);
     return { opacity: progress.value * dragFade };
   });
 
   // Contenu : fondu decale, il arrive apres le visuel.
-  const contentStyle = useAnimatedStyle(() => {
-    const drag = dragY.value;
-    // Meme formule de retrecissement que le calque hero, pour que la bascule de
-    // l'un a l'autre au relachement ne se voie pas.
-    const dragScale = interpolate(
-      Math.min(Math.max(drag, 0), 400),
-      [0, 400],
-      [1, 0.82]
-    );
-
-    return {
-      opacity: isHandedOverToHero ? 0 : progress.value * progress.value,
-      transform: [{ translateY: drag }, { scale: dragScale }],
-      borderRadius: interpolate(
-        Math.min(Math.max(drag, 0), 400),
-        [0, 400],
-        [0, 28]
-      ),
-    };
-  }, [isHandedOverToHero]);
-
-  // Progression du geste, transmise au detail pour effacer tout sauf la photo.
-  const dragProgress = useDerivedValue(() =>
-    Math.min(Math.max(dragY.value, 0) / DISMISS_THRESHOLD, 1)
-  );
+  // Contenu reel : fondu decale a l'ouverture. Des que le geste demarre, il
+  // s'effiace d'un coup et laisse la place au calque hero — il ne doit plus
+  // rester que la photo dans la main.
+  const contentStyle = useAnimatedStyle(() => ({
+    opacity:
+      isDragging || isHandedOverToHero ? 0 : progress.value * progress.value,
+  }), [isDragging, isHandedOverToHero]);
 
   const renderBody = () => {
     if (isLoading) {
@@ -219,8 +239,9 @@ export default function InspirationDetailScreen() {
       <InspirationDetail
         inspiration={inspiration}
         onClose={handleRequestClose}
-        dragProgress={dragProgress}
         dismissGesture={hasHero ? dismissGesture : undefined}
+        scrollRef={scrollRef}
+        contentScrollY={contentScrollY}
       />
     );
   };
@@ -250,12 +271,13 @@ export default function InspirationDetailScreen() {
         {renderBody()}
       </Animated.View>
 
-      {isExpanding && (
+      {(isExpanding || isDragging) && (
         <SharedElementHero
           ref={heroRef}
           origin={origin}
           target={heroTarget}
           progress={progress}
+          dragX={dragX}
           dragY={dragY}
           onExpanded={handleExpanded}
         />
